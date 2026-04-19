@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google"; // Industry standard font
+import { Poppins, Inter } from "next/font/google"; // Industry standard font
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+
 
 // Configure the font
 const poppins = Poppins({ 
@@ -21,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", inter.variable)}>
       <body className={`${poppins.className} antialiased`}>
         {/* Everything inside 'children' is the content of your page.tsx files */}
         {children}
