@@ -1,7 +1,7 @@
-import Image from "next/image";
+
+
 
 export default function Home() {
-
 const academicLevels = [
   {id:1, level:"Pre-Elementary", grades:"Nursery, Kindergarten 1 & 2", imgUrl: "/pre-elementary.svg"},
   {id:2, level:"Elementary", grades:"Grades 1 to 6", imgUrl: "/elementary.svg"},
@@ -10,17 +10,31 @@ const academicLevels = [
 
   return(
     <div className="flex flex-col gap-20">
+
+    <section>
+      <div className="relative overflow-hidden text-white">
+        <img src="/landing-hero.svg" alt="" className="object-cover h-[85vh] w-full"/>
+        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center">
+          <h1>WELCOME TO ST. LOUISSE ACADEMY</h1>
+          <div className="text-[48px] italic font-semibold">
+            <p><span className="text-sla-gold">S</span>trive.</p>
+            <p><span className="text-sla-gold">L</span>earn.</p>
+            <p><span className="text-sla-gold">A</span>ccomplish.</p>
+          </div>
+        </div>
+      </div>
+    </section>
     
     <section>
 
     </section>
 
     <section className="bg-sla-blue p-5 text-white">
-      <div className="flex justify-between">
-        <h2>Campus Bulletin</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-[20px] font-semibold font-garamond">Campus Bulletin</h2>
         <button className="text-[12px] text-sla-blue bg-white py-2 px-6 rounded-2xl font-semibold">View More</button>
       </div>
-      <p>Discover on-campus events for students, parents, and visitors.</p>
+      <p className="mt-5 font-light text-[14px] ">Discover on-campus events for students, parents, and visitors.</p>
     </section>
 
     <section className="flex flex-col gap-5 mt-20 w-[85%] mx-auto">
@@ -43,19 +57,6 @@ const academicLevels = [
       <h2 className="text-[20px] font-semibold text-sla-blue">Begin your journey with us <span className="italic">today.</span></h2>
       <div className="flex flex-col lg:flex-row">
 
-        <div className="relative overflow-hidden inline-block">
-            <img src="/pre-elementary.svg" alt="" className="object-cover z-0 mx-auto"/>
-
-
-
-            <div className="absolute inset-0 flex flex-col text-white items-center justify-center">
-              <h1 className="text-4xl font-bold font-montserrat">St. Louisse Academy</h1>
-              <p className="text-lg font-poppins">Excellence in Education</p>
-            </div>
-        </div>
-        <div>
-
-        </div>
       </div>
     </section>
 

@@ -53,6 +53,12 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  /* This maps your Next.js font variables to Tailwind utility classes */
+  --font-montserrat: var(--font-montserrat);
+  --font-garamond: var(--font-garamond);
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
