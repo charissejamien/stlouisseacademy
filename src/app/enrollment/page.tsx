@@ -1,5 +1,5 @@
 "use client";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import { useEffect } from "react";
 
@@ -8,7 +8,7 @@ export default function Enrollment () {
 
 const [selectedGrade, setSelectedGrade] = useState("nursery");
 const [selectedDiscount, setSelectedDiscount] = useState<string[]>([]);
-
+const supabase = createClient();
 
 useEffect(() => {
   console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
