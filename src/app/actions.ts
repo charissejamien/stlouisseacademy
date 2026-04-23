@@ -1,44 +1,50 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
+import { create } from "domain";
 
-export async function saveStudentInfo(state: { success: boolean }, formData: FormData) {
-
+// --- Student Actions ---
+export async function saveStudentInfo(state: { success: boolean, message?: string }, formData: FormData) {
     const supabase = await createClient();
-
     const firstName = formData.get("firstName");
 
-    const {error} = await supabase
+    const { error } = await supabase
         .from('studentInfo')
-        .insert({firstName : firstName})
+        .insert({ firstName: firstName });
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
     
-    return{success : true};
+    return { success: true, message: "Student registered!" };
 }
 
-//Bulletin Actions
+export type ActionResponse = {
+    success: boolean;
+    message: string;
+};
 
-export async function savePost(state: { success: boolean, message?: string }, formData: FormData) {
+// --- Bulletin Actions ---
+export async function savePost(state: ActionResponse, formData: FormData): Promise<ActionResponse> {
     const supabase = await createClient();
 
-    // 1. Collect all form data
     const title = formData.get("postTitle");
     const summary = formData.get("postSummary");
     const body = formData.get("postBody");
-    const tag = formData.get("postTag"); // From our hidden input
+    const tag = formData.get("postTag");
     const featuredFile = formData.get("featuredImg") as File;
     const galleryFiles = formData.getAll("galleryImgs") as File[];
-    console.log("File Name:", featuredFile?.name);
-    console.log("File Size:", featuredFile?.size);
 
     let featuredImageUrl = "";
     const galleryUrls: string[] = [];
 
     try {
-        // 2. Upload Featured Image if it exists
         if (featuredFile && featuredFile.size > 0) {
             const fileName = `${Date.now()}-${featuredFile.name}`;
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('post-images') // Make sure this bucket exists in Supabase!
+            
+            // FIX: Removed 'uploadData' to resolve "unused variable" warning
+            const { error: uploadError } = await supabase.storage
+                .from('post-images')
                 .upload(fileName, featuredFile);
 
             if (uploadError) throw uploadError;
@@ -47,7 +53,6 @@ export async function savePost(state: { success: boolean, message?: string }, fo
             featuredImageUrl = publicUrl.publicUrl;
         }
 
-        // 3. Upload Gallery Images
         for (const file of galleryFiles) {
             if (file.size > 0) {
                 const fileName = `gallery/${Date.now()}-${file.name}`;
@@ -59,7 +64,6 @@ export async function savePost(state: { success: boolean, message?: string }, fo
             }
         }
 
-        // 4. Save everything to the 'posts' table
         const { error } = await supabase
             .from('posts')
             .insert([{ 
@@ -68,14 +72,62 @@ export async function savePost(state: { success: boolean, message?: string }, fo
                 body, 
                 tag,
                 featured_image: featuredImageUrl,
-                gallery: galleryUrls // This should be a JSONB or Text[] column in Supabase
+                gallery: galleryUrls 
             }]);
 
         if (error) throw error;
 
         return { success: true, message: "Post published successfully!" };
 
-    } catch (err: any) {
-        return { success: false, message: err.message || "An unexpected error occurred" };
+    } catch (err: unknown) {
+        // FIX: Specified type as 'unknown' and safely extracted the message
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        return { success: false, message: errorMessage };
     }
+}
+// --- Careers Actions ---
+// FIX: Added 'state' parameter and a return for the 'success' case
+export async function postJobOpening(state: { success: boolean, message?: string }, formData: FormData) {
+    const supabase = await createClient();
+
+    const position = formData.get("jobPosition");
+    const specialty = formData.get("jobSpecialty");
+
+    const { error } = await supabase
+        .from('careers')
+        .insert([
+            {
+                position: position,
+                specialty: specialty
+            }
+        ]);
+
+    if (error) {
+        return {
+            success: false,
+            message: error.message
+        };
+    }
+
+    // You were missing a return here!
+    return {
+        success: true,
+        message: "Job opening posted successfully!"
+    };
+}
+
+
+export async function getJobOpenings() {
+    const supabase = await createClient();
+    
+
+    const {data, error} = await supabase
+    .from('careers')
+    .select("*");
+
+    if (error) {
+        console.error("error");
+    }
+
+    return data;
 }

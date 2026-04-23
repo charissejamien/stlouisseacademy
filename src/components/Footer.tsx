@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
     return(
         <div className="bg-sla-blue px-5 py-20 flex flex-col text-white mt-10 text-center gap-10 xl:px-90">
@@ -24,10 +26,10 @@ export default function Footer() {
                 <div className="flex flex-col gap-2">
                     <p className="font-medium">Quick Links</p>
                     <div className="text-sla-gold flex flex-col gap-2 lg:text-[14px] lg:text-right">
-                        <p>Academics</p>
-                        <p>Admissions</p>
-                        <p>Careers</p>
-                        <p>About</p>
+                        <Link href='/academics'>Academics</Link>
+                        <Link href='/admissions'>Admissions</Link>
+                        <Link href='/careers'>Careers</Link>
+                        <Link href='/about'>About</Link>
                     </div>
                 </div>
             </div>
