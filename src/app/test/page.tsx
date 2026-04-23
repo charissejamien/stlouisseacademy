@@ -1,33 +1,24 @@
-"use client";
-import { createClient } from "@/lib/supabase/client";
+"use client"
+import { useActionState } from "react";
+import { saveStudentInfo } from "../actions";
+
 
 export default function Test() {
-    const supabase = createClient();
 
-    const handleSave = async (formData: FormData) => {
-        // One line to get all data: entries() converts the form into an object
-        const rawData = Object.fromEntries(formData.entries());
+    const [state, formAction] = useActionState(saveStudentInfo, {success:false});
 
-        const { error } = await supabase
-            .from('studentInfo')
-            .insert([{ 
-                firstName: rawData.firstName, 
-                middleName: rawData.middleName, 
-                lastName: rawData.lastName 
-            }]);
-
-        if (error) alert(error.message);
-        else alert("Student saved!");
-    };
 
     return (
-        <form action={handleSave} className="flex flex-col gap-4 p-10">
-            {/* Make sure the 'name' attribute matches your database columns or keys */}
-            <input name="firstName" placeholder="First Name" className="border" />
-            <input name="middleName" placeholder="Middle Name" className="border" />
-            <input name="lastName" placeholder="Last Name" className="border" />
+        <form action={formAction} className="m-10 flex gap-5">
+
+            <input type="text" name="firstName" placeholder="First Name" className="border border-black p-2"/>
+            <input type="text" name="middleName" placeholder="Middle Name" className="border border-black p-2"/>
+            <input type="text" name="lastName" placeholder="Last Name" className="border border-black p-2"/>
             
-            <button type="submit" className="bg-blue-500 text-white">Save</button>
+            <button type="submit">Save Info</button>
+            {state.success && <p className="text-green-500">Student Saved!</p>}
         </form>
+
+        
     );
 }

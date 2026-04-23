@@ -13,10 +13,10 @@ const academicLevels = [
 
     <section>
       <div className="relative overflow-hidden text-white">
-        <img src="/landing-hero.svg" alt="" className="object-cover h-[85vh] w-full"/>
+        <img src="/landing-hero.svg" alt="" className="object-cover h-[85vh] w-full lg:h-[90vh]"/>
         <div className="absolute inset-0 z-20 flex flex-col justify-center items-center">
           <h1>WELCOME TO ST. LOUISSE ACADEMY</h1>
-          <div className="text-[48px] italic font-semibold">
+          <div className="text-[48px] italic font-semibold lg:text-[72px]">
             <p><span className="text-sla-gold">S</span>trive.</p>
             <p><span className="text-sla-gold">L</span>earn.</p>
             <p><span className="text-sla-gold">A</span>ccomplish.</p>
@@ -29,12 +29,21 @@ const academicLevels = [
 
     </section>
 
-    <section className="bg-sla-blue p-5 text-white">
-      <div className="flex justify-between items-center">
-        <h2 className="text-[20px] font-semibold font-garamond">Campus Bulletin</h2>
+    <section className="bg-sla-blue p-5 py-20 text-white">
+      <div className="lg:w-[80%] lg:mx-auto">
+        <div className="flex justify-between items-center">
+        <h2 className="text-[20px] font-medium font-garamond lg:text-[32px]">Campus Bulletin</h2>
         <button className="text-[12px] text-sla-blue bg-white py-2 px-6 rounded-2xl font-semibold">View More</button>
       </div>
-      <p className="mt-5 font-light text-[14px] ">Discover on-campus events for students, parents, and visitors.</p>
+      <p className="mt-1 font-light text-[14px] lg:text-[16px]">Discover on-campus events for students, parents, and visitors.</p>
+      <div className="mt-5">
+        <div className="w-70 h-50 bg-gray-muted relative overflow-hidden">
+          <div className="absolute inset-0 z-20 flex justify-start items-end m-3">
+            <button className="text-[14px] border border-white px-3 py-1 rounded-2xl">Read Announcement</button>
+          </div>
+        </div>
+      </div>
+      </div>
     </section>
 
     <section className="flex flex-col gap-5 mt-20 w-[85%] mx-auto">
