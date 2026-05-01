@@ -4,28 +4,40 @@ import { createClient } from "@/lib/supabase/server";
 import { create } from "domain";
 
 // --- Student Actions ---
-export async function saveStudentInfo(state: { success: boolean, message?: string }, formData: FormData) {
+export async function enrollStudent(state:{success:boolean, message:string}, formData:FormData) {
     const supabase = await createClient();
-    const firstName = formData.get("firstName");
 
-    const { error } = await supabase
-        .from('studentInfo')
-        .insert({ firstName: firstName });
+    const firstName = formData.get("firstName");
+    const middleName = formData.get("middleName");
+    const lastName = formData.get("lastName");
+    const gender = formData.get("gender");
+    const gradeLevel = formData.get("gradeLevel");
+    const parent = formData.get("parent");
+
+    const {error} = await supabase
+    .from('students')
+    .insert([{
+        first_name : firstName,
+        middle_name : middleName,
+        last_name : lastName,
+        gender : gender,
+        gradeLevel : gradeLevel,
+        parent : parent,
+    }])
 
     if (error) {
-        return { success: false, message: error.message };
+        return {success:false, message:error.message}
     }
-    
-    return { success: true, message: "Student registered!" };
+
+    if (!firstName || !middleName || !lastName || !gender || !gradeLevel || !parent) {
+        return {success:false, message:"Fields cannot be empty"}
+    }
+
+    return {success:true, message:"Student Enrolled"}
 }
 
-export type ActionResponse = {
-    success: boolean;
-    message: string;
-};
-
 // --- Bulletin Actions ---
-export async function savePost(state: ActionResponse, formData: FormData): Promise<ActionResponse> {
+export async function savePost(state: {success:boolean, message:string}, formData: FormData) {
     const supabase = await createClient();
 
     const title = formData.get("postTitle");

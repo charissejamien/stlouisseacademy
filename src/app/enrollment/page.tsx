@@ -11,19 +11,23 @@ const nameInputs = [
     ];
 
     const gradeLevels = [
-        {name:"nursery", label:"Nursery"},
-        {name:"preKinder", label:"Pre-Kindergarten"},
-        {name:"kinder", label:"Kindergarten"},
-        {name:"1", label:"Grade 1"},
-        {name:"2", label:"Grade 2"},
-        {name:"3", label:"Grade 3"},
-        {name:"4", label:"Grade 4"},
-        {name:"5", label:"Grade 5"},
-        {name:"6", label:"Grade 6"},
-        {name:"7", label:"Grade 7"},
-        {name:"8", label:"Grade 8"},
-        {name:"9", label:"Grade 9"},
-        {name:"10", label:"Grade 10"}
+        {name:"nursery", label:"Nursery", category: "preElementary"},
+        {name:"preKinder", label:"Pre-Kindergarten", category: "preElementary"},
+        {name:"kinder", label:"Kindergarten", category: "preElementary"},
+        {name:"1", label:"Grade 1", category: "elementary"},
+        {name:"2", label:"Grade 2", category: "elementary"},
+        {name:"3", label:"Grade 3", category: "elementary"},
+        {name:"4", label:"Grade 4", category: "elementary"},
+        {name:"5", label:"Grade 5", category: "elementary"},
+        {name:"6", label:"Grade 6", category: "elementary"},
+        {name:"7", label:"Grade 7", category: "juniorHigh"},
+        {name:"8", label:"Grade 8", category: "juniorHigh"},
+        {name:"9", label:"Grade 9", category: "juniorHigh"},
+        {name:"10", label:"Grade 10", category: "juniorHigh"}
+    ];
+
+    const fees = [
+        {name:"preElementary", tuition:17720, }
     ];
 
     const guardianRelationship = ["Mother", "Father", "Grandparent", "Aunt", "Uncle", "Cousin", "Sibling", "Guardian"]
@@ -44,11 +48,9 @@ export default function Enrollment() {
     }, [state]);
 
     return(
-        <div className="w-[80%] mx-auto mt-20">
-
-            <h2 className="text-sla-blue font-semibold text-[28px]">Student Enrollment</h2>
-
+        <div className="w-[80%] mx-auto mt-20 flex gap-10">
             <section>
+                <h2 className="text-sla-blue font-semibold text-[28px]">Student Enrollment</h2>
                 <form action={formAction} className="flex flex-col gap-5">
                     <div className="bg-white p-5 rounded-sm">
                         <h2>Basic Student Information</h2>
@@ -104,6 +106,10 @@ export default function Enrollment() {
 
                     <button className="bg-sla-blue text-white p-2">Enroll Student</button>
                 </form>
+            </section>
+
+            <section className="bg-sla-blue p-5 text-white">
+                <h2>Fee Assessment</h2>
             </section>
 
         </div>
