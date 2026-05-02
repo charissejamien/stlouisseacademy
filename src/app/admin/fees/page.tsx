@@ -1,9 +1,8 @@
-
+"use client";
+import { useActionState, useEffect } from "react";
 import { Input } from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
-
-
-
+import { saveFees } from "./actions";
+import toast from 'react-hot-toast';
 
 export default function Fees() {
 
@@ -25,20 +24,34 @@ const mandatoryFees = [
     {name:"ptaMem", label:"PTA Membership"},
 ];
 
+const [state, formAction] = useActionState(saveFees, {success:false, message:""})
+useEffect(() => {
+    if(state.message) {
+        if(state.success) {
+            toast.success(state.message);
+        } else {
+            toast.error(state.message);
+        }
+    }
+
+}, [state]);
+
+
+
 
     return(
         <div className="p-20">
             <h2 className="text-[28px] font-semibold text-sla-blue">Fee Configuration</h2>
 
             <div>
-                <form action="" className="flex flex-col gap-10">
-                    <div className="bg-white rounded-md p-5 flex flex-col gap-3">
+                <form action={formAction} className="flex flex-col gap-10">
+                    <div className="bg-white rounded-md p-5 flex flex-col gap-3 w-fit">
                         <p>Tuition Fees by Level</p>
                         {tuitionFees.map((item) => 
-                        <div key={item.name} className="flex">
+                        <div key={item.name} className="flex justify-between gap-10">
                             <label htmlFor={item.name} className="text-sla-blue font-medium">{item.label}</label>
-                            <Input className="w-30"/>
-                        </div>
+                            <Input className="w-30 bg-background" name={item.name}/>
+                        </div> 
                         )}
                     </div>
 
@@ -46,25 +59,24 @@ const mandatoryFees = [
                         <div className="bg-white rounded-md p-5 flex flex-col gap-3">
                             <p>Uniforms and Merch</p>
                             {otherFees.map((item) => 
-                            <div key={item.name} className="flex">
+                            <div key={item.name} className="flex justify-between gap-10">
                                 <label htmlFor={item.name} className="text-sla-blue font-medium">{item.label}</label>
-                                <Input className="w-30"/>
+                                <Input className="w-30 bg-background" name={item.name}/>
                             </div>
                             )}
                         </div>
                         <div className="bg-white rounded-md p-5 flex flex-col gap-3">
                             <p>Mandatory Fees</p>
                             {mandatoryFees.map((item) => 
-                            <div key={item.name} className="flex">
+                            <div key={item.name} className="flex justify-between gap-10">
                                 <label htmlFor={item.name} className="text-sla-blue font-medium">{item.label}</label>
-                                <Input className="w-30"/>
-                            </div>
+                                <Input className="w-30 bg-background" name={item.name}/>
+                            </div> 
                             )}
                         </div>
                     </div>
 
-                    <button type="submit" className="bg-sla-blue p-5 text-white">Confirm Changes</button>
-
+                    <button className="bg-sla-blue p-2 rounded-sm text-white w-[300]">Confirm Changes</button>
                 </form>
             </div>
         </div>
