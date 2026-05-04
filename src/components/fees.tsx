@@ -1,65 +1,39 @@
 "use client";
-import { saveNewFees } from "@/app/admin/fees/actions";
-import { useActionState, useEffect, useState } from "react";
-import toast from 'react-hot-toast';
+
+import { useState } from "react";
+import { Input } from "@/components/ui/input"
+
 
 export default function FeesInput () {
 
-const category = ["tuition", "membership", "event", "merchandise"]
+    const [val1, setVal1] = useState("");
+    const [val2, setVal2] = useState("");
 
-const [state, formAction] = useActionState(saveNewFees, {success:false, message:""})
+    const totalTuition = Number(val1) + Number(val2);
 
-
-useEffect(() => {
-    if(state.message) {
-        if (state.success) {
-            toast.success(state.message);
-        } else {
-             toast.error(state.message);
-        }
-    }
-}, [state] )
-
+    const gradeCategory = [
+        {label: "Pre Elementary", value:"preElementary"},
+        {label: "Elementary", value:"elementary"},
+        {label: "Junior High School", value:"juniorHighSchool"}
+    ];
 
     return(
-        <div className="w-[80%] mx-auto mt-20 mb-20">
 
-            <section>
-                <h2 className="mb-5">Add Fees </h2>
-                <form action={formAction} className="bg-white p-5">
-                    <div className="flex gap-5">
-
-                        <div className="flex flex-col">
-                            <label htmlFor="">Add Fee Specification</label>
-                            <input type="text" name="description" className="bg-background py-1 w-80"/>
-                        </div>
-
-                        <div className="flex flex-col">
-                            <label htmlFor="">Add Fee Amount</label>
-                            <input type="text" name="amount" className="bg-background py-1"/>
-                        </div>
-                        
-                        <div className="flex flex-col">
-                            <label htmlFor="">Add Fee Category</label>
-                            <select name="category" className="bg-background py-1 capitalize px-2">
-                                {category.map((c) => (
-                                    <option value={c} key={c}>{c}</option>
-                                ))}
-                            </select>
-                        </div>
+        <div className="w-[80%] mx-auto md:w-[95%]">
+            <div className="mt-10 mb-10 bg-white p-5 rounded-md">
+                <h2 className="text-sla-blue font-semibold">Configure School Fees</h2>
+                    <div className="flex gap-5 ml-5">
+                        <select name="" id="">
+                        {gradeCategory.map((g) => (
+                            <option key={g.value} value={g.value}>{g.label}</option>
+                        ))}
+                        </select>
+                        <Input placeholder="Grade Level" />
+                        <Input placeholder="Base Tuition" value={val1} onChange={(e) => setVal1(e.target.value)} />
+                        <Input placeholder="Miscellaneous" value={val2} onChange={(e) => setVal2(e.target.value)} />
+                        <div className="w-200">Total Tuition: P{totalTuition}</div>
                     </div>
-
-                    
-
-                    <button className="bg-sla-blue text-white px-4 py-1 rounded-sm mt-5">Submit</button>
-                            
-                </form>
-
-            </section>
-
-
-
+            </div>
         </div>
-
     );
 }
