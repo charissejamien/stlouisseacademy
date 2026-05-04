@@ -3,19 +3,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+function slugify(text:string) {
+    return text.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g,"");
+}
+
 export async function saveNewFees(state:{success:boolean, message:string}, formData:FormData) {
     const supabase = await createClient();
 
-    const name = formData.get('description')
+    const name = formData.get('description')?.toString() || "";
     const category = formData.get('category')
     const amount = formData.get('amount')
+    const supabaseId = slugify(name);
 
     const {error} = await supabase
     .from('fees')
     .insert([{
         name : name,
         category : category,
-        amount : amount
+        amount : amount,
+        slug : supabaseId,
     }])
 
     if (error) {
