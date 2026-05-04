@@ -1,53 +1,116 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
-const fees = [ 
-    {name: "tuitionPreElem", label: "Pre Elementary"},
-    {name: "tuitionElem", label: "Elementary"},
-    {name: "tuitionJHS", label: "Junior High School"},
-    {name:"logo", label:"Logo"},
-    {name:"upperCloth", label:"Upper Cloth"},
-    {name:"lowerCloth", label:"Lower Cloth"},
-    {name:"ssgMem", label:"SSG Membership"},
-    {name:"studentPub", label:"Student Publication"},
-    {name:"ptaMem", label:"PTA Membership"},
-];
-
-export interface FeeData {
-    description: string;
-    amount: number;
-}
-
-
-export async function saveFees(state:{message:string, success:boolean}, formData:FormData ) {
-
+export async function saveNewFees(state:{success:boolean, message:string}, formData:FormData) {
     const supabase = await createClient();
 
-    const feeUpdate = fees.map((fee) => ({
-        description: fee.label,
-        amount: formData.get(fee.name),
-    }));
+    const name = formData.get('description')
+    const category = formData.get('category')
+    const amount = formData.get('amount')
 
     const {error} = await supabase
     .from('fees')
-    .upsert(feeUpdate);
+    .insert([{
+        name : name,
+        category : category,
+        amount : amount
+    }])
 
-    if(error) {
-        return {success:false, message:error.message};
+    if (error) {
+        return {success:false, message:error.message}
     }
 
-    return {success:true, message:"Fees Updated!"};
-
+    revalidatePath('/admin/fees')
+    return {success:true, message:"success!"}
 }
 
-export default async function getFees () {
+export async function getFees () {
     
     const supabase = await createClient();
 
-    const {data} = await supabase
+    const {data, error} = await supabase
     .from('fees')
-    .select('description');
+    .select('*');
 
-    return data as FeeData[];
+    if (error) {
+        console.log(error.message);
+    }
+
+    return data;
+}
+
+
+export async function updateFee(formData:FormData){
+    const supabase = await createClient();
+
+    const description = formData.get("description");
+    const amount = formData.get("amount");
+
+    const {error} = await supabase
+    .from('fees')
+    .update({description, amount})
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    revalidatePath("/admin/fees"); 
+    return { success: true, message: "Fee updated!" };
+}
+
+export async function deleteFee(id: string) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('fees')
+    .delete()
+    .eq("id", id);
+
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    revalidatePath('admin/fees');
+}
+
+
+export async function saveDiscount(state: {success:boolean, message:string}, formData:FormData) {
+    const supabase = await createClient();
+
+    const name = formData.get("description");
+    const amount = formData.get("amount");
+    const category = formData.get("category")
+
+    const {error} = await supabase
+    .from('discounts')
+    .insert([{
+        name : name,
+        amount : amount,
+        category : category
+    }]);
+
+    if (error) {
+        return {success:false, message: error.message}
+    }
+
+    return {success:true, message: "Discount posted!"}
+
+}
+
+export async function getDiscount() {
+    const supabase = await createClient();
+
+
+    const {data , error} = await supabase
+    .from('discounts')
+    .select('*');
+
+    if (error) {
+        console.log(error.message);
+    }
+
+    return data;
 }
