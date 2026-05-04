@@ -1,6 +1,5 @@
 import Card from "@/components/jobOpeningsCard";
 
-
 export default function Careers() {
 
 

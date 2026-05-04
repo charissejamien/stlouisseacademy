@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google"; // Industry standard font
+import { Poppins, Inter } from "next/font/google";
 import { Montserrat, EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import {Toaster} from 'react-hot-toast';
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -49,7 +50,7 @@ export default function RootLayout({
         <div className={montserrat.className}>
           <Header />
         </div>
-        {/* Everything inside 'children' is the content of your page.tsx files */}
+        <Toaster position="top-center"/>
         {children}
         <div className={montserrat.className}>
           <Footer />
