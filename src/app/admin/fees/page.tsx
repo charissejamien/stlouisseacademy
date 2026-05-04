@@ -14,7 +14,6 @@ export default function Fees() {
             <Discounts/>
             <DiscountsList/>
             <FeesList/>
-            {/* <FeesForm/> */}
         </div>
     );
 }

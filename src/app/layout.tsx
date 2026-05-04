@@ -4,6 +4,7 @@ import { Montserrat, EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import {Toaster} from 'react-hot-toast';
+import QueryProvider from "@/providers/query-provider";
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -51,7 +52,9 @@ export default function RootLayout({
           <Header />
         </div>
         <Toaster position="top-center"/>
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
         <div className={montserrat.className}>
           <Footer />
         </div>

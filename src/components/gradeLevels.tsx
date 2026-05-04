@@ -4,9 +4,9 @@ import { saveDiscount } from "@/app/admin/fees/actions";
 import { useActionState, useEffect } from "react";
 import toast from 'react-hot-toast';
 
-export default function Discounts () {
+export default function GradeLevels () {
 
-const category = ["academic", "payment", "sibling", "special"]
+const category = ["Pre-Elementary", "Elementary", "Junior High School"]
 
 
 const [state, formAction] = useActionState(saveDiscount, {success:false, message:""})
