@@ -3,33 +3,33 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-function slugify(text:string) {
-    return text.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g,"");
-}
 
-export async function saveNewFees(state:{success:boolean, message:string}, formData:FormData) {
+export async function saveSchoolFee(state:{success:boolean, message:string}, formData:FormData) {
     const supabase = await createClient();
 
-    const name = formData.get('description')?.toString() || "";
-    const category = formData.get('category')
-    const amount = formData.get('amount')
-    const supabaseId = slugify(name);
+    const category = formData.get("category");
+    const gradeLevel = formData.get("gradeLevel");
+    const entranceFee = formData.get("entranceFee");
+    const baseTuition = formData.get("baseTuition");
+    const miscellaneous = formData.get("miscellaneous");
+    const totalTuition = formData.get("totalTuition");
 
     const {error} = await supabase
-    .from('fees')
+    .from('tuition_fees')
     .insert([{
-        name : name,
-        category : category,
-        amount : amount,
-        slug : supabaseId,
-    }])
+        grade_level : gradeLevel,
+        grade_category : category,
+        entrance_fee : entranceFee,
+        base_tuition : baseTuition,
+        miscellaneous : miscellaneous,
+        total_tuition : totalTuition
+    }]);
 
     if (error) {
-        return {success:false, message:error.message}
+        return {success:false, message:error.message};
     }
 
-    revalidatePath('/admin/fees')
-    return {success:true, message:"success!"}
+    return {success:true, message:"Successfully Configured!"};
 }
 
 export async function getFees () {
@@ -119,4 +119,25 @@ export async function getDiscount() {
     }
 
     return data;
+}
+
+
+export async function saveGradeLevelConfiguration(state:{success:boolean, message:string}, formData:FormData) {
+    const supabase = await createClient();
+
+    const category = formData.get("category");
+    const gradeLevel = formData.get("gradeLevel");
+
+    const {error} = await supabase
+    .from('grade_levels')
+    .insert([{
+        grade_level : gradeLevel,
+        grade_category : category,
+    }]);
+
+    if (error) {
+        return {success:false, message:error.message};
+    }
+    
+    return {success:true, message:"Successfully Configured!"};
 }

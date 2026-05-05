@@ -109,3 +109,22 @@ export async function getJobOpenings() {
 
     return data;
 }
+
+
+
+
+
+
+export async function getGradeLevels(){
+    const supabase = await createClient();
+
+    const {data , error} = await supabase
+    .from('grade_levels')
+    .select('*');
+
+    if (error) {
+        console.log(error.message);
+    }
+
+    return data || [];
+}
