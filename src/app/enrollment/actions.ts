@@ -11,6 +11,7 @@ export async function enrollStudent(state:{success:boolean, message:string}, for
     const gender = formData.get("gender");
     const gradeLevel = formData.get("gradeLevel");
     const parent = formData.get("parent");
+    const dateOfBirth = formData.get("dob");
 
     const {error} = await supabase
     .from('students')
@@ -19,17 +20,17 @@ export async function enrollStudent(state:{success:boolean, message:string}, for
         middle_name : middleName,
         last_name : lastName,
         gender : gender,
+        date_of_birth : dateOfBirth,
         gradeLevel : gradeLevel,
         parent : parent,
+        id : "0121775459",
     }])
 
     if (error) {
         return {success:false, message:error.message}
     }
 
-    if (!firstName || !middleName || !lastName || !gender || !gradeLevel || !parent) {
-        return {success:false, message:"Fields cannot be empty"}
-    }
+    
 
     return {success:true, message:"Student Enrolled"}
 }
