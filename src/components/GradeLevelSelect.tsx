@@ -20,7 +20,7 @@ export default function GradeLevelSelect({ gradeLevels, onChange }: Props) {
     
   return (
     <div>
-      <Select onValueChange={onChange}>
+      <Select onValueChange={onChange} name="gradeLevel">
         <SelectTrigger className="w-full rounded-md w-50">
           <SelectValue placeholder="Select a grade level" />
         </SelectTrigger>

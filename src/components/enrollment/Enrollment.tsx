@@ -29,8 +29,8 @@ export default function EnrollmentForm( { gradeLevels } : Props ) {
         {label:"Middle Name", value:"middleName"},
         {label:"Last Name", value:"lastName"},
     ];
-
     const rel = ["Mother", "Father", "Sibling", "Grandparent", "Aunt", "Uncle", "Guardian"];
+    const gender = ["Female", "Male"];
 
     const [selectedGrade, setSelectedGrade] = useState("");
     const [state, formAction] = useActionState(enrollStudent, {success:false, message:""})
@@ -67,7 +67,23 @@ export default function EnrollmentForm( { gradeLevels } : Props ) {
                     </div>
                     <div className="flex flex-col">
                         <label>Residence</label>
-                        <Input name="residence" className="capitalize w-107"/>
+                        <Input name="residence" className="capitalize w-80`"/>
+                    </div>
+                    <div className="flex flex-col">
+                        <label>Gender</label>
+                        <Select name="gender">
+                            <SelectTrigger className="w-full w-50 rounded-sm">
+                                <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                <SelectLabel>Gender</SelectLabel>
+                                {gender.map((g) => (
+                                    <SelectItem key={g} value={g}> {g} </SelectItem>
+                                ))}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>
@@ -92,7 +108,7 @@ export default function EnrollmentForm( { gradeLevels } : Props ) {
                         <label>Relationship</label>
                         <Select>
                             <SelectTrigger className="w-full w-40 rounded-sm">
-                                <SelectValue placeholder="Select a fruit" />
+                                <SelectValue placeholder="Select relationship" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
