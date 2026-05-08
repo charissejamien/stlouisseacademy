@@ -26,6 +26,7 @@ export default function ScannerPage() {
 
     window.addEventListener("keydown", handleKeyDown);
 
+
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [buffer]);
 
