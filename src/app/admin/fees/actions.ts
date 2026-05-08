@@ -141,3 +141,27 @@ export async function saveGradeLevelConfiguration(state:{success:boolean, messag
     
     return {success:true, message:"Successfully Configured!"};
 }
+
+
+export async function saveSubjectConfiguration (state: {success:boolean, message:string}, formData:FormData) {
+    const supabase = await createClient();
+
+    const subject = formData.get("subject")
+
+
+    const {error} = await supabase
+    .from('subjects')
+    .insert([{
+        subject: subject,
+    }]);
+
+    if(error) {
+        if (error.code === "23505") {
+            return {success:false, message:("Subject Already Exists!")};
+        }
+        return {success:false, message:(error.message)};
+    }
+
+    return {success:true, message:"Subject Successfully Added!"};
+}
+
