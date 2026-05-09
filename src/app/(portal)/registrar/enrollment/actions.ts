@@ -2,7 +2,39 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+export async function generateStudentId() {
+
+    const year = new Date().getFullYear().toString();
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("students")
+        .select("student_id")
+        .like("student_id", `${year}%`)
+        .order("student_id", { ascending: false })
+        .limit(1);
+
+    if (error) {
+        throw error;
+    }
+
+    let nextNumber = 1;
+ 
+    if (data && data.length > 0) {
+
+        const latestId = data[0].student_id;
+        const latestNumber = parseInt(latestId.slice(4));
+        nextNumber = latestNumber + 1;
+    }
+
+    const paddedNumber = String(nextNumber).padStart(4, "0");
+
+    return `${year}${paddedNumber}`;
+}
+
 export async function enrollStudent(state:{success:boolean, message:string}, formData:FormData) {
+
     const supabase = await createClient();
 
     const firstName = formData.get("firstName");
@@ -13,6 +45,8 @@ export async function enrollStudent(state:{success:boolean, message:string}, for
     const parent = formData.get("parent");
     const dateOfBirth = formData.get("dob");
 
+    const studentId = await generateStudentId();
+
     const {error} = await supabase
     .from('students')
     .insert([{
@@ -21,16 +55,14 @@ export async function enrollStudent(state:{success:boolean, message:string}, for
         last_name : lastName,
         gender : gender,
         date_of_birth : dateOfBirth,
-        gradeLevel : gradeLevel,
+        grade_level : gradeLevel,
         parent : parent,
-        id : "0121775459",
+        student_id : studentId
     }])
 
     if (error) {
         return {success:false, message:error.message}
     }
-
-    
 
     return {success:true, message:"Student Enrolled"}
 }

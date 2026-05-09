@@ -1,6 +1,6 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import { saveGradeLevelConfiguration } from "@/app/admin/fees/actions";
+import { saveGradeLevelConfiguration } from "@/app/(portal)/admin/configuration/actions";
 import { useActionState, useEffect } from "react";
 import toast from 'react-hot-toast';
 

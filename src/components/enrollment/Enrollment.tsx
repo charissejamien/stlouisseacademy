@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select"
 import GradeLevelSelect from "../GradeLevelSelect";
 import { useActionState, useEffect, useState } from "react";
-import { enrollStudent } from "@/app/enrollment/actions";
+import { enrollStudent } from "@/app/(portal)/registrar/enrollment/actions";
 import toast from 'react-hot-toast';
 
 type GradeLevel = {

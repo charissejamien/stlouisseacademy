@@ -42,7 +42,7 @@ export default function Admissions() {
                 <p>Pre-Elementary Checklist</p>
                 <p>For Nursery, Kinder 1, and Kinder 2 applicants.</p>
                 {preElemRequirements.map((list) => (
-                    <div className='bg-background border border-gray-muted flex flex-col gap-3'>
+                    <div key={list.id} className='bg-background border border-gray-muted flex flex-col gap-3'>
                         <Check  size={12}/>
                         <p>{list.requirement}</p>
                         <p>{list.description}</p>

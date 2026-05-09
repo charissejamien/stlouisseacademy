@@ -1,6 +1,6 @@
 "use client";
 import { Trash } from 'lucide-react';
-import { deleteFee } from '@/app/admin/fees/actions';
+import { deleteFee } from '@/app/(portal)/admin/configuration/actions';
 import toast from 'react-hot-toast';
 
 export function DeleteButton({ id }: { id: string }) {

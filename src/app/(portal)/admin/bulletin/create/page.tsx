@@ -1,7 +1,7 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import { savePost } from "../../actions";
+import { savePost } from "@/app/actions";
 import { useActionState, useState, useRef } from "react";
 import { ImageIcon } from "lucide-react";
 

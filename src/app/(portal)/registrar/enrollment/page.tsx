@@ -1,5 +1,5 @@
 import EnrollmentForm from "@/components/enrollment/Enrollment";
-import { getGradeLevels } from "../actions";
+import { getGradeLevels } from "@/app/actions";
 
 export default async function Enrollment() {
 

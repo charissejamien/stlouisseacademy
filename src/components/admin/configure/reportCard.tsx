@@ -1,7 +1,7 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { useActionState, useEffect } from "react";
-import { saveSubjectConfiguration } from "@/app/admin/fees/actions";
+import { saveSubjectConfiguration } from "@/app/(portal)/admin/configuration/actions";
 import toast from "react-hot-toast";
 
 export default function ConfigureReportCard() {
