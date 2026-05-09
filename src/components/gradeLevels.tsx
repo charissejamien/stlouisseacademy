@@ -1,6 +1,6 @@
 
 "use client";
-import { saveDiscount } from "@/app/admin/fees/actions";
+import { saveDiscount } from "@/app/(portal)/admin/configuration/actions";
 import { useActionState, useEffect } from "react";
 import toast from 'react-hot-toast';
 

@@ -1,4 +1,4 @@
-import Heading from "@/components/admin/dashboard/Heading";
+import Heading from "@/components/shared/Heading";
 import ManagementSummary from "@/components/admin/dashboard/ManagementSummary";
 import FinanceSummary from "@/components/admin/dashboard/FinanceSummary";
 import InventorySummary from "@/components/admin/dashboard/InventorySummary";

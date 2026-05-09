@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { saveSchoolFee } from "@/app/admin/fees/actions";
+import { saveSchoolFee } from "@/app/(portal)/admin/configuration/actions";
 import toast from 'react-hot-toast';
 
 
