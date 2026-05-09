@@ -6,7 +6,7 @@ export default function StudentSummary() {
             <p className="text-sla-gray text-[14px]">Grade 5 - Amber</p>
             <div className="bg-background p-5 rounded-md mt-5 flex flex-col gap-1 items-center">
                 <p className="text-sla-gray text-[12px] font-medium">ATTENDANCE STATUS</p>
-                <p className="text-sla-blue text-[24px] font-semibold">PRESENT</p>
+                <p className="text-green-700 text-[24px] font-semibold">PRESENT</p>
                 <p className="text-gray-700 text-[12px] font-medium">recorded at 6:30 am</p>
             </div>
             <div className="flex mt-3 justify-center">
