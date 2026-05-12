@@ -32,6 +32,21 @@ export async function saveSchoolFee(state:{success:boolean, message:string}, for
     return {success:true, message:"Successfully Configured!"};
 }
 
+export async function getTuitionFees () {
+    
+    const supabase = await createClient();
+
+    const {data, error} = await supabase
+    .from('tuition_fees')
+    .select('*');
+
+    if (error) {
+        console.log(error.message);
+    }
+
+    return data;
+}
+
 export async function getFees () {
     
     const supabase = await createClient();
@@ -163,5 +178,25 @@ export async function saveSubjectConfiguration (state: {success:boolean, message
     }
 
     return {success:true, message:"Subject Successfully Added!"};
+}
+
+export async function saveBooksConfiguration(state:{success:boolean, message:string}, formData:FormData) {
+    const supabase = await createClient();
+
+    const amount = formData.get("amount");
+    const gradeLevel = formData.get("gradeLevel");
+
+    const {error} = await supabase
+    .from('books')
+    .insert([{
+        grade_level : gradeLevel,
+        amount : amount,
+    }]);
+
+    if (error) {
+        return {success:false, message:error.message};
+    }
+    
+    return {success:true, message:"Successfully Configured!"};
 }
 

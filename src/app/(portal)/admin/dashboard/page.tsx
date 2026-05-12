@@ -22,6 +22,7 @@ export default function Dashboard() {
                 <h3 className="text-[18px] font-medium">Inventory</h3>
                 <InventorySummary/>
             </div>
+
         </div>
     );
 }

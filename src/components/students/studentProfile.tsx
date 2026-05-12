@@ -21,12 +21,31 @@ export default async function StudentProfile({
 
 
     return (
-        <div className="w-[80%] mx-auto mt-20">
-            <div className="bg-white rounded-md p-5">
-                <h2>Student Profile</h2>
+        <div className="flex flex-col gap-5">
+            <section className="bg-white rounded-md p-10 flex gap-10 items-center">
+                        <div className="bg-sla-blue w-30 h-30"/>
 
-                <p>{student.first_name}</p>
-            </div>
+                        <div className="flex flex-col gap-1">
+                            <p className="text-[24px] text-sla-blue font-semibold">{student.last_name}, {student.first_name} </p>
+                            <div className="flex gap-10">
+                                <p className="text-[14px] text-sla-gray">ID: {student.student_id}</p>
+                                <p className="text-[14px] text-sla-gray">Grade Level</p>
+                            </div>
+                        </div>
+            </section>
+
+            <section className="flex gap-5">
+                <div className="bg-white rounded-md p-7 pr-20 flex flex-col gap-3">
+                    <p className="text-sla-blue font-medium">Personal Information</p>
+                    <div className="flex grid grid-cols-2 gap-5">
+                       
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-md p-5">
+                    <p className="text-sla-blue font-medium">Emergency Contact</p>
+                </div>
+            </section>
         </div>
     );
 }

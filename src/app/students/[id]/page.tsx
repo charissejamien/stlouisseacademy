@@ -1,4 +1,4 @@
-import StudentProfile from "@/components/students/studentProfile";
+import StudentProfile from "@/components/students/StudentProfile";
 
 export default async function StudentInformation({
     params,
@@ -7,6 +7,8 @@ export default async function StudentInformation({
 }) {
 
     const { id } = await params;
+
+    console.log(id)
 
     return <StudentProfile id={id} />;
 }

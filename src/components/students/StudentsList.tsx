@@ -3,7 +3,7 @@ import { getClassList } from "@/app/students/actions";
 import { Input } from "../ui/input";
 import Link from "next/link";
 
-export default async function ClassList() {
+export default async function StudentsList() {
 
     const list = await getClassList();
 

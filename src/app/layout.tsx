@@ -49,7 +49,6 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", inter.variable, montserrat.variable, ebGaramond.variable)}>
       <body className={`${poppins.className} antialiased`}>
         <div className={montserrat.className}>
-          <Header />
         </div>
         <Toaster position="top-center"/>
         <QueryProvider>
