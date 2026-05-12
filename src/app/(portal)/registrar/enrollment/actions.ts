@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function generateStudentId() {
 
@@ -33,11 +34,11 @@ export async function generateStudentId() {
     return `${year}${paddedNumber}`;
 }
 
-export async function enrollStudent(state:{success:boolean, message:string}, formData:FormData) {
+export async function enrollStudent(state: {success:boolean, message:string}, formData:FormData) {
 
     const supabase = await createClient();
 
-    const firstName = formData.get("firstName");
+    const firstName = formData.get("firstName") as string;
     const middleName = formData.get("middleName");
     const lastName = formData.get("lastName");
     const gender = formData.get("gender");
@@ -45,36 +46,71 @@ export async function enrollStudent(state:{success:boolean, message:string}, for
     const parent = formData.get("parent");
     const dateOfBirth = formData.get("dob");
 
-    const studentId = await generateStudentId();
+    const totalTuition = formData.get("totalTuition");
 
-    const {error} = await supabase
+    const studentId = await generateStudentId();
+    const isEscRecipient = formData.get("escRecipient") === "on";
+
+
+    if(!firstName.trim()) {
+        return {success:false, message:"Fill out fields"}
+    }
+
+    const {error: studentError} = await supabase
     .from('students')
     .insert([{
         first_name : firstName,
         middle_name : middleName,
         last_name : lastName,
         gender : gender,
-        date_of_birth : dateOfBirth,
+        date_of_birth : dateOfBirth === "" ? null : dateOfBirth,
         grade_level : gradeLevel,
         parent : parent,
-        student_id : studentId
-    }])
+        student_id : studentId,
+        esc_recipient : isEscRecipient
+    }]);
 
-    if (error) {
-        return {success:false, message:error.message}
+    if (studentError) {
+        return {success:false, message:studentError.message}
     }
 
+    const {error: accountCardError} = await supabase
+    .from('student_account_card')
+    .insert([{
+        student_id: studentId,
+        total_tuition_fee: totalTuition
+    }]);
+    
+
+    if (accountCardError) {
+        return {success:false, message:accountCardError.message}
+    }
+
+    revalidatePath('registrar/enrollment');
     return {success:true, message:"Student Enrolled"}
 }
 
+export async function getTuitionFees() {
+    const supabase = await createClient();
 
-export async function getDiscountByCategory(categories: string[]) {
+    const {data, error} = await supabase
+    .from('tuition_fees')
+    .select('*')
+
+    if (error) {
+        console.log(error.message)
+    }
+
+    return data || [];
+}
+
+
+export async function getDiscounts() {
     const supabase = await createClient();
 
     const {data , error} = await supabase
     .from('discounts')
     .select('*')
-    .in('category', categories);
 
     if(error) {
         console.log(error.message)
@@ -83,45 +119,17 @@ export async function getDiscountByCategory(categories: string[]) {
     return data || [];
 }
 
-
-export async function getFeesByGrade(gradeLevel: string) {
+export async function getBooksFees() {
     const supabase = await createClient();
 
-    // 1. Create a map that connects your form values to your DB slugs
-    const gradeToSlugMap: Record<string, string> = {
-        "nursery": "pre-elementary",
-        "preKinder": "pre-elementary",
-        "kinder": "pre-elementary",
-        "1": "elementary",
-        "2": "elementary",
-        "3": "elementary",
-        "4": "elementary",
-        "5": "elementary",
-        "6": "elementary",
-        "7": "junior-high-school",
-        "8": "junior-high-school",
-        "9": "junior-high-school",
-        "10": "junior-high-school",
-    };
+    const {data , error} = await supabase
+    .from('books')
+    .select('*')
 
-    // 2. Translate the grade
-    const slug = gradeToSlugMap[gradeLevel];
-
-    if (!slug) {
-        console.log("No slug found for grade:", gradeLevel);
-        return [];
+    if(error) {
+        console.log(error.message)
     }
 
-    // 3. Query using the translated slug
-    const { data, error } = await supabase
-        .from('fees')
-        .select('*')
-        .eq('slug', slug); // Now this will match 'elementary', 'pre-elementary', etc.
-
-    if (error) {
-        console.error("Supabase Error:", error.message);
-        return [];
-    }
-
-    return data;
+    return data || [];
 }
+

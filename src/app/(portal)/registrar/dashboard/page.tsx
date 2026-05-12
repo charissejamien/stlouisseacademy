@@ -1,5 +1,5 @@
 import Heading from "@/components/shared/Heading";
-import Widgets from "@/components/registrar/Widgets";
+import Widgets from "@/components/registrar/dashboard/Widgets";
 
 export default function Dashboard(){
     return(

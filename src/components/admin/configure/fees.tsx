@@ -6,7 +6,7 @@ import { saveSchoolFee } from "@/app/(portal)/admin/configuration/actions";
 import toast from 'react-hot-toast';
 
 
-export default function FeesInput () {
+export default function ConfigureSchoolFees () {
 
     const [val1, setVal1] = useState("");
     const [val2, setVal2] = useState("");
