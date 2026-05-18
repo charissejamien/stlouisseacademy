@@ -15,12 +15,12 @@ export default function RegistrarSidebar() {
         {label: "Payments", link: "/admin/dashboard", icon:Wallet},
         {label: "DCPR", link: "/admin/dashboard", icon: WalletCards},
         {label: "Payroll", link: "/admin/dashboard", icon: FileText},
-        {label: "Students", link: "/admin/dashboard", icon: FileText},
+        {label: "Students", link: "/registrar/students", icon: FileText},
         {label: "Teachers", link: "/admin/dashboard", icon: FileText},
     ]
 
     return(
-        <div className="bg-sla-blue px-10 rounded-md ml-5 my-10 h-min-screen">
+        <div className="bg-gradient-to-t from-[#3153DE] to-[#4580FF] px-15 rounded-md ml-5 my-10 h-min-screen">
             <div className="flex justify-center my-5 py-5">
                 <Image src="/logo.svg" alt="logo" width={100} height={100}/>
             </div>

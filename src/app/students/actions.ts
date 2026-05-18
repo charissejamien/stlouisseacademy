@@ -46,3 +46,23 @@ export async function getStudentProfile(
 
     return data;
 }
+
+export async function getStudents(studentName: string) {
+    const supabase = await createClient();
+
+    let query = supabase
+        .from("students")
+        .select("*");
+
+    if (studentName) {
+        query = query.ilike("first_name", `%${studentName}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return data;
+}

@@ -1,7 +1,7 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Select,SelectContent,SelectGroup,SelectItem,SelectLabel,SelectTrigger,SelectValue} from "@/components/ui/select"
-import GradeLevelSelect from "@/components/GradeLevelSelect";
+
 import { useActionState, useEffect, useState } from "react";
 import { enrollStudent } from "@/app/(portal)/registrar/enrollment/actions";
 import toast from 'react-hot-toast';
@@ -113,7 +113,7 @@ export default function EnrollmentForm( { gradeLevels, tuitionFees, discounts, b
                 <div className="bg-white p-5 rounded-md flex flex-col gap-3 w-fit">
                     <h2>Academic Placement</h2>
                     <div className="flex gap-5">
-                        <GradeLevelSelect gradeLevels={gradeLevels} onChange={setSelectedGrade}/>
+                        {/* <GradeLevelSelect gradeLevels={gradeLevels} onChange={setSelectedGrade}/>
                         {["7", "8", "9", "10"].includes(selectedGrade) && (
                             <div className="flex items-center space-x-2 border py-1 px-3 rounded-sm bg-input/50">
                                 <input type="checkbox" id="escRecipient" name="escRecipient" onChange={(e) => setEsc(e.target.checked)} className="h-4 w-4"/>
@@ -121,7 +121,7 @@ export default function EnrollmentForm( { gradeLevels, tuitionFees, discounts, b
                                     ESC Recipient (Junior High School)
                                 </label>
                             </div>
-                        )}
+                        )} */}
                     </div>
                     
                 </div>
@@ -155,6 +155,29 @@ export default function EnrollmentForm( { gradeLevels, tuitionFees, discounts, b
                             <Input className="w-45"/>
                         </div>
                     </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-md flex flex-col gap-3 w-fit">
+                    <h2 className="font-medium">Enrollment Settlement</h2>
+                    <div className="flex flex-col">
+                        <label>OR Number</label>
+                        <Input className="w-50" name="orNum"/>
+                    </div>
+                    <div className="flex gap-5">
+                        <div className="flex flex-col">
+                            <label>Amount</label>
+                            <Input name="amount"/>
+                        </div>
+                        <div className="flex flex-col">
+                            <label>Particulars</label>
+                            <Input name="particulars"/>
+                        </div>
+                        <div className="flex flex-col">
+                            <label>Mode of Payment</label>
+                            <Input name="mop"/>
+                        </div>
+                    </div>
+
                 </div>
 
                 <button>submit</button>

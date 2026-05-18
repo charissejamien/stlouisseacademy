@@ -1,12 +1,13 @@
 import StudentSummary from "@/components/parents/StudentSummary"
 import AnnouncementsWidget from "@/components/parents/AnnouncementsWidget";
+import Heading from "@/components/shared/Heading";
 import Link from "next/link";
 
 
 export default function Dashboard() {
     return (
         <div className="w-[80%] mx-auto mt-20 flex flex-col gap-5">
-            <h2 className="text-[24px] font-medium">Welcome, Parent!</h2>
+            <Heading/>
 
             <div>
                 <AnnouncementsWidget/>

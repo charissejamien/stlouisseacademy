@@ -1,19 +1,13 @@
-import ConfigureSchoolFees from "@/components/admin/configure/fees";
-import ConfigureBooks from "@/components/admin/configure/books";
-import ConfigureGradeLevels from "@/components/admin/configure/GradeLevels";
-import ConfigureReportCard from "@/components/admin/configure/reportCard";
+import SystemConfiguration from "@/components/admin/SystemConfiguration";
 
-import GetSchoolFees from "@/components/admin/configure/SchoolFees";
 
 
 export default async function Fees() {
     return(
-        <div>
-            <ConfigureSchoolFees/>
-            <GetSchoolFees/>
-            <ConfigureBooks/>
-            <ConfigureGradeLevels/>
-            <ConfigureReportCard/>
+        <div className="mt-20 px-20">
+            <h2 className="text-[28px] font-semibold">System Configuration</h2>
+            <p>Manage global settings, tuition fee structures, and active discount.</p>
+            <SystemConfiguration/>
 
         </div>
     );

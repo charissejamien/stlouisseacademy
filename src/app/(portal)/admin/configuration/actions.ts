@@ -1,154 +1,67 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 
 
-export async function saveSchoolFee(state:{success:boolean, message:string}, formData:FormData) {
+
+{/* School Year Actions*/}
+export async function saveSchoolYear(startYear: string, endYear: string) {
     const supabase = await createClient();
 
-    const category = formData.get("category");
-    const gradeLevel = formData.get("gradeLevel");
-    const entranceFee = formData.get("entranceFee");
-    const baseTuition = formData.get("baseTuition");
-    const miscellaneous = formData.get("miscellaneous");
-    const totalTuition = formData.get("totalTuition");
-
     const {error} = await supabase
-    .from('tuition_fees')
+    .from('school_years')
     .insert([{
-        grade_level : gradeLevel,
-        grade_category : category,
-        entrance_fee : entranceFee,
-        base_tuition : baseTuition,
-        miscellaneous : miscellaneous,
-        total_tuition : totalTuition
+        start_year: startYear,
+        end_year: endYear,
     }]);
 
     if (error) {
-        return {success:false, message:error.message};
+        throw new Error (error.message);
     }
-
-    return {success:true, message:"Successfully Configured!"};
 }
 
-export async function getTuitionFees () {
-    
+export async function getSchoolYears() {
     const supabase = await createClient();
-
-    const {data, error} = await supabase
-    .from('tuition_fees')
-    .select('*');
-
-    if (error) {
-        console.log(error.message);
-    }
-
-    return data;
-}
-
-export async function getFees () {
-    
-    const supabase = await createClient();
-
-    const {data, error} = await supabase
-    .from('fees')
-    .select('*');
-
-    if (error) {
-        console.log(error.message);
-    }
-
-    return data;
-}
-
-
-export async function updateFee(formData:FormData){
-    const supabase = await createClient();
-
-    const description = formData.get("description");
-    const amount = formData.get("amount");
-
-    const {error} = await supabase
-    .from('fees')
-    .update({description, amount})
-
-    if (error) {
-        return { success: false, message: error.message };
-    }
-
-    revalidatePath("/admin/fees"); 
-    return { success: true, message: "Fee updated!" };
-}
-
-export async function deleteFee(id: string) {
-    const supabase = await createClient();
-
-    const {error} = await supabase
-    .from('fees')
-    .delete()
-    .eq("id", id);
-
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    revalidatePath('admin/fees');
-}
-
-
-export async function saveDiscount(state: {success:boolean, message:string}, formData:FormData) {
-    const supabase = await createClient();
-
-    const name = formData.get("description");
-    const amount = formData.get("amount");
-    const category = formData.get("category")
-
-    const {error} = await supabase
-    .from('discounts')
-    .insert([{
-        name : name,
-        amount : amount,
-        category : category
-    }]);
-
-    if (error) {
-        return {success:false, message: error.message}
-    }
-
-    return {success:true, message: "Discount posted!"}
-
-}
-
-export async function getDiscount() {
-    const supabase = await createClient();
-
 
     const {data , error} = await supabase
-    .from('discounts')
+    .from('school_years')
     .select('*');
 
     if (error) {
-        console.log(error.message);
+        throw new Error (error.message);
     }
 
-    return data;
+    return data
 }
 
 
-export async function saveGradeLevelConfiguration(state:{success:boolean, message:string}, formData:FormData) {
+{/* Grade Levels Actions*/}
+export async function saveGradeLevel(category: string, level: string) {
     const supabase = await createClient();
 
-    const category = formData.get("category");
-    const gradeLevel = formData.get("gradeLevel");
 
     const {error} = await supabase
     .from('grade_levels')
     .insert([{
-        grade_level : gradeLevel,
+        grade_level : level,
         grade_category : category,
-    }]);
+    }])
+    .select("*");
+
+    if (error) {
+        return {success:false, message:error.message};
+    }
+    
+    return {success:true, message:"Successfully Configured!"};
+}
+
+export async function getGradeLevels() {
+    const supabase = await createClient();
+
+
+    const {error} = await supabase
+    .from('grade_levels')
+    .select("*");
 
     if (error) {
         return {success:false, message:error.message};
@@ -158,40 +71,18 @@ export async function saveGradeLevelConfiguration(state:{success:boolean, messag
 }
 
 
-export async function saveSubjectConfiguration (state: {success:boolean, message:string}, formData:FormData) {
+
+{/* Books Actions */}
+export async function saveBookFee(gradeLevel: string, amount: number) {
     const supabase = await createClient();
-
-    const subject = formData.get("subject")
-
-
-    const {error} = await supabase
-    .from('subjects')
-    .insert([{
-        subject: subject,
-    }]);
-
-    if(error) {
-        if (error.code === "23505") {
-            return {success:false, message:("Subject Already Exists!")};
-        }
-        return {success:false, message:(error.message)};
-    }
-
-    return {success:true, message:"Subject Successfully Added!"};
-}
-
-export async function saveBooksConfiguration(state:{success:boolean, message:string}, formData:FormData) {
-    const supabase = await createClient();
-
-    const amount = formData.get("amount");
-    const gradeLevel = formData.get("gradeLevel");
 
     const {error} = await supabase
     .from('books')
-    .insert([{
-        grade_level : gradeLevel,
-        amount : amount,
-    }]);
+    .insert({
+        grade_level: gradeLevel,
+        amount: amount
+    })
+    .select("*");
 
     if (error) {
         return {success:false, message:error.message};
@@ -199,4 +90,89 @@ export async function saveBooksConfiguration(state:{success:boolean, message:str
     
     return {success:true, message:"Successfully Configured!"};
 }
+
+export async function getBookFee() {
+    const supabase = await createClient();
+
+    const {data , error} = await supabase
+    .from('books')
+    .select('*');
+
+    if (error) {
+        throw new Error(error.message)
+    }
+    
+    return data
+}
+
+export async function deleteBookFee(id: number) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('books')
+    .delete()
+    .eq("id", id);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+{/* Tuition Fee Actions */}
+export async function saveTuitionFee(gradeLevel: string, baseTuition: number, miscellaneous: number, totalTuition: number) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('books')
+    .insert({
+        grade_level: gradeLevel,
+        base_tuition: baseTuition,
+        miscellaneous : miscellaneous,
+        total_tuition: totalTuition,
+    });
+
+    if (error) {
+       throw new Error (error.message);
+    }   
+}
+
+
+export async function getTuitionFees() {
+    const supabase = await createClient();
+
+    const {data , error} = await supabase
+    .from('tuition_fees')
+    .select('*');
+
+    if (error) {
+        throw new Error(error.message)
+    }
+    
+    return data
+}
+
+export async function updateTuitionFee(
+    id: number,
+    baseTuition: number,
+    miscellaneous: number,
+    totalTuition: number
+) {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from('tuition_fees')
+        .update({
+            base_tuition: baseTuition,
+            miscellaneous: miscellaneous,
+            total_tuition: totalTuition,
+        })
+        .eq('id', id); 
+
+    if (error) {
+        throw new Error(error.message);
+    }
+}
+
+
+
 
