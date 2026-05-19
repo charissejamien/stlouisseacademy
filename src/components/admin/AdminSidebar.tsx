@@ -22,7 +22,7 @@ export default function AdminSidebar() {
 
 
   return(
-    <div className="bg-gradient-to-t from-[#3153DE] to-[#4580FF] p-20 m-5 rounded-md">
+    <div className="bg-gradient-to-t from-[#3153DE] to-[#4580FF] p-10 m-5 rounded-md text-white flex flex-col gap-5">
         {links.map((l , index) => (
           <Link key={index} href={l.link} className='flex flex-row gap-2 items-center'>
             <l.icon/>

@@ -9,7 +9,7 @@ export default function Layout({
     <div className="flex min-h-screen">
       <AdminSidebar />
 
-      <main className="flex-1 p-4">
+      <main className="flex-1">
         {children}
       </main>
     </div>
