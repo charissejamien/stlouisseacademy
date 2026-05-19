@@ -64,7 +64,7 @@ import toast from "react-hot-toast";
 import { format } from "date-fns"
 
 
-import { deleteMerchandise, saveSchoolYear } from "@/app/(portal)/admin/configuration/actions";
+import { deleteMerchandise, getDiscounts, saveDiscount, deleteDiscount, updateDiscount, saveSchoolYear } from "@/app/(portal)/admin/configuration/actions";
 import { getSchoolYears } from "@/app/(portal)/admin/configuration/actions";
 import { saveBookFee } from "@/app/(portal)/admin/configuration/actions";
 import { getBookFee } from "@/app/(portal)/admin/configuration/actions";
@@ -81,6 +81,8 @@ import { saveMerchandise, getMerchandise } from "@/app/(portal)/admin/configurat
 
 export default function SystemConfiguration() {
 
+    const queryClient = useQueryClient()
+
     const {data} = useQuery({queryKey: ["levels"], queryFn: getGradeLevels})
     const [baseTuition, setBaseTuition] = useState(0)
     const [miscellaneous, setMiscellaneous] = useState(0)
@@ -93,18 +95,26 @@ export default function SystemConfiguration() {
     const { data : schoolYears} = useQuery({queryKey: ["schoolYears"], queryFn: getSchoolYears})
     const { data : tuitionFees} = useQuery({queryKey: ["tuitionFees"], queryFn: getTuitionFees})
     const { data : merchandise} = useQuery({queryKey: ["merchandise"], queryFn: getMerchandise})
+    const { data: discounts} = useQuery({queryKey: ["discounts"], queryFn: getDiscounts})
 
     const [startYear, setStartYear] = useState("")
     const [endYear, setEndYear] = useState("")
     const [startDate, setStartDate] = useState<Date | undefined>()
     const [endDate, setEndDate] = useState<Date | undefined>()
 
+
+    const [discountsModal, setDiscountsModal] = useState(false)
+
     const [merchandiseName, setMerchandiseName] = useState("")
     const [unit, setUnit] = useState("")
     const [price, setPrice] = useState(0)
     const [hasSizes, setHasSizes] = useState(false)
 
-    const queryClient = useQueryClient()
+    const [discountName, setDiscountName] = useState("")
+    const [discCategory, setDiscCategory] = useState("")
+    const [discAmount, setDiscAmount] = useState(0)
+
+    
 
     const mutation = useMutation({
         mutationFn: ({
@@ -184,6 +194,7 @@ export default function SystemConfiguration() {
             setMerchandiseName("")
             setUnit("")
             setPrice(0)
+            queryClient.invalidateQueries({queryKey: ["merchandise"]})
         },
     })
 
@@ -196,6 +207,53 @@ export default function SystemConfiguration() {
         onError: (res) => {
             toast.error(res.message)
         },
+    })
+
+    const discountsMutation = useMutation ({
+        mutationFn: ({
+            discountName,
+            discCategory,
+            discAmount
+        } : {
+            discountName: string,
+            discCategory: string,
+            discAmount: number
+        }) => saveDiscount(discountName, discCategory, discAmount),
+        onSuccess: (res) => {
+            toast.success("Discount Successfully Added!")
+            setDiscountsModal(false)
+            setDiscountName("")
+            setDiscCategory("")
+            setDiscAmount(0)
+            queryClient.invalidateQueries({queryKey: ['discounts']})
+        },
+        onError: (res) => {
+            toast.error(res.message)
+        },
+    })
+
+    const updateDiscountMutation = useMutation({
+        mutationFn: ({
+            id,
+            amount
+        } : {
+            id: string,
+            amount: number
+        }) => updateDiscount(id, amount),
+        onSuccess: (res) => {
+            toast.success("Discount Successfully Added!")
+            setDiscountsModal(false)
+            setDiscAmount(0)
+            queryClient.invalidateQueries({queryKey: ['discounts']})
+        },
+    })
+
+    const deleteDiscountMutation = useMutation({
+        mutationFn: (id: string) => deleteDiscount(id), 
+        onSuccess: (res) => {
+            toast.success("Discount Successfully Deleted!")
+            queryClient.invalidateQueries({queryKey: ['discounts']})
+        }
     })
 
 
@@ -511,7 +569,9 @@ export default function SystemConfiguration() {
                                 </DialogContent>
                             </Dialog>
                         </CardHeader>
-                        <Separator/>
+                        <div className="mx-5">
+                            <Separator/>
+                        </div>
                         <CardContent>
                             <div>
                                 <Table>
@@ -696,6 +756,79 @@ export default function SystemConfiguration() {
                                     </TableBody>
                                 </Table>
                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Discounts Configuration */}
+                <TabsContent value="discounts" className="flex flex-col gap-10">
+                    <Card>
+                        <CardHeader className="flex items-center justify-between">
+                            <CardTitle>Discounts Management</CardTitle>
+                            <Dialog open={discountsModal} onOpenChange={setDiscountsModal}>
+                                <DialogTrigger>
+                                    <Button>+ Add New Discount</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogTitle>Add New Discount</DialogTitle>
+                                    <FieldGroup  className="flex flex-row gap-5">
+                                        <Field>
+                                            <FieldLabel>Discount Specification</FieldLabel>
+                                            <FieldLabel className="text-[12px] text-sla-gray leading-none">(First, Varsity)</FieldLabel>
+                                            <Input value={discountName} onChange={(e) => setDiscountName(e.target.value)}/>
+                                        </Field>
+                                        <Field>
+                                            <FieldLabel>Category</FieldLabel>
+                                            <FieldLabel className="text-[12px] text-sla-gray leading-none">(Academic, Payment, Sibling)</FieldLabel>
+                                            <Input value={discCategory} onChange={(e) => setDiscCategory(e.target.value)}/>
+                                        </Field>
+                                    </FieldGroup>
+                                        <Field>
+                                            <FieldLabel>Amount in Percentage</FieldLabel>
+                                            <Input value={discAmount} onChange={(e) => setDiscAmount(Number(e.target.value))}/>
+                                        </Field>
+                                    <Button onClick={() => discountsMutation.mutate({discountName, discCategory, discAmount})}>Add Discount</Button>
+                                    
+                                </DialogContent>
+                            </Dialog>
+                        </CardHeader>
+                        <Separator/>
+                        <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                        <TableHead className="w-50">Discount</TableHead>
+                                        <TableHead className="w-35">Category</TableHead>
+                                        <TableHead className="w-35">Amount</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {discounts?.map((d , index) => (
+                                        <TableRow key={index}>
+                                            <TableCell className="font-medium w-50">{d.name}</TableCell>
+                                            <TableCell className="w-35">{d.category}</TableCell>
+                                            <TableCell className="w-35">{d.amount}%</TableCell>
+                                            <TableCell className="flex gap-2">
+                                                <Dialog>
+                                                    <DialogTrigger>
+                                                        <Button><Pencil/></Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogTitle>Edit {d.name} Amount</DialogTitle>
+                                                        <Field>
+                                                            <FieldLabel>Amount in Percentage</FieldLabel>
+                                                            <Input value={discAmount} onChange={(e) => setDiscAmount(Number(e.target.value))}/>
+                                                        </Field>
+                                                        <Button onClick={() => updateDiscountMutation.mutate({id: d.id, amount: discAmount})}>Update Amount</Button>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button onClick={() => deleteDiscountMutation.mutate(d.id)}><Trash2/></Button>
+                                            </TableCell>
+                                            
+                                        </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                         </CardContent>
                     </Card>
                 </TabsContent>

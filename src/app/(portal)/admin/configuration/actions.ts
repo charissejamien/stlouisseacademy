@@ -233,6 +233,65 @@ export async function deleteMerchandise(id: string) {
     }
 }
 
+{/* Discounts Actions */}
+export async function saveDiscount (name: string, category: string, amount: number) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('discounts')
+    .insert({
+        name: name,
+        category: category,
+        amount: amount
+    });
+
+    if (error) {
+        throw new Error (error.message);
+    }
+}
+
+export async function getDiscounts() {
+    const supabase = await createClient();
+
+    const {data , error} = await supabase
+    .from('discounts')
+    .select('*');
+
+    if (error) {
+        throw new Error(error.message)
+    }
+    
+    return data
+}
+
+export async function updateDiscount(id: string, amount: number) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('discounts')
+    .update({
+        amount: amount
+    })
+    .eq('id', id)
+
+    if (error) {
+        throw new Error(error.message)
+    }
+}
+
+export async function deleteDiscount(id: string) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('discounts')
+    .delete()
+    .eq('id', id)
+
+    if (error) {
+        throw new Error(error.message)
+    }
+}
+
 
 
 

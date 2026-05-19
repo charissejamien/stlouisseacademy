@@ -5,7 +5,7 @@ import InventorySummary from "@/components/admin/dashboard/InventorySummary";
 
 export default function Dashboard() {
     return(
-        <div className="w-[80%] mx-auto mt-20 flex flex-col gap-5">
+        <div className="w-[80%] mx-auto mt-5 flex flex-col gap-5">
             <Heading/>
 
             <div className="flex flex-col gap-3">
