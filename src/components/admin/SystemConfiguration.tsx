@@ -54,7 +54,7 @@ import { Input } from "../ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
-import { Pen, Pencil , Trash2 } from 'lucide-react'
+import { Pencil , Trash2 } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react";
 
@@ -64,7 +64,7 @@ import toast from "react-hot-toast";
 import { format } from "date-fns"
 
 
-import { saveSchoolYear } from "@/app/(portal)/admin/configuration/actions";
+import { deleteMerchandise, saveSchoolYear } from "@/app/(portal)/admin/configuration/actions";
 import { getSchoolYears } from "@/app/(portal)/admin/configuration/actions";
 import { saveBookFee } from "@/app/(portal)/admin/configuration/actions";
 import { getBookFee } from "@/app/(portal)/admin/configuration/actions";
@@ -75,12 +75,13 @@ import { getTuitionFees } from "@/app/(portal)/admin/configuration/actions";
 import { updateTuitionFee } from "@/app/(portal)/admin/configuration/actions";
 
 
+import { saveMerchandise, getMerchandise } from "@/app/(portal)/admin/configuration/actions";
+
 
 
 export default function SystemConfiguration() {
 
-    const {data, error} = useQuery({queryKey: ["levels"], queryFn: getGradeLevels})
-    const [checked, setChecked] = useState(false)
+    const {data} = useQuery({queryKey: ["levels"], queryFn: getGradeLevels})
     const [baseTuition, setBaseTuition] = useState(0)
     const [miscellaneous, setMiscellaneous] = useState(0)
 
@@ -91,11 +92,17 @@ export default function SystemConfiguration() {
     const { data : books} = useQuery({queryKey: ["books"], queryFn: getBookFee})
     const { data : schoolYears} = useQuery({queryKey: ["schoolYears"], queryFn: getSchoolYears})
     const { data : tuitionFees} = useQuery({queryKey: ["tuitionFees"], queryFn: getTuitionFees})
+    const { data : merchandise} = useQuery({queryKey: ["merchandise"], queryFn: getMerchandise})
 
     const [startYear, setStartYear] = useState("")
     const [endYear, setEndYear] = useState("")
     const [startDate, setStartDate] = useState<Date | undefined>()
     const [endDate, setEndDate] = useState<Date | undefined>()
+
+    const [merchandiseName, setMerchandiseName] = useState("")
+    const [unit, setUnit] = useState("")
+    const [price, setPrice] = useState(0)
+    const [hasSizes, setHasSizes] = useState(false)
 
     const queryClient = useQueryClient()
 
@@ -128,16 +135,16 @@ export default function SystemConfiguration() {
             endYear: string
         }) => saveSchoolYear(startYear, endYear),
         onSuccess: () => {
-            toast.success("Configurtd")
+            toast.success("Successfuly Added!")
+            setOpen(false)
             setStartYear("")
             setEndYear("")
-
         },
         onError: (res) => {
             toast.error(res.message)
         },
     })
-    
+
 
     const updateTuitionMutation = useMutation({
         mutationFn: ({
@@ -159,6 +166,37 @@ export default function SystemConfiguration() {
         },
     })
         
+    const merchandiseMutation = useMutation({
+        mutationFn: ({
+            merchandiseName,
+            unit,
+            price,
+            hasSizes
+        } : {
+            merchandiseName: string
+            unit: string
+            price: number
+            hasSizes: boolean
+        }) => saveMerchandise(merchandiseName, unit, price, hasSizes),
+        onSuccess: (res) => {
+            toast.success('Successfuly Added!')
+            setOpen(false)
+            setMerchandiseName("")
+            setUnit("")
+            setPrice(0)
+        },
+    })
+
+    const deleteMerchandiseMutation = useMutation({
+        mutationFn: (id:string) => deleteMerchandise(id),
+        onSuccess: (res) => {
+            toast.success('Successfuly Deleted')
+            queryClient.invalidateQueries({queryKey: ["merchandise"]})
+        },
+        onError: (res) => {
+            toast.error(res.message)
+        },
+    })
 
 
     const sizes = ["6", "8", "10", "12", "14", "16", "18", "20", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL" ]
@@ -178,7 +216,7 @@ export default function SystemConfiguration() {
                     <Card>
                         <CardHeader className="flex items-center justify-between">
                             <CardTitle>School Year Management</CardTitle>
-                            <Dialog>
+                            <Dialog open={open} onOpenChange={setOpen}>
                                 <DialogTrigger>
                                     <Button>+ Add New School Year</Button>
                                 </DialogTrigger>
@@ -433,7 +471,6 @@ export default function SystemConfiguration() {
                                     </TableBody>
                                 </Table>
                             </div>
-                            
                         </CardContent>
                     </Card>
 
@@ -444,10 +481,10 @@ export default function SystemConfiguration() {
                             <CardTitle>Book Fees</CardTitle>
                             <Dialog open={open} onOpenChange={setOpen}>
                                 <DialogTrigger>
-                                    <Button>+ Add New Book Fee</Button>
+                                    <Button>+ Addk Fee</Button>
                                 </DialogTrigger>
                                 <DialogContent>
-                                    <DialogTitle>Add New Book Fee</DialogTitle>
+                                    <DialogTitle>Addk Fee</DialogTitle>
                                     <FieldGroup className="flex flex-row gap-5">
                                         <Field>
                                             <FieldLabel>Grade Level</FieldLabel>
@@ -477,16 +514,39 @@ export default function SystemConfiguration() {
                         <Separator/>
                         <CardContent>
                             <div>
-                                {books?.map((b , index) => (
-                                    <div key={index} className="flex gap-5 p-3 items-center justify-between">
-                                        <p className="w-40">{b.grade_level}</p>
-                                        <p className="w-25">P{b.amount.toLocaleString()}.00</p>
-                                        <div className="flex">
-                                            <Button className="bg-white hover:bg-white group" onClick={() => deleteBookFee(b.id)}><Pencil className="text-black group-hover:text-red-700"/></Button>
-                                            <Button className="bg-white hover:bg-white group" ><Trash2 className="text-black group-hover:text-red-700"/></Button>
-                                        </div>
-                                    </div>
-                                ))}
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                        <TableHead className="w-50">Grade Level</TableHead>
+                                        <TableHead className="w-35">Amount</TableHead>
+                                        <TableHead className="w-35">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {books?.map((b, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell className="font-medium w-50">{b.grade_level}</TableCell>
+                                            <TableCell className="w-35">P{b.amount.toLocaleString()}.00</TableCell>
+                                            <TableCell className="flex gap-2">
+                                                <Dialog>
+                                                    <DialogTrigger>
+                                                        <Button><Pencil/></Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogTitle>Edit {b.grade_level} Books</DialogTitle>
+                                                        <Field>
+                                                            <FieldLabel>Amount</FieldLabel>
+                                                            <Input name="baseTuition" onChange={(e) => setBaseTuition(Number(e.target.value))}/>
+                                                        </Field>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button ><Trash2/></Button>
+                                            </TableCell>
+                                            
+                                        </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </div>
                         </CardContent>
                     </Card>
@@ -537,36 +597,35 @@ export default function SystemConfiguration() {
                     <Card>
                         <CardHeader className="flex items-center justify-between">
                             <CardTitle>Merchandise</CardTitle>
-                            <Dialog>
+                            <Dialog open={open} onOpenChange={setOpen}>
                                 <DialogTrigger>
                                     <Button>+ Add New Merchandise</Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogTitle>Add New Merchandise</DialogTitle>
-                                    <form action="">
                                     <FieldGroup>
                                         <Field>
                                             <FieldLabel className="leading-none">Merchandise Name</FieldLabel>
                                             <FieldLabel className="text-[12px] text-sla-gray leading-none">(Logo, Upper Cloth, Lower Cloth)</FieldLabel>
-                                            <Input></Input>
+                                            <Input value={merchandiseName} onChange={(e) => setMerchandiseName(e.target.value)}/>
                                         </Field>
                                         <div className="flex gap-5">
                                             <Field>
                                                 <FieldLabel>Unit<span className="text-[12px] text-sla-gray">(yards, piece)</span></FieldLabel>
-                                                <Input></Input>
+                                                <Input value={unit} onChange={(e) => setUnit(e.target.value)}/>
                                             </Field>
                                             <Field>
-                                                <FieldLabel>Amount per Unit</FieldLabel>
-                                                <Input></Input>
+                                                <FieldLabel>Price per Unit</FieldLabel>
+                                                <Input value={price} onChange={(e) => setPrice(Number(e.target.value))}/>
                                             </Field>
                                         </div>
                                         <Field orientation={"horizontal"}>
-                                            <Checkbox className="size-5" checked={checked} onCheckedChange={(checked) => setChecked(checked === true)}/>
+                                            <Checkbox className="size-5" checked={hasSizes} onCheckedChange={(hasSizes) => setHasSizes(hasSizes === true)}/>
                                             <FieldLabel>Size Chart</FieldLabel>
                                         </Field>
                                     </FieldGroup>
 
-                                    {checked && (
+                                    {hasSizes && (
                                         <Field className="mt-5">
                                             <FieldLabel className="leading-none">Sizes Offered</FieldLabel>
                                             <div className="grid grid-cols-2">
@@ -581,20 +640,62 @@ export default function SystemConfiguration() {
                                             <Button> + Custom Sized</Button>
                                         </Field>
                                     )}
-
-                                    
-                                    </form>
-                                    <DialogClose><Button>Save</Button></DialogClose>
+                                    <Button onClick={() => merchandiseMutation.mutate({merchandiseName, unit, price, hasSizes})}>Save</Button>
                                     
                                 </DialogContent>
                             </Dialog>
                         </CardHeader>
                         <Separator/>
                         <CardContent>
-                            <div className="flex flex-col gap-2">
-                                
+                            <div>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                        <TableHead className="w-50">Merchandise</TableHead>
+                                        <TableHead className="w-35">Unit</TableHead>
+                                        <TableHead className="w-35">Price</TableHead>
+                                        <TableHead className="w-35">Stock</TableHead>
+                                        <TableHead className="w-35">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {merchandise?.map((m , index) => (
+                                        <TableRow key={index}>
+                                            <TableCell className="font-medium w-50">{m.name}</TableCell>
+                                            <TableCell className="w-35">{m.unit}</TableCell>
+                                            <TableCell className="w-35">P{m.price}.00</TableCell>
+                                            <TableCell className="w-35">{m.stock}</TableCell>
+                                            <TableCell className="flex gap-2">
+                                                <Dialog>
+                                                    <DialogTrigger>
+                                                        <Button><Pencil/></Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogTitle>Edit {m.name} Details</DialogTitle>
+                                                        <FieldGroup className="flex flex-row gap-5">
+                                                            <Field>
+                                                                <FieldLabel>Base Tuition</FieldLabel>
+                                                                <Input name="baseTuition" onChange={(e) => setBaseTuition(Number(e.target.value))}/>
+                                                            </Field>
+                                                            <Field>
+                                                                <FieldLabel>Miscellaneous</FieldLabel>
+                                                                <Input name="miscellaneous" onChange={(e) => setMiscellaneous(Number(e.target.value))}/>
+                                                            </Field>
+                                                            <Field>
+                                                                <FieldLabel>Total Tuition</FieldLabel>
+                                                                <Input value={totalTuition.toLocaleString()}/>
+                                                            </Field>
+                                                        </FieldGroup>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button onClick={() => deleteMerchandiseMutation.mutate(m.id)}><Trash2/></Button>
+                                            </TableCell>
+                                            
+                                        </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </div>
-                            
                         </CardContent>
                     </Card>
                 </TabsContent>
