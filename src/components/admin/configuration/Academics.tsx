@@ -7,14 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
@@ -24,15 +17,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -55,7 +39,6 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
 import { Pencil , Trash2 } from 'lucide-react'
-import { Checkbox } from "@/components/ui/checkbox"
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -63,10 +46,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import toast from "react-hot-toast";
 
-import { saveSchoolYear } from "@/app/(portal)/admin/configuration/actions"
-import { getSchoolYears } from "@/app/(portal)/admin/configuration/actions"
+import { saveSchoolYear, getSchoolYears, deleteSchoolYear } from "@/app/(portal)/admin/configuration/actions"
 
-import { getGradeLevels } from "@/app/(portal)/admin/configuration/actions"
+import { getGradeLevels, handleSchoolYearChange } from "@/app/(portal)/admin/configuration/actions"
 
 export default function AcademicsConfiguration() {
 
@@ -97,14 +79,26 @@ export default function AcademicsConfiguration() {
             setSchoolYearsModal(false)
             setStartYear("")
             setEndYear("")
+            queryClient.invalidateQueries({queryKey: ["schoolYears"]})
         },
         onError: (res) => {
             toast.error(res.message)
         },
     })
 
+    const deleteSchoolyearMutation = useMutation({
+        mutationFn: (id: string) => deleteSchoolYear(id),
+        onSuccess: () => {
+            toast.success("School Year Successfully Deleted!")
+            queryClient.invalidateQueries({queryKey: ["schoolYears"]})
+        },
+        onError: (res) => {
+            toast.error(res.message)
+        }
+    })
+
     return(
-        <div>
+        <div className="flex flex-col gap-10">
             <Card>
                 <CardHeader className="flex items-center justify-between">
                     <CardTitle>School Year Management</CardTitle>
@@ -136,8 +130,18 @@ export default function AcademicsConfiguration() {
                                 <p>SY {s.start_year} - {s.end_year}</p>
                                 <div className="flex gap-2">
                                     <Label>Set Active</Label>
-                                    <Switch id="activeYear" />
+                                    <Switch
+                                        checked={s.is_active}
+                                        onCheckedChange={async (checked) => {
+                                            await handleSchoolYearChange(s.id, checked)
+
+                                            queryClient.invalidateQueries({
+                                            queryKey: ["schoolYears"],
+                                            })
+                                        }}
+                                    />
                                 </div>
+                                <div>
                                 <Dialog>
                                     <DialogTrigger>
                                         <Button><Pencil/></Button>
@@ -190,9 +194,11 @@ export default function AcademicsConfiguration() {
                                                 </Popover>
                                             </Field>
                                         </FieldGroup>
-                                        <Button onClick={() => schoolYearMutation.mutate({startYear, endYear})}>Add</Button>
+                                        <Button onClick={() => schoolYearMutation.mutate({startYear, endYear})}>Add School Year</Button>
                                     </DialogContent>
                                 </Dialog>
+                                <Button onClick={() => deleteSchoolyearMutation.mutate(s.id)}><Trash2/></Button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -221,40 +227,51 @@ export default function AcademicsConfiguration() {
                                 </Field>
                             </FieldGroup>
                             </form>
-                            <DialogClose><Button>Save</Button></DialogClose>
+                            <Button>Add Grade Level</Button>
                         </DialogContent>
                     </Dialog>
                 </CardHeader>
                 <Separator/>
                 <CardContent>
                     <div className="flex flex-col gap-2">
-                        {levels?.map((d, index) => (
-                            <div key={index} className="border rounded-sm p-3 flex justify-between">
-                                <p>{d.grade_level}</p>
-                                <Dialog >
-                                    <DialogTrigger>
-                                        <Button><Pencil/></Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogTitle>Edit Grade Level</DialogTitle>
-                                        <FieldGroup  className="flex flex-row gap-5">
-                                            <Field>
-                                                <FieldLabel>Class Size</FieldLabel>
-                                                <Input></Input>
-                                            </Field>
-                                            <Field>
-                                                <FieldLabel>No. of Teacher per Class</FieldLabel>
-                                                <Input></Input>
-                                            </Field>
-                                        </FieldGroup>
-                                        <DialogClose><Button>Save</Button></DialogClose>
-                                        
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        ))}
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead className="w-50">Grade Level</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {levels?.map((l , index) => (
+                            <TableRow key={index} className="flex justify-between">
+                                <TableCell className="font-medium w-50">{l.grade_level}</TableCell>
+                                <TableCell className="flex gap-2">
+                                    <Dialog>
+                                        <DialogTrigger>
+                                            <Button><Pencil/></Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogTitle>Edit {l.grade_level}</DialogTitle>
+                                            <FieldGroup>
+                                                <Field>
+                                                    <FieldLabel>Amount in Percentage</FieldLabel>
+                                                    <Input />
+                                                </Field>
+                                                <Field>
+                                                    <FieldLabel>Amount in Percentage</FieldLabel>
+                                                    <Input />
+                                                </Field>
+                                            </FieldGroup>
+
+                                            <Button>Update Amount</Button>
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Button ><Trash2/></Button>
+                                </TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                     </div>
-                    
                 </CardContent>
             </Card>
         </div>
