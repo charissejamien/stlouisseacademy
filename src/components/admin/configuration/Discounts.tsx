@@ -7,14 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
@@ -24,21 +17,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import {
   Table,
   TableBody,
@@ -51,16 +29,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
 import { Pencil , Trash2 } from 'lucide-react'
-import { Checkbox } from "@/components/ui/checkbox"
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { format } from "date-fns"
 import toast from "react-hot-toast";
 
 import { saveDiscount, getDiscounts, updateDiscount, deleteDiscount } from "@/app/(portal)/admin/configuration/actions";

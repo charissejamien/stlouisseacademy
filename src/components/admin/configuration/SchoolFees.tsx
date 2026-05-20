@@ -7,12 +7,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import {
   Dialog,
   DialogClose,
   DialogContent,
@@ -33,12 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import {
   Table,
   TableBody,
@@ -51,8 +39,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
 
 import { Pencil , Trash2 } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
@@ -60,7 +46,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { format } from "date-fns"
 import toast from "react-hot-toast";
 
 import { saveTuitionFee, getTuitionFees, updateTuitionFee } from "@/app/(portal)/admin/configuration/actions";
@@ -97,7 +82,7 @@ export default function SchoolFeesConfiguration() {
     const { data : merchandise} = useQuery({queryKey: ["merchandise"], queryFn: getMerchandise})
     const { data : levels} = useQuery({queryKey: ["levels"], queryFn: getGradeLevels})
 
-    const saveTuitionMutation = useMutation({
+    const saveBookMutation = useMutation({
         mutationFn: ({
             gradeLevel,
             amount,
@@ -106,8 +91,8 @@ export default function SchoolFeesConfiguration() {
             amount: number
         }) => saveBookFee(gradeLevel, amount),
         onSuccess: () => {
-            toast.success("Configurtd")
-            setOpen(false)
+            toast.success("Successfully Added Book Fee")
+            setBooksModal(false)
             setGradeLevel("")
             setAmount(0)
             queryClient.invalidateQueries({queryKey: ["books"]})
@@ -129,7 +114,7 @@ export default function SchoolFeesConfiguration() {
             miscellaneous : number
             totalTuition : number
         }) => updateTuitionFee(id, baseTuition, miscellaneous, totalTuition),
-        onSuccess: (res) => {
+        onSuccess: () => {
             toast.success('Successfuly Updated!')
         },
         onError: (res) => {
@@ -149,7 +134,7 @@ export default function SchoolFeesConfiguration() {
             price: number
             hasSizes: boolean
         }) => saveMerchandise(merchandiseName, unit, price, hasSizes),
-        onSuccess: (res) => {
+        onSuccess: () => {
             toast.success('Successfuly Added!')
             setOpen(false)
             setMerchandiseName("")
@@ -161,7 +146,7 @@ export default function SchoolFeesConfiguration() {
 
     const deleteMerchandiseMutation = useMutation({
         mutationFn: (id:string) => deleteMerchandise(id),
-        onSuccess: (res) => {
+        onSuccess: () => {
             toast.success('Successfuly Deleted')
             queryClient.invalidateQueries({queryKey: ["merchandise"]})
         },
@@ -174,7 +159,7 @@ export default function SchoolFeesConfiguration() {
     const totalTuition = baseTuition + miscellaneous;
 
     return(
-        <div>
+        <div className="flex flex-col gap-10">
             <Card>
                 <CardHeader className="flex items-center justify-between">
                     <CardTitle>Tuition Fees</CardTitle>
@@ -279,12 +264,12 @@ export default function SchoolFeesConfiguration() {
             <Card>
                 <CardHeader className="flex items-center justify-between">
                     <CardTitle>Book Fees</CardTitle>
-                    <Dialog open={open} onOpenChange={setOpen}>
+                    <Dialog open={booksModal} onOpenChange={setBooksModal}>
                         <DialogTrigger>
-                            <Button>+ Addk Fee</Button>
+                            <Button>+ Add Book Fee</Button>
                         </DialogTrigger>
                         <DialogContent>
-                            <DialogTitle>Addk Fee</DialogTitle>
+                            <DialogTitle>Add Book Fee</DialogTitle>
                             <FieldGroup className="flex flex-row gap-5">
                                 <Field>
                                     <FieldLabel>Grade Level</FieldLabel>
@@ -307,7 +292,7 @@ export default function SchoolFeesConfiguration() {
                                     <Input value={amount} onChange={(e) => setAmount(Number(e.target.value))}/>
                                 </Field>
                             </FieldGroup>
-                            <Button onClick={() => saveTuitionMutation.mutate({gradeLevel , amount})}>Save</Button>
+                            <Button onClick={() => saveBookMutation.mutate({gradeLevel , amount})}>Save</Button>
                         </DialogContent>
                     </Dialog>
                 </CardHeader>

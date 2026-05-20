@@ -25,7 +25,8 @@ export async function getSchoolYears() {
 
     const {data , error} = await supabase
     .from('school_years')
-    .select('*');
+    .select('*')
+    .order("start_year", { ascending: true })
 
     if (error) {
         throw new Error (error.message);
@@ -38,12 +39,53 @@ export async function deleteSchoolYear(id: string) {
     const supabase = await createClient();
 
     const {error} = await supabase
-    .from('merchandise')
+    .from('school_years')
     .delete()
     .eq('id', id)
 
     if (error) {
         throw new Error(error.message)
+    }
+}
+
+export async function handleSchoolYearChange( id: string, checked: boolean) {
+    const supabase = await createClient()
+
+    if (!checked) {
+    const { error } = await supabase
+        .from("school_years")
+        .update({
+        is_active: false,
+        })
+        .eq("id", id)
+
+    if (error) {
+        throw new Error(error.message)
+    }
+
+    return
+    }
+
+    const { error: resetError } = await supabase
+    .from("school_years")
+    .update({
+        is_active: false,
+    })
+    .not("id", "is", null)
+
+    if (resetError) {
+    throw new Error(resetError.message)
+    }
+
+    const { error: activeError } = await supabase
+    .from("school_years")
+    .update({
+        is_active: true,
+    })
+    .eq("id", id)
+
+    if (activeError) {
+        throw new Error(activeError.message)
     }
 }
 
