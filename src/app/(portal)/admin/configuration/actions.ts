@@ -64,7 +64,7 @@ export async function saveGradeLevel(category: string, level: string) {
     if (error) {
         return {success:false, message:error.message};
     }
-    
+
     return {success:true, message:"Successfully Configured!"};
 }
 
@@ -72,15 +72,15 @@ export async function getGradeLevels() {
     const supabase = await createClient();
 
 
-    const {error} = await supabase
+    const {data , error} = await supabase
     .from('grade_levels')
     .select("*");
 
     if (error) {
-        return {success:false, message:error.message};
+        throw new Error(error.message)
     }
-    
-    return {success:true, message:"Successfully Configured!"};
+
+    return data
 }
 
 
