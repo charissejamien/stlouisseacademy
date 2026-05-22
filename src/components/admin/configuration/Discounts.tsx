@@ -50,7 +50,7 @@ export default function DiscountsConfiguration() {
 
     const [discountName, setDiscountName] = useState("")
     const [discCategory, setDiscCategory] = useState("")
-    const [discAmount, setDiscAmount] = useState(0)
+    const [discAmount, setDiscAmount] = useState("")
 
     const discountsMutation = useMutation ({
         mutationFn: ({
@@ -60,14 +60,14 @@ export default function DiscountsConfiguration() {
         } : {
             discountName: string,
             discCategory: string,
-            discAmount: number
+            discAmount: string
         }) => saveDiscount(discountName, discCategory, discAmount),
         onSuccess: (res) => {
             toast.success("Discount Successfully Added!")
             setDiscountsModal(false)
             setDiscountName("")
             setDiscCategory("")
-            setDiscAmount(0)
+            setDiscAmount("")
             queryClient.invalidateQueries({queryKey: ['discounts']})
         },
         onError: (res) => {
@@ -81,12 +81,12 @@ export default function DiscountsConfiguration() {
             amount
         } : {
             id: string,
-            amount: number
+            amount: string
         }) => updateDiscount(id, amount),
         onSuccess: (res) => {
             toast.success("Discount Successfully Added!")
             setDiscountsModal(false)
-            setDiscAmount(0)
+            setDiscAmount("")
             queryClient.invalidateQueries({queryKey: ['discounts']})
         },
     })
@@ -123,7 +123,7 @@ export default function DiscountsConfiguration() {
                         </FieldGroup>
                             <Field>
                                 <FieldLabel>Amount in Percentage</FieldLabel>
-                                <Input value={discAmount} onChange={(e) => setDiscAmount(Number(e.target.value))}/>
+                                <Input value={discAmount} onChange={(e) => setDiscAmount(e.target.value)} step={"0.01"}/>
                             </Field>
                         <Button onClick={() => discountsMutation.mutate({discountName, discCategory, discAmount})}>Add Discount</Button>
                     </DialogContent>
@@ -154,7 +154,7 @@ export default function DiscountsConfiguration() {
                                             <DialogTitle>Edit {d.name} Amount</DialogTitle>
                                             <Field>
                                                 <FieldLabel>Amount in Percentage</FieldLabel>
-                                                <Input value={discAmount} onChange={(e) => setDiscAmount(Number(e.target.value))}/>
+                                                <Input value={discAmount} onChange={(e) => setDiscAmount(e.target.value)} step={"0.01"}/>
                                             </Field>
                                             <Button onClick={() => updateDiscountMutation.mutate({id: d.id, amount: discAmount})}>Update Amount</Button>
                                         </DialogContent>

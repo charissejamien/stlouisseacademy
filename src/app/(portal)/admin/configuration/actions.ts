@@ -116,7 +116,8 @@ export async function getGradeLevels() {
 
     const {data , error} = await supabase
     .from('grade_levels')
-    .select("*");
+    .select("*")
+    .order("grade_level", {ascending: false})
 
     if (error) {
         throw new Error(error.message)
@@ -128,14 +129,14 @@ export async function getGradeLevels() {
 
 
 {/* Books Actions */}
-export async function saveBookFee(gradeLevel: string, amount: number) {
+export async function saveBookFee(gradeLevel: string, amount: string) {
     const supabase = await createClient();
 
     const {error} = await supabase
     .from('books')
     .insert({
         grade_level: gradeLevel,
-        amount: amount
+        amount: parseFloat(amount)
     })
     .select("*");
 
@@ -144,6 +145,22 @@ export async function saveBookFee(gradeLevel: string, amount: number) {
     }
     
     return {success:true, message:"Successfully Configured!"};
+}
+
+export async function updateBookFee(id: string, amount: string) {
+    const supabase = await createClient();
+
+    const {error} = await supabase
+    .from('books')
+    .update({
+        amount: parseFloat(amount)
+    })
+    .eq("id", id)
+
+    if (error) {
+        throw new Error(error.message)
+    }
+
 }
 
 export async function getBookFee() {
@@ -160,7 +177,7 @@ export async function getBookFee() {
     return data
 }
 
-export async function deleteBookFee(id: number) {
+export async function deleteBookFee(id: string) {
     const supabase = await createClient();
 
     const {error} = await supabase
@@ -174,7 +191,7 @@ export async function deleteBookFee(id: number) {
 }
 
 {/* Tuition Fee Actions */}
-export async function saveTuitionFee(gradeLevel: string, baseTuition: number, miscellaneous: number, totalTuition: number) {
+export async function saveTuitionFee(gradeLevel: string, baseTuition: number, miscellaneous: number, totalTuition: number, entranceFee: number, sortOrder: number) {
     const supabase = await createClient();
 
     const {error} = await supabase
@@ -184,6 +201,8 @@ export async function saveTuitionFee(gradeLevel: string, baseTuition: number, mi
         base_tuition: baseTuition,
         miscellaneous : miscellaneous,
         total_tuition: totalTuition,
+        entrance_fee: entranceFee,
+        sort_order: sortOrder
     });
 
     if (error) {
@@ -228,23 +247,80 @@ export async function updateTuitionFee(
     }
 }
 
-
-
-{/* Merchandise Actions */}
-export async function saveMerchandise (merchandiseName: string, unit: string, price: number, hasSizes: boolean) {
+{/* Other Fees Actions */}
+export async function saveOtherFee(category: string, feeName: string, feeAmount: string) {
     const supabase = await createClient();
 
     const {error} = await supabase
-    .from('merchandise')
+    .from('other_fees')
     .insert({
-        name: merchandiseName,
-        unit: unit,
-        price: price,
-        has_sizes: hasSizes
+        category: category,
+        name: feeName,
+        amount: parseFloat(feeAmount),
     });
 
     if (error) {
-        throw new Error (error.message);
+        throw new Error(error.message);
+    }
+}
+
+export async function getOtherFees() {
+    const supabase = await createClient();
+
+    const {data , error} = await supabase
+    .from('other_fees')
+    .select('*');
+
+    if (error) {
+        throw new Error(error.message)
+    }
+    
+    return data
+}
+
+{/* Merchandise Actions */}
+type SizePrice = {
+    size: string;
+    price: string;
+};
+
+export async function saveMerchandise(
+    merchandiseName: string,
+    unit: string,
+    hasSizes: boolean,
+    sizes: SizePrice[]
+    ) {
+    const supabase = await createClient();
+
+    const { data: merchandise, error: merchandiseError } = await supabase
+        .from("merchandise")
+        .insert({
+        name: merchandiseName,
+        unit,
+        has_sizes: hasSizes,
+        })
+        .select()
+        .single();
+
+    if (merchandiseError) {
+        throw new Error(merchandiseError.message);
+    }
+
+    if (hasSizes && sizes.length > 0) {
+
+        const sizeRows = sizes.map((s) => ({
+            product_id: merchandise.id,
+            size: s.size,
+            price: parseFloat(s.price),
+        }));
+
+        const { error: sizeError } = await supabase
+        .from("merchandise_sizes")
+        .insert(sizeRows);
+
+        if (sizeError) {
+        throw new Error(sizeError.message);
+        }
     }
 }
 
@@ -253,7 +329,7 @@ export async function getMerchandise() {
 
     const {data , error} = await supabase
     .from('merchandise')
-    .select('*');
+    .select(`*, merchandise_sizes (*)`);
 
     if (error) {
         throw new Error(error.message)
@@ -275,8 +351,21 @@ export async function deleteMerchandise(id: string) {
     }
 }
 
+export async function deleteVariant(id: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("merchandise_sizes")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 {/* Discounts Actions */}
-export async function saveDiscount (name: string, category: string, amount: number) {
+export async function saveDiscount (name: string, category: string, amount: string) {
     const supabase = await createClient();
 
     const {error} = await supabase
@@ -284,7 +373,7 @@ export async function saveDiscount (name: string, category: string, amount: numb
     .insert({
         name: name,
         category: category,
-        amount: amount
+        amount: parseFloat(amount)
     });
 
     if (error) {
@@ -306,13 +395,13 @@ export async function getDiscounts() {
     return data
 }
 
-export async function updateDiscount(id: string, amount: number) {
+export async function updateDiscount(id: string, amount: string) {
     const supabase = await createClient();
 
     const {error} = await supabase
     .from('discounts')
     .update({
-        amount: amount
+        amount: parseFloat(amount)
     })
     .eq('id', id)
 
