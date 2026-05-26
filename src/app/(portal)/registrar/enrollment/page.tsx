@@ -1,22 +1,28 @@
-import EnrollmentForm from "@/components/registrar/enrollment/EnrollmentForm";
-import { getGradeLevels } from "@/app/actions";
-import { getTuitionFees } from "./actions";
-import { getDiscounts } from "./actions";
-import { getBooksFees } from "./actions";
+"use client";
 
+import { useState } from "react";
+import EnrollmentContainer from "@/components/registrar/enrollment/EnrollmentContainer";
 
-export default async function Enrollment() {
+type Parent = {
+    id: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
+    email?: string;
+    contact_number?: string;
+};
 
-    const gradeLevels = await getGradeLevels();
-    const tuitionFees = await getTuitionFees();
-    const discounts = await getDiscounts();
-    const books = await getBooksFees();
+export default function Enrollment() {
 
-    return(
-        <div className="w-[90%] mx-auto mt-10">
-            <h2 className="text-sla-blue text-[24px] font-semibold mt-20 mb-5">Student Enrollment</h2>
-            <EnrollmentForm gradeLevels={gradeLevels} tuitionFees={tuitionFees} discounts={discounts} books={books}/>
+    const [parent, setParent] = useState<Parent | null>(null);
+
+    return (
+        <div className="w-[90%] mx-auto">
+            <h2 className="text-sla-blue text-[24px] font-semibold mt-10 mb-5">
+                Student Enrollment
+            </h2>
+
+            <EnrollmentContainer />
         </div>
-
     );
 }

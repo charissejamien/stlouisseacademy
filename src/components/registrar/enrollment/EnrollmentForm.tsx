@@ -1,266 +1,233 @@
 "use client";
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, Trash2 } from "lucide-react";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select,SelectContent,SelectGroup,SelectItem,SelectLabel,SelectTrigger,SelectValue} from "@/components/ui/select"
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
-import { useActionState, useEffect, useState } from "react";
-import { enrollStudent } from "@/app/(portal)/registrar/enrollment/actions";
-import toast from 'react-hot-toast';
+import { getDiscounts, getGradeLevels } from "@/app/(portal)/admin/configuration/actions";
+import { getActiveSchoolYear } from "@/app/(portal)/registrar/enrollment/actions";
 
-type Props = {
-  gradeLevels: {grade_level:string}[];
-  tuitionFees: {grade_level: string, entrance_fee: number, base_tuition: number, miscellaneous: number, total_tuition: number}[];
-  discounts: {id:number, name: string, amount: number, category: string}[];
-  books: {id: number, grade_level: string, amount: number}[];
+type Parent = {
+    id: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
+    email?: string;
+    contact_number?: string;
 };
 
-export default function EnrollmentForm( { gradeLevels, tuitionFees, discounts, books } : Props ) {
+type EnrollmentFormProps = {
+    parent: Parent;
+    onEnrollmentComplete: (students: { firstName: string; lastName: string; gradeLevel: string }[]) => void;
+};
 
-    const basicInfo = [
-        {label:"First Name", value:"firstName"},
-        {label:"Middle Name", value:"middleName"},
-        {label:"Last Name", value:"lastName"},
-    ];
-    const rel = ["Mother", "Father", "Sibling", "Grandparent", "Aunt", "Uncle", "Guardian"];
-    const gender = ["Female", "Male"];
+type StudentEnrollment = {
+    formId: string; 
+    firstName: string;
+    middleName: string;
+    lastName: string;
+    gradeLevel: string;
+    studentType: string;
+};
 
-    const [selectedGrade, setSelectedGrade] = useState("");
-    const [state, formAction] = useActionState(enrollStudent, {success:false, message:""})
-    const [esc, setEsc] = useState(false);
-    const [selectedDiscounts, setSelectedDiscounts] = useState<{id:number, name: string, amount: number}[]>([]);
+export default function EnrollmentForm({ parent, onEnrollmentComplete }: EnrollmentFormProps) { 
+    const studentTypes = ["New", "Transferee", "Returning"];
 
-    
-    const currentFee = tuitionFees.find(f => f.grade_level === selectedGrade);
-    const bookFee = books.find(f => f.grade_level === selectedGrade);
+    const { data: schoolYear } = useQuery({ queryKey: ["schoolYear"], queryFn: getActiveSchoolYear });
+    const { data: gradeLevels } = useQuery({ queryKey: ["gradeLevels"], queryFn: getGradeLevels });
+    const { data: discounts } = useQuery({ queryKey: ["discounts"], queryFn: getDiscounts });
 
-    {/* Calculations */}
-    const percentageDeductions = selectedDiscounts.reduce((acc, d) => {
-
-    const base = currentFee?.base_tuition ?? 0;
-    return acc + (base * (d.amount / 100));
-    }, 0);
-
-    const totalLess = (esc ? 9000 : 0) + percentageDeductions;
-
-    const totalTuitionFee = currentFee ? (currentFee.total_tuition - totalLess) : 0; 
-
-    const toggleDiscount = (discount: {id: number, name: string, amount: number}) => {
-    setSelectedDiscounts((prev) => {
-        // Now TypeScript won't complain about d.id
-        const exists = prev.find((d) => d.id === discount.id);
-        if (exists) {
-        return prev.filter((d) => d.id !== discount.id);
-        } else {
-        return [...prev, discount];
+    const [students, setStudents] = useState<StudentEnrollment[]>([
+        {
+            formId: "initial-student",
+            firstName: "",
+            middleName: "",
+            lastName: "",
+            gradeLevel: "",
+            studentType: "",
         }
-    });
+    ]);
+
+    const parentFullName = [parent.first_name, parent.middle_name, parent.last_name]
+        .filter(Boolean)
+        .join(" ");
+
+    const updateStudentField = (index: number, field: keyof StudentEnrollment, value: string) => {
+        setStudents((prev) =>
+            prev.map((student, i) => (i === index ? { ...student, [field]: value } : student))
+        );
     };
 
-
-    useEffect(() => {
-        if(state.message) {
-            if (state.success) {
-                toast.success(state.message);
-            } else {
-                toast.error(state.message);
-            }
+    const handleSubmit = () => {
+        const hasMissingFields = students.some(
+            (s) => !s.firstName || !s.lastName || !s.gradeLevel || !s.studentType
+        );
+        
+        if (hasMissingFields) {
+            alert("Please fill out all required student placement fields before proceeding.");
+            return;
         }
-    }, [state])
 
-    return(
-        <form className="flex gap-5" action={formAction}>
+        const studentSummaries = students.map(({ firstName, lastName, gradeLevel }) => ({
+            firstName,
+            lastName,
+            gradeLevel
+        }));
 
-            
-            <div className="flex flex-col gap-5">
+        // This uses the prop and moves you to step 3
+        onEnrollmentComplete(studentSummaries); 
+    };
+
+    const addStudent = () => {
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
         
-                <div className="bg-white p-5 rounded-md flex flex-col gap-3 w-fit">
-                    <h2>Basic Student Information</h2>
-                    <div className="flex gap-5">
-                        {basicInfo.map((b) => (
-                            <div key={b.value} className="flex flex-col">
-                                <label>{b.label}</label>
-                                <Input name={b.value} className="capitalize"/>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex gap-5">
-                        <div className="flex flex-col">
-                            <label>Date of Birth</label>
-                            <input type="date" name="dob" className="h-9 w-50 py-1 px-3 text-[14px] rounded-sm bg-input/50"/>
-                        </div>
-                        <div className="flex flex-col">
-                            <label>Residence</label>
-                            <Input name="residence" className="capitalize w-80`"/>
-                        </div>
-                        <div className="flex flex-col">
-                            <label>Gender</label>
-                            <Select name="gender">
-                                <SelectTrigger className="w-full w-50 rounded-sm">
-                                    <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                    <SelectLabel>Gender</SelectLabel>
-                                    {gender.map((g) => (
-                                        <SelectItem key={g} value={g}> {g} </SelectItem>
-                                    ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
+        const newStudent: StudentEnrollment = {
+            formId: uniqueId,
+            firstName: "",
+            middleName: "",
+            lastName: "",
+            gradeLevel: "",
+            studentType: "",
+        };
+        
+        setStudents((prev) => [...prev, newStudent]);
+    };
+
+    const removeStudent = (index: number) => {
+        if (students.length === 1) return;
+        setStudents((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    return (
+        <div className="w-full flex flex-col gap-5">
+            <div className="bg-muted p-4 rounded-md border border-input/40 flex justify-between items-center">
+                <div>
+                    <p className="text-sm text-muted-foreground">Enrolling student(s) under parent:</p>
+                    <h3 className="text-xl font-bold text-sla-blue">{parentFullName}</h3>
                 </div>
-
-                <div className="bg-white p-5 rounded-md flex flex-col gap-3 w-fit">
-                    <h2>Academic Placement</h2>
-                    <div className="flex gap-5">
-                        {/* <GradeLevelSelect gradeLevels={gradeLevels} onChange={setSelectedGrade}/>
-                        {["7", "8", "9", "10"].includes(selectedGrade) && (
-                            <div className="flex items-center space-x-2 border py-1 px-3 rounded-sm bg-input/50">
-                                <input type="checkbox" id="escRecipient" name="escRecipient" onChange={(e) => setEsc(e.target.checked)} className="h-4 w-4"/>
-                                <label className="text-sm font-medium leading-none cursor-pointer">
-                                    ESC Recipient (Junior High School)
-                                </label>
-                            </div>
-                        )} */}
-                    </div>
-                    
-                </div>
-
-                {/* Parent Information */}
-                <div className="bg-white p-5 rounded-md flex flex-col gap-3 w-fit">
-                    <h2 className="font-medium">Parent/Guardian Information</h2>
-                    <div className="flex gap-5">
-                        <div className="flex flex-col">
-                            <label>Full Name</label>
-                            <Input className="w-70 capitalize" name="parent"/>
-                        </div>
-                        <div className="flex flex-col">
-                            <label>Relationship</label>
-                            <Select>
-                                <SelectTrigger className="w-full w-40 rounded-sm">
-                                    <SelectValue placeholder="Select relationship" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                    <SelectLabel>Relationship</SelectLabel>
-                                    {rel.map((r) => (
-                                        <SelectItem key={r} value={r}> {r} </SelectItem>
-                                    ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex flex-col">
-                            <label>Contact Number</label>
-                            <Input className="w-45"/>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-md flex flex-col gap-3 w-fit">
-                    <h2 className="font-medium">Enrollment Settlement</h2>
-                    <div className="flex flex-col">
-                        <label>OR Number</label>
-                        <Input className="w-50" name="orNum"/>
-                    </div>
-                    <div className="flex gap-5">
-                        <div className="flex flex-col">
-                            <label>Amount</label>
-                            <Input name="amount"/>
-                        </div>
-                        <div className="flex flex-col">
-                            <label>Particulars</label>
-                            <Input name="particulars"/>
-                        </div>
-                        <div className="flex flex-col">
-                            <label>Mode of Payment</label>
-                            <Input name="mop"/>
-                        </div>
-                    </div>
-
-                </div>
-
-                <button>submit</button>
+                <Button onClick={addStudent} variant="outline" className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" /> Add Another Student
+                </Button>
             </div>
 
-            <div className="text-white bg-sla-blue rounded-md p-5 w-100">
-            <h2 className="font-medium">Fee Assessment</h2>
+            {students.map((student, index) => (
+                <div key={student.formId} className="border-b border-dashed border-input pb-10 last:border-0 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                            Student #{index + 1}
+                        </span>
+                        {students.length > 1 && (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-destructive hover:bg-destructive/10 gap-2"
+                                onClick={() => removeStudent(index)}
+                            >
+                                <Trash2 className="w-4 h-4" /> Remove Student
+                            </Button>
+                        )}
+                    </div>
 
-            {currentFee ? (
-                <div className="mt-4 space-y-2">
-                    <div>
-                        <div className="flex justify-between">
-                            <p className="color-sla-skyblue">Tuition Fee</p>
-                            <p>P{currentFee.total_tuition.toLocaleString(undefined, {minimumFractionDigits:2 , maximumFractionDigits:2})}</p>
+                    <div className="w-full flex gap-10">
+                        <div className="flex flex-col gap-5 flex-1">
+                            <Card>
+                                <CardTitle className="px-5 pt-5">Academic Placement</CardTitle>
+                                <CardContent className="flex gap-5 items-center">
+                                    {schoolYear?.map((s) => (
+                                        <Label key={s.id} className="font-semibold bg-input/50 py-3 px-5 rounded-md">
+                                            SY {s.start_year} - {s.end_year}
+                                        </Label>
+                                    ))}
+                                    <Select 
+                                        value={student.gradeLevel} 
+                                        onValueChange={(val) => updateStudentField(index, "gradeLevel", val)}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Grade Level" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {gradeLevels?.map((g) => (
+                                                <SelectItem key={g.id} value={g.grade_level}>{g.grade_level}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Select 
+                                        value={student.studentType} 
+                                        onValueChange={(val) => updateStudentField(index, "studentType", val)}
+                                    >
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Student Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {studentTypes.map((s) => (
+                                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="w-[750px]">
+                                <CardTitle className="px-5 pt-5">Basic Information</CardTitle>
+                                <CardContent>
+                                    <FieldGroup className="flex flex-row gap-5">
+                                        <Field className="w-250">
+                                            <FieldLabel>First Name</FieldLabel>
+                                            <Input 
+                                                value={student.firstName} 
+                                                onChange={(e) => updateStudentField(index, "firstName", e.target.value)} 
+                                            />
+                                        </Field>
+                                        <Field>
+                                            <FieldLabel>Middle Name</FieldLabel>
+                                            <Input 
+                                                value={student.middleName} 
+                                                onChange={(e) => updateStudentField(index, "middleName", e.target.value)} 
+                                            />
+                                        </Field>
+                                        <Field>
+                                            <FieldLabel>Last Name</FieldLabel>
+                                            <Input 
+                                                value={student.lastName} 
+                                                onChange={(e) => updateStudentField(index, "lastName", e.target.value)} 
+                                            />
+                                        </Field>
+                                    </FieldGroup>
+                                </CardContent>
+                            </Card>
                         </div>
+                        
                         <div>
-                            <div className="flex justify-between text-sm opacity-80">
-                                <p>Base Tuition</p>
-                                <p>P{currentFee.base_tuition.toLocaleString(undefined, {minimumFractionDigits:2 , maximumFractionDigits:2})}</p>
-                            </div>
-                            <div className="flex justify-between text-sm opacity-80">
-                                <p>Miscellaneous</p>
-                                <p>P{currentFee.miscellaneous.toLocaleString(undefined, {minimumFractionDigits:2 , maximumFractionDigits:2})}</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-between mt-3">
-                            <p>Books</p>
-                            <p>P{bookFee?.amount.toLocaleString() ?? 0}</p>
+                            <Card className="w-[300px] px-5 bg-sla-blue text-white h-fit">
+                                <CardTitle className="pt-5">Fee Assessment</CardTitle>
+                                <CardContent>
+                                    <div>
+                                        <h3>Discounts</h3>
+                                        <div className="flex flex-col gap-3">
+                                            {discounts?.map((d) => (
+                                                <div key={d.id} className="flex justify-between">
+                                                    <Label>{d.name}</Label>
+                                                    <Label>{d.amount}%</Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>
-            ) : (
-                <p className="text-sm opacity-60 mt-4 italic">Please select a grade level to see assessment.</p>
-            )}
+            ))}
 
-            <div>
-                <p className="text-[12px] my-1">DISCOUNTS</p>
-                <div className="flex flex-col gap-1">
-                    {discounts.map((d, index) => {
-                const isSelected = selectedDiscounts.some((sd) => sd.name === d.name);
-
-                return (
-                    <button
-                    key={index}
-                    type="button"
-                    onClick={() => toggleDiscount(d)}
-                    // 2. Use a template literal to switch classes
-                    className={`border rounded-sm px-4 py-2 flex justify-between transition-all ${
-                        isSelected 
-                        ? "bg-white text-sla-blue font-medium shadow-sm" // Styles when selected
-                        : "bg-transparent text-white hover:bg-white/10" // Styles when NOT selected
-                    }`}
-                    >
-                    <p>{d.name}</p>
-                    <p>{d.amount}%</p>
-                    </button>
-                );
-                })}
-                </div>
-
-            </div>
-
-            <div className="text-[12px] tracking-wide mt-5">
-                <p>Subtotal</p>
-                <div className="flex justify-between">
-                    <p>Less</p>
-                    <p>-P{totalLess.toLocaleString(undefined, {minimumFractionDigits:2 , maximumFractionDigits:2})}</p>
-                </div>
-                
-            </div>
-
-            <div className="bg-[#1A5EA1] rounded-sm py-2 flex flex-col items-center mt-10">
-                <p className="text-[12px] uppercase tracking-wider">Total Assessment</p>
-                <p className="text-[28px] font-semibold tracking-wider">P{totalTuitionFee.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
-                <input type="hidden" name="totalTuition" value={totalTuitionFee} />
-            </div>
-
-            
+            <Button onClick={handleSubmit} className="w-fit px-10 ml-auto mt-5">
+                Submit All Enrollments
+            </Button>
         </div>
-
-        
-
-
-        </form>
     );
 }
