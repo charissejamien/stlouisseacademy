@@ -8,22 +8,29 @@ import FeeSettlement from "./FeeSettlement";
 type Parent = {
     id: number;
     first_name: string;
-    middle_name?: string;
     last_name: string;
-    email?: string;
-    contact_number?: string;
 };
 
-type StudentSummary = {
+type StudentData = {
     firstName: string;
+    middleName: string;
     lastName: string;
+    dateOfBirth: string;
+    gender: string;
     gradeLevel: string;
+    studentType: string;
 };
 
 export default function EnrollmentContainer() {
     const [step, setStep] = useState(1);
     const [parent, setParent] = useState<Parent | null>(null);
-    const [enrolledStudents, setEnrolledStudents] = useState<StudentSummary[]>([]);
+    const [enrolledStudents, setEnrolledStudents] = useState<StudentData[]>([]);
+
+    const handleResetAllSteps = () => {
+        setParent(null);
+        setEnrolledStudents([]);
+        setStep(1);
+    };
 
     return (
         <div>
@@ -50,6 +57,7 @@ export default function EnrollmentContainer() {
                 <FeeSettlement 
                     parent={parent} 
                     enrolledStudents={enrolledStudents} 
+                    onComplete={handleResetAllSteps}
                 />
             )}
         </div>
