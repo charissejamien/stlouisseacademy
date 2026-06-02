@@ -1,34 +1,35 @@
-import StudentSummary from "@/components/parents/StudentSummary"
+"use client";
+
+// 1. Import your custom responsive navigation layout wrapper
+import ParentNavigation from "@/components/parents/ParentsSidebar";
+// 2. Import your widget and dynamic student profile components
 import AnnouncementsWidget from "@/components/parents/AnnouncementsWidget";
-import Heading from "@/components/shared/Heading";
-import Link from "next/link";
-
-
-export default function Dashboard() {
+import StudentSummary from "@/components/parents/StudentSummary";
+export default function ParentDashboardPage() {
     return (
-        <div className="w-[80%] mx-auto mt-20 flex flex-col gap-5">
-            <Heading/>
+        <ParentNavigation>
+            {/* Everything inside here automatically injects as the {children} prop */}
+            <div className="flex flex-col gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                        Welcome Back!
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                        Stay updated with St. Louisse Academy announcements and check your children's live details.
+                    </p>
+                </div>
 
-            <div>
-                <AnnouncementsWidget/>
-            </div>
+                {/* 📢 Your closeable school announcements banner widget */}
+                <AnnouncementsWidget />
 
-            <div>
-                <h3 className="text-[20px] text-sla-blue font-semibold">Student Profiles</h3>
-                <div className="flex gap-3">
-                    <Link href={`/parents/dashboard/student`}>
-                        <StudentSummary/>
-                    </Link>
-                    
-                    <StudentSummary/>
-                    <StudentSummary/>
+                {/* 👤 Your dynamic sibling profile summary cards pulling from UUID */}
+                <div className="mt-4">
+                    <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wider text-xs">
+                        Registered Student Profiles
+                    </h3>
+                    <StudentSummary />
                 </div>
             </div>
-
-            <div>
-                <h3 className="text-[20px] text-sla-blue font-semibold">Balance Summary</h3>
-                
-            </div>
-        </div>
+        </ParentNavigation>
     );
 }
