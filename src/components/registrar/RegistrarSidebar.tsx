@@ -13,7 +13,7 @@ export default function RegistrarSidebar() {
         {label: "Dashboard", link: "/registrar/dashboard", icon: LayoutDashboard},
         {label: "Enrollment", link: "/registrar/enrollment", icon: NotebookText},
         {label: "Payments", link: "/registrar/payments", icon:Wallet},
-        {label: "DCPR", link: "/admin/dashboard", icon: WalletCards},
+        {label: "DCPR", link: "/registrar/dcpr", icon: WalletCards},
         {label: "Payroll", link: "/admin/dashboard", icon: FileText},
         {label: "Students", link: "/registrar/students", icon: FileText},
         {label: "Teachers", link: "/admin/dashboard", icon: FileText},

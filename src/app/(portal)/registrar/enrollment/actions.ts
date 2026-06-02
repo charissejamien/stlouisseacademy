@@ -276,3 +276,40 @@ export async function deleteBillingPeriod(id: string) {
     if (error) throw new Error(error.message);
     return { success: true };
 }
+
+
+
+
+
+
+interface ParentInvitationPayload {
+    email: string;
+    firstName: string;
+    lastName: string;
+}
+
+export async function inviteParentAccount({ email, firstName, lastName }: ParentInvitationPayload) {
+    // We need the service_role client here because normal clients can't arbitrarily create/invite auth users
+    const supabase = await createClient(); 
+
+    // 1. Send an official Supabase Auth Invite
+    // This automatically creates a user record in auth.users with a 'invited' status
+    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+        email,
+        {
+            data: {
+                first_name: firstName,
+                last_name: lastName,
+                role: "parent" // Custom metadata parameter to control page routing guards
+            },
+            // The URL the parent is redirected to after clicking the email link to set their password
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/set-password` 
+        }
+    );
+
+    if (inviteError) {
+        throw new Error(`Invitation Failed: ${inviteError.message}`);
+    }
+
+    return { success: true, user: inviteData.user };
+}

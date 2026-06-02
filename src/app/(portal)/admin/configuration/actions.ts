@@ -195,7 +195,7 @@ export async function saveTuitionFee(gradeLevel: string, baseTuition: number, mi
     const supabase = await createClient();
 
     const {error} = await supabase
-    .from('books')
+    .from('tuition_fees')
     .insert({
         grade_level: gradeLevel,
         base_tuition: baseTuition,
