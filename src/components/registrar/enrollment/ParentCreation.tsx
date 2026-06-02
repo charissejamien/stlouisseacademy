@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { registerParent, getParents } from "@/app/(portal)/registrar/enrollment/actions";
 
 type Parent = {
-    id: number;
+    id: string;
     first_name: string;
     middle_name?: string;
     last_name: string;

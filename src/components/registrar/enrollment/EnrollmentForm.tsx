@@ -14,7 +14,7 @@ import { getGradeLevels } from "@/app/(portal)/admin/configuration/actions";
 import { getActiveSchoolYear, getTuitionFees } from "@/app/(portal)/registrar/enrollment/actions";
 
 interface Parent {
-    id: number;
+    id: string; 
     first_name: string;
     middle_name?: string;
     last_name: string;
@@ -39,7 +39,7 @@ interface EnrollmentFormProps {
 }
 
 interface TuitionFeeRecord {
-    id: number;
+    id: string; 
     grade_level: string;
     base_tuition: number;
     miscellaneous: number;
@@ -48,12 +48,12 @@ interface TuitionFeeRecord {
 }
 
 interface GradeLevelRecord {
-    id: number;
+    id: string; 
     grade_level: string;
 }
 
 interface SchoolYearRecord {
-    id: number;
+    id: string; 
     start_year: number;
     end_year: number;
     is_active: boolean;

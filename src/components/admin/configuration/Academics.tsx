@@ -47,8 +47,12 @@ import { format } from "date-fns"
 import toast from "react-hot-toast";
 
 import { saveSchoolYear, getSchoolYears, deleteSchoolYear } from "@/app/(portal)/admin/configuration/actions"
-
 import { getGradeLevels, handleSchoolYearChange } from "@/app/(portal)/admin/configuration/actions"
+import { getBillingPeriods, saveBillingPeriod, deleteBillingPeriod } from "@/app/(portal)/registrar/enrollment/actions";
+interface BillingPeriodRecord {
+    id: string; 
+    period_name: string;
+}
 
 export default function AcademicsConfiguration() {
 
@@ -56,6 +60,7 @@ export default function AcademicsConfiguration() {
 
     const [schoolYearsModal, setSchoolYearsModal] = useState(false)
     const [gradeLevelsModal, setGradeLevelsModal] = useState(false)
+    const [billingPeriodsModal, setBillingPeriodsModal] = useState(false) 
 
     {/* School Year */}
     const [startYear, setStartYear] = useState("")
@@ -63,8 +68,12 @@ export default function AcademicsConfiguration() {
     const [startDate, setStartDate] = useState<Date | undefined>()
     const [endDate, setEndDate] = useState<Date | undefined>()
 
+    {/* Billing Allocation Local State Tracking Hooks */}
+    const [periodName, setPeriodName] = useState("");
+
     const { data : schoolYears} = useQuery({queryKey: ["schoolYears"], queryFn: getSchoolYears})
     const { data : levels} = useQuery({queryKey: ["levels"], queryFn: getGradeLevels})
+    const { data : billingPeriods } = useQuery<BillingPeriodRecord[]>({ queryKey: ["billingPeriods"], queryFn: getBillingPeriods })
 
     const schoolYearMutation = useMutation({
         mutationFn: ({
@@ -75,7 +84,7 @@ export default function AcademicsConfiguration() {
             endYear: string
         }) => saveSchoolYear(startYear, endYear),
         onSuccess: () => {
-            toast.success("Successfuly Added!")
+            toast.success("Successfully Added!")
             setSchoolYearsModal(false)
             setStartYear("")
             setEndYear("")
@@ -97,13 +106,42 @@ export default function AcademicsConfiguration() {
         }
     })
 
+    {/* Mutation to Write Allocation Period Items to Database */}
+    const billingPeriodMutation = useMutation({
+        mutationFn: () => {
+            if (!periodName.trim()) throw new Error("Please enter an installment period label.");
+            return saveBillingPeriod(periodName);
+        },
+        onSuccess: () => {
+            toast.success("Allocation indicator saved successfully!");
+            setBillingPeriodsModal(false);
+            setPeriodName("");
+            queryClient.invalidateQueries({ queryKey: ["billingPeriods"] });
+        },
+        onError: (err: Error) => {
+            toast.error(err.message);
+        }
+    });
+
+    {/* Mutation to Scrub Out Dead Allocation Periods */}
+    const deleteBillingPeriodMutation = useMutation({
+        mutationFn: (id: string) => deleteBillingPeriod(id),
+        onSuccess: () => {
+            toast.success("Allocation indicator removed safely.");
+            queryClient.invalidateQueries({ queryKey: ["billingPeriods"] });
+        },
+        onError: (err: Error) => {
+            toast.error(err.message);
+        }
+    });
+
     return(
         <div className="flex flex-col gap-10">
             <Card>
                 <CardHeader className="flex items-center justify-between">
                     <CardTitle>School Year Management</CardTitle>
                     <Dialog open={schoolYearsModal} onOpenChange={setSchoolYearsModal}>
-                        <DialogTrigger>
+                        <DialogTrigger asChild>
                             <Button>+ Add New School Year</Button>
                         </DialogTrigger>
                         <DialogContent>
@@ -126,28 +164,27 @@ export default function AcademicsConfiguration() {
                 <CardContent>
                     <div className="border rounded-sm p-3">
                         {schoolYears?.map((s , index) => (
-                            <div key={index} className="flex justify-between items-center">
+                            <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
                                 <p>SY {s.start_year} - {s.end_year}</p>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 items-center">
                                     <Label>Set Active</Label>
                                     <Switch
                                         checked={s.is_active}
                                         onCheckedChange={async (checked) => {
                                             await handleSchoolYearChange(s.id, checked)
-
                                             queryClient.invalidateQueries({
-                                            queryKey: ["schoolYears"],
+                                                queryKey: ["schoolYears"],
                                             })
                                         }}
                                     />
                                 </div>
-                                <div>
+                                <div className="flex gap-2">
                                 <Dialog>
-                                    <DialogTrigger>
-                                        <Button><Pencil/></Button>
+                                    <DialogTrigger asChild>
+                                        <Button size="icon" variant="outline"><Pencil className="w-4 h-4"/></Button>
                                     </DialogTrigger>
                                     <DialogContent>
-                                        <DialogTitle>Add New School year</DialogTitle>
+                                        <DialogTitle>Edit Dates for School Year</DialogTitle>
                                         <FieldGroup  className="flex flex-row gap-5">
                                             <Field>
                                                 <FieldLabel>Start Date</FieldLabel>
@@ -197,7 +234,7 @@ export default function AcademicsConfiguration() {
                                         <Button onClick={() => schoolYearMutation.mutate({startYear, endYear})}>Add School Year</Button>
                                     </DialogContent>
                                 </Dialog>
-                                <Button onClick={() => deleteSchoolyearMutation.mutate(s.id)}><Trash2/></Button>
+                                <Button variant="destructive" size="icon" onClick={() => deleteSchoolyearMutation.mutate(s.id)}><Trash2 className="w-4 h-4"/></Button>
                                 </div>
                             </div>
                         ))}
@@ -209,12 +246,12 @@ export default function AcademicsConfiguration() {
                 <CardHeader className="flex items-center justify-between">
                     <CardTitle>Grade Level Management</CardTitle>
                     <Dialog open={gradeLevelsModal} onOpenChange={setGradeLevelsModal}>
-                        <DialogTrigger>
+                        <DialogTrigger asChild>
                             <Button>+ Add New Grade Level</Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogTitle>Add New Grade Level</DialogTitle>
-                            <form action="">
+                            <form onSubmit={(e) => e.preventDefault()}>
                             <FieldGroup>
                                 <Field>
                                     <FieldLabel className="leading-none">Grade Category</FieldLabel>
@@ -227,7 +264,7 @@ export default function AcademicsConfiguration() {
                                 </Field>
                             </FieldGroup>
                             </form>
-                            <Button>Add Grade Level</Button>
+                            <Button className="mt-4">Add Grade Level</Button>
                         </DialogContent>
                     </Dialog>
                 </CardHeader>
@@ -238,16 +275,17 @@ export default function AcademicsConfiguration() {
                         <TableHeader>
                             <TableRow>
                             <TableHead className="w-50">Grade Level</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {levels?.map((l , index) => (
-                            <TableRow key={index} className="flex justify-between">
+                            <TableRow key={index}>
                                 <TableCell className="font-medium w-50">{l.grade_level}</TableCell>
-                                <TableCell className="flex gap-2">
+                                <TableCell className="flex gap-2 justify-end">
                                     <Dialog>
-                                        <DialogTrigger>
-                                            <Button><Pencil/></Button>
+                                        <DialogTrigger asChild>
+                                            <Button size="icon" variant="outline"><Pencil className="w-4 h-4"/></Button>
                                         </DialogTrigger>
                                         <DialogContent>
                                             <DialogTitle>Edit {l.grade_level}</DialogTitle>
@@ -261,17 +299,87 @@ export default function AcademicsConfiguration() {
                                                     <Input />
                                                 </Field>
                                             </FieldGroup>
-
-                                            <Button>Update Amount</Button>
+                                            <Button className="mt-4">Update Amount</Button>
                                         </DialogContent>
                                     </Dialog>
-                                    <Button ><Trash2/></Button>
+                                    <Button variant="destructive" size="icon"><Trash2 className="w-4 h-4"/></Button>
                                 </TableCell>
                             </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                     </div>
+                </CardContent>
+            </Card>
+
+            {/* 🗓️ UPDATED SECTION: TEXT-ONLY PAYMENT INDICATOR CONFIGURATION */}
+            <Card>
+                <CardHeader className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Fee Allocation & Indicator Management</CardTitle>
+                        <p className="text-xs text-muted-foreground mt-1">Configure allocation indicators for staggered tracking loops (e.g., Downpayment, July Installment, August Installment).</p>
+                    </div>
+                    <Dialog open={billingPeriodsModal} onOpenChange={setBillingPeriodsModal}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-sla-blue text-white">+ Add Fee Indicator</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogTitle>Create Fee Allocation Indicator</DialogTitle>
+                            <FieldGroup className="flex flex-col gap-4">
+                                <Field>
+                                    <FieldLabel>Allocation Label / Milestone Indicator</FieldLabel>
+                                    <Input 
+                                        value={periodName} 
+                                        onChange={(e) => setPeriodName(e.target.value)}
+                                        placeholder="e.g., August Installment, Downpayment, Miscellaneous" 
+                                    />
+                                </Field>
+                            </FieldGroup>
+                            <Button 
+                                className="mt-4 bg-sla-blue text-white" 
+                                onClick={() => billingPeriodMutation.mutate()}
+                                disabled={billingPeriodMutation.isPending}
+                            >
+                                {billingPeriodMutation.isPending ? "Saving..." : "Save Indicator"}
+                            </Button>
+                        </DialogContent>
+                    </Dialog>
+                </CardHeader>
+                <Separator/>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Active Allocation Indicator Name</TableHead>
+                                <TableHead className="text-right">Action Controls</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {billingPeriods && billingPeriods.length > 0 ? (
+                                billingPeriods.map((period) => (
+                                    <TableRow key={period.id}>
+                                        <TableCell className="font-semibold text-slate-800">{period.period_name}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="text-destructive hover:bg-destructive/10"
+                                                onClick={() => deleteBillingPeriodMutation.mutate(period.id)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="text-center text-xs italic text-muted-foreground py-6">
+                                        No specific installment metrics are configured yet. Click above to populate fields.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

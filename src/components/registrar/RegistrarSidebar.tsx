@@ -12,7 +12,7 @@ export default function RegistrarSidebar() {
     const links = [
         {label: "Dashboard", link: "/registrar/dashboard", icon: LayoutDashboard},
         {label: "Enrollment", link: "/registrar/enrollment", icon: NotebookText},
-        {label: "Payments", link: "/admin/dashboard", icon:Wallet},
+        {label: "Payments", link: "/registrar/payments", icon:Wallet},
         {label: "DCPR", link: "/admin/dashboard", icon: WalletCards},
         {label: "Payroll", link: "/admin/dashboard", icon: FileText},
         {label: "Students", link: "/registrar/students", icon: FileText},

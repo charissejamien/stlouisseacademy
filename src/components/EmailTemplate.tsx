@@ -40,7 +40,7 @@ export function getEnrollmentEmailHtml({
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
             <h2 style="color: #1e3a8a; margin-bottom: 4px;">Enrollment Successful!</h2>
             <p style="color: #475569; font-size: 16px; margin-top: 0;">Dear ${parentName},</p>
-            <p style="color: #334155; line-height: 1.5;">We are pleased to inform you that your student registration parameters for <strong>School Year ${schoolYearLabel}</strong> have been processed successfully.</p>
+            <p style="color: #334155; line-height: 1.5;">We are pleased to inform you that your student enrollment for <strong>School Year ${schoolYearLabel}</strong> have been processed successfully.</p>
             
             <h3 style="color: #1e3a8a; margin-top: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;">Enrolled Student Summary</h3>
             <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">

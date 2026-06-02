@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -10,10 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
-import { getTuitionFees, getBooks, saveCompleteEnrollment } from "@/app/(portal)/registrar/enrollment/actions";
+import { getTuitionFees, getBooks, saveCompleteEnrollment, getBillingPeriods } from "@/app/(portal)/registrar/enrollment/actions";
 
 interface Parent {
-    id: number;
+    id: string; 
     first_name: string;
     last_name: string;
 }
@@ -35,7 +36,7 @@ interface FeeSettlementProps {
 }
 
 interface TuitionFeeRecord {
-    id: number;
+    id: string; 
     grade_level: string;
     base_tuition: number;
     miscellaneous: number;
@@ -44,22 +45,35 @@ interface TuitionFeeRecord {
 }
 
 interface BookRecord {
-    id: number;
+    id: string; 
     grade_level: string;
     amount: number;
 }
 
-interface StudentPaymentAllocation {
-    studentIndex: number;
-    studentName: string;
+interface PaymentItem {
+    rowId: string;
     paymentSpecifics: string;
     amountPaid: string;
 }
 
+interface StudentAllocationGroup {
+    studentName: string;
+    items: PaymentItem[];
+}
+
+interface BillingPeriodRecord {
+    id: string;
+    period_name: string; // e.g., 'Downpayment', 'July Installment', 'August Installment'
+    due_date: string;
+}
+
 export default function FeeSettlement({ parent, enrolledStudents, onComplete }: FeeSettlementProps) {
     const paymentMethods = ["Cash", "G-Cash", "Bank Transfer"];
-    const paymentSpecificsOptions = ["Entrance Fee", "Enrollment Fee"];
 
+    const { data: billingPeriods = [] } = useQuery<BillingPeriodRecord[]>({
+        queryKey: ["billingPeriods"],
+        queryFn: getBillingPeriods
+    });
     const { data: tuitionFeesList = [] } = useQuery<TuitionFeeRecord[]>({ 
         queryKey: ["tuitionFees"], 
         queryFn: getTuitionFees 
@@ -73,12 +87,12 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
     const [orNumber, setOrNumber] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("Cash");
 
-    const [allocations, setAllocations] = useState<StudentPaymentAllocation[]>(
-        enrolledStudents.map((s, idx) => ({
-            studentIndex: idx,
+    const [allocations, setAllocations] = useState<StudentAllocationGroup[]>(
+        enrolledStudents.map((s) => ({
             studentName: `${s.firstName} ${s.lastName}`,
-            paymentSpecifics: "Entrance Fee",
-            amountPaid: ""
+            items: [
+                { rowId: "initial-0", paymentSpecifics: "Entrance Fee", amountPaid: "" }
+            ]
         }))
     );
 
@@ -108,34 +122,66 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
     const overallBookFee = computedBreakdowns.reduce((sum, item) => sum + item.bookTotal, 0);
     const totalAssessmentDue = overallTuitionFee + overallBookFee;
 
-    const updateAllocationField = (index: number, field: keyof StudentPaymentAllocation, value: string) => {
+    const addPaymentRow = (studentIndex: number) => {
+        const newId = `${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
         setAllocations((prev) =>
-            prev.map((alloc, i) => (i === index ? { ...alloc, [field]: value } : alloc))
+            prev.map((group, idx) => {
+                if (idx !== studentIndex) return group;
+                return {
+                    ...group,
+                    items: [...group.items, { rowId: newId, paymentSpecifics: "Advance Tuition Fee", amountPaid: "" }]
+                };
+            })
+        );
+    };
+
+    const removePaymentRow = (studentIndex: number, rowId: string) => {
+        setAllocations((prev) =>
+            prev.map((group, idx) => {
+                if (idx !== studentIndex || group.items.length === 1) return group;
+                return {
+                    ...group,
+                    items: group.items.filter((item) => item.rowId !== rowId)
+                };
+            })
+        );
+    };
+
+    const updatePaymentRowField = (studentIndex: number, rowId: string, field: keyof PaymentItem, value: string) => {
+        setAllocations((prev) =>
+            prev.map((group, idx) => {
+                if (idx !== studentIndex) return group;
+                return {
+                    ...group,
+                    items: group.items.map((item) => (item.rowId === rowId ? { ...item, [field]: value } : item))
+                };
+            })
         );
     };
 
     const mutation = useMutation({
-    mutationFn: () => saveCompleteEnrollment({
-        parentId: parent.id,
-        students: computedBreakdowns.map((student, idx) => ({
-            ...student,
-            paymentSpecifics: allocations[idx].paymentSpecifics,
-            amountPaid: Number(allocations[idx].amountPaid || 0)
-        })),
-        // Change paymentGlobal to payment here to match the SaveCompleteEnrollmentPayload type interface
-        payment: {
-            orNumber,
-            paymentMethod
+        mutationFn: () => saveCompleteEnrollment({
+            parentId: parent.id,
+            students: computedBreakdowns.map((student, idx) => ({
+                ...student,
+                paymentsDistributed: allocations[idx].items.map((item) => ({
+                    paymentSpecifics: item.paymentSpecifics,
+                    amountPaid: Number(item.amountPaid || 0)
+                }))
+            })),
+            payment: {
+                orNumber,
+                paymentMethod
+            }
+        }),
+        onSuccess: () => {
+            toast.success("All student records and initial composite items saved cleanly!");
+            onComplete();
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || "An issue occurred while writing enrollment parameters.");
         }
-    }),
-    onSuccess: () => {
-        toast.success("All student records and distributed payment items saved successfully!");
-        onComplete();
-    },
-    onError: (error: Error) => {
-        toast.error(error.message || "An issue occurred while writing enrollment parameters.");
-    }
-});
+    });
 
     const handleEnrollmentSubmit = () => {
         if (!orNumber) {
@@ -143,9 +189,11 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
             return;
         }
 
-        const hasInvalidAmounts = allocations.some(a => !a.amountPaid || Number(a.amountPaid) <= 0);
-        if (hasInvalidAmounts) {
-            toast.error("Please input a valid distributed payment amount for each student row.");
+        const missingAmounts = allocations.some((group) =>
+            group.items.some((item) => !item.amountPaid || Number(item.amountPaid) <= 0)
+        );
+        if (missingAmounts) {
+            toast.error("Please ensure every specified payment row has a valid numeric amount.");
             return;
         }
 
@@ -180,6 +228,7 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
                         </div>
                     ))}
 
+                    {/* ✅ Restored Missing Balance Card Summary Layout Here */}
                     <Card className="mt-2">
                         <CardTitle className="px-5 pt-5 text-lg">Comprehensive Balance Due</CardTitle>
                         <CardContent className="flex flex-col gap-2 mt-2 text-sm">
@@ -227,42 +276,69 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
                                 </Field>
                             </div>
 
-                            <div className="flex flex-col gap-4">
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Distributed Payment Allocation Per Student Row</h3>
+                            <div className="flex flex-col gap-6">
+                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Distributed Composite Payment Details</h3>
                                 
-                                {allocations.map((alloc, idx) => (
-                                    <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end p-4 border rounded-md bg-card shadow-sm">
-                                        <Field>
-                                            <FieldLabel className="font-medium text-foreground">For Student</FieldLabel>
-                                            <Input value={alloc.studentName} disabled className="bg-muted text-muted-foreground font-semibold" />
-                                        </Field>
-
-                                        <Field>
-                                            <FieldLabel>Payment Specifics</FieldLabel>
-                                            <Select 
-                                                value={alloc.paymentSpecifics} 
-                                                onValueChange={(val) => updateAllocationField(idx, "paymentSpecifics", val)}
+                                {allocations.map((group, studentIdx) => (
+                                    <div key={studentIdx} className="p-4 border rounded-md bg-card shadow-sm flex flex-col gap-4">
+                                        <div className="flex justify-between items-center border-b pb-2 bg-muted/20 px-2 rounded">
+                                            <span className="font-bold text-sla-blue">For Student: {group.studentName}</span>
+                                            <Button 
+                                                type="button"
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-8 text-xs flex items-center gap-1"
+                                                onClick={() => addPaymentRow(studentIdx)}
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {paymentSpecificsOptions.map((opt) => (
-                                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </Field>
+                                                <Plus className="w-3.5 h-3.5" /> Add Fee Allocation Row
+                                            </Button>
+                                        </div>
 
-                                        <Field>
-                                            <FieldLabel>Amount Paid (₱)</FieldLabel>
-                                            <Input 
-                                                type="number" 
-                                                value={alloc.amountPaid} 
-                                                onChange={(e) => updateAllocationField(idx, "amountPaid", e.target.value)} 
-                                                placeholder="0.00" 
-                                            />
-                                        </Field>
+                                        {group.items.map((item) => (
+                                            <div key={item.rowId} className="flex flex-col md:flex-row gap-4 items-end">
+                                                <Field className="flex-1">
+    <FieldLabel>Payment Allocation Specifics</FieldLabel>
+    <Select 
+        value={item.paymentSpecifics} 
+        onValueChange={(val) => updatePaymentRowField(studentIdx, item.rowId, "paymentSpecifics", val)}
+    >
+        <SelectTrigger>
+            <SelectValue placeholder="Select Allocation Month" />
+        </SelectTrigger>
+        <SelectContent>
+            {/* 🗓️ This now dynamically loops through your actual database months! */}
+            {billingPeriods.map((period) => (
+                <SelectItem key={period.id} value={period.period_name}>
+                    {period.period_name}
+                </SelectItem>
+            ))}
+        </SelectContent>
+    </Select>
+</Field>
+
+                                                <Field className="flex-1">
+                                                    <FieldLabel>Amount Tendered Paid (₱)</FieldLabel>
+                                                    <Input 
+                                                        type="number" 
+                                                        value={item.amountPaid} 
+                                                        onChange={(e) => updatePaymentRowField(studentIdx, item.rowId, "amountPaid", e.target.value)} 
+                                                        placeholder="0.00" 
+                                                    />
+                                                </Field>
+
+                                                {group.items.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-destructive hover:bg-destructive/10 mb-0.5"
+                                                        onClick={() => removePaymentRow(studentIdx, item.rowId)}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 ))}
                             </div>
