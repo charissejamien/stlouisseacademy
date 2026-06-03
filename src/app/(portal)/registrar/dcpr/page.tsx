@@ -46,7 +46,7 @@ export default function RegistrarDCPRPage() {
     }
 
     return (
-        <div className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-6 mt-10 ml-10">
             <div>
                 <h1 className="text-2xl font-bold tracking-tight text-sla-blue">Daily Cashier's Position Report (DCPR)</h1>
                 <p className="text-sm text-muted-foreground">Review audited transaction collection logs and verification statuses from school operations.</p>
@@ -116,7 +116,7 @@ function DailyPaymentsBreakdownView({ dateString, onBack }: BreakdownProps) {
     const grossCashCollected = paymentsList.reduce((sum, item) => sum + item.amount, 0);
 
     return (
-        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-150">
+        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-150 m-10 ml-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
                 <div className="flex items-center gap-3">
                     <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground hover:text-foreground">
