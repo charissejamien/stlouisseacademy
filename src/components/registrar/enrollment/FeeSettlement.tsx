@@ -228,24 +228,7 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
                         </div>
                     ))}
 
-                    {/* ✅ Restored Missing Balance Card Summary Layout Here */}
-                    <Card className="mt-2">
-                        <CardTitle className="px-5 pt-5 text-lg">Comprehensive Balance Due</CardTitle>
-                        <CardContent className="flex flex-col gap-2 mt-2 text-sm">
-                            <div className="flex justify-between border-b pb-1">
-                                <span>Total Class Tuition Base:</span>
-                                <span>₱{overallTuitionFee.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between border-b pb-1">
-                                <span>Total Curriculum Book Fees:</span>
-                                <span>₱{overallBookFee.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between pt-2 text-base font-bold text-sla-blue">
-                                <span>Gross Total Assessment:</span>
-                                <span>₱{totalAssessmentDue.toLocaleString()}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    
                 </div>
 
                 <div className="xl:col-span-2">
