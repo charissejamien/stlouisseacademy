@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 import { getGradeLevels } from "@/app/(portal)/admin/configuration/actions";
-import { getActiveSchoolYear, getTuitionFees } from "@/app/(portal)/registrar/enrollment/actions";
+// 🔄 INJECTED: Added getBooks to the destructive server action imports array
+import { getActiveSchoolYear, getTuitionFees, getBooks } from "@/app/(portal)/registrar/enrollment/actions";
 
 interface Parent {
     id: string; 
@@ -47,6 +48,13 @@ interface TuitionFeeRecord {
     entrance_fee: number;
 }
 
+// 🔄 INJECTED: Added book model structural parameters contract data interface
+interface BookFeeRecord {
+    id: string;
+    grade_level: string;
+    amount: number | string;
+}
+
 interface GradeLevelRecord {
     id: string; 
     grade_level: string;
@@ -66,6 +74,8 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
     const { data: schoolYear } = useQuery<SchoolYearRecord[]>({ queryKey: ["schoolYear"], queryFn: getActiveSchoolYear });
     const { data: gradeLevels } = useQuery<GradeLevelRecord[]>({ queryKey: ["gradeLevels"], queryFn: getGradeLevels });
     const { data: tuitionFeesList = [] } = useQuery<TuitionFeeRecord[]>({ queryKey: ["tuitionFees"], queryFn: getTuitionFees });
+    // 🔄 INJECTED: TanStack clean query fetcher hook for pulling operational book costs schema
+    const { data: bookFeesList = [] } = useQuery<BookFeeRecord[]>({ queryKey: ["books"], queryFn: getBooks });
 
     const [students, setStudents] = useState<StudentEnrollment[]>([
         {
@@ -136,6 +146,8 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
 
             {students.map((student, index) => {
                 const matchedFee = tuitionFeesList.find((t) => t.grade_level === student.gradeLevel);
+                // 🔄 INJECTED: Cross reference lookups filtering out the matching book fee parameters for this selection row
+                const matchedBook = bookFeesList.find((b) => b.grade_level === student.gradeLevel);
 
                 return (
                     <div key={student.formId} className="border-b border-dashed border-input pb-10 last:border-0 flex flex-col gap-4">
@@ -269,9 +281,19 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
                                                     <span>Total Tuition:</span>
                                                     <span>₱{Number(matchedFee.total_tuition).toLocaleString()}</span>
                                                 </div>
-                                                <div className="flex justify-between pt-1">
+                                                <div className="flex justify-between border-b border-white/20 pb-1">
                                                     <span>Entrance Fee:</span>
                                                     <span>₱{Number(matchedFee.entrance_fee).toLocaleString()}</span>
+                                                </div>
+                                                {/* 🔄 INJECTED: Added real-time reactive lookup displaying localized book costs metrics inside the card stack */}
+                                                <div className="flex justify-between pt-1 text-emerald-300 font-medium">
+                                                    <span>Books Cost:</span>
+                                                    <span>
+                                                        {matchedBook 
+                                                            ? `₱${Number(matchedBook.amount).toLocaleString()}` 
+                                                            : "₱0.00"
+                                                        }
+                                                    </span>
                                                 </div>
                                             </>
                                         ) : (

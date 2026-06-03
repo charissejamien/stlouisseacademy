@@ -40,7 +40,7 @@ export function DailyPaymentsBreakdownView({ dcprId, dateString, onBack }: Break
     const grossCashCollected = paymentsList.reduce((sum, item) => sum + item.amount, 0);
 
     return (
-        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-200">
+        <div className=" mt-20 ml-20 w-full flex flex-col gap-6 animate-in fade-in duration-200">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
                 <div className="flex items-center gap-3">
                     <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground hover:text-foreground">

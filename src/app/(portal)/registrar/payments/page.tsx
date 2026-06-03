@@ -21,6 +21,7 @@ import { getParents, getBillingPeriods } from "../enrollment/actions";
 import { 
     getStudentsAndBalancesByParent, 
     createFamilyPayments,
+    getRecentPayments, 
     SiblingStudent 
 } from "@/app/(portal)/registrar/payments/actions"; 
 
@@ -51,17 +52,43 @@ interface AddPaymentProps {
     onBack: () => void;
 }
 
-const mockRecentPayments = [
-    { id: "1", or: "OR-99210", payee: "Cardo Dalisay", total: "₱7,000.00", date: "June 02, 2026", method: "Cash" },
-];
+// ✅ Added strong interface contract for database payment transactions
+interface PaymentTransactionRecord {
+    id: string;
+    or_number: string;
+    payee_name: string;
+    created_at: string;
+    mode_of_payment: string;
+    amount: number;
+}
 
 export default function RegistrarPaymentsPage() {
+    const queryClient = useQueryClient();
     const [view, setView] = useState<"dashboard" | "add-payment">("dashboard");
     const [mainSearchQuery, setMainSearchQuery] = useState("");
 
+    // 🔄 Fetching live data from backend actions instead of mock array logs
+    const { data: recentPayments = [], isLoading } = useQuery<PaymentTransactionRecord[]>({
+        queryKey: ["recentPayments"],
+        queryFn: getRecentPayments,
+    });
+
     if (view === "dashboard") {
+        // 🔍 Dynamic multi-field filter sequence evaluating live input
+        const filteredPayments = recentPayments.filter((log) => {
+            const query = mainSearchQuery.toLowerCase().trim();
+            if (!query) return true;
+            return (
+                log.or_number?.toLowerCase().includes(query) ||
+                log.payee_name?.toLowerCase().includes(query)
+            );
+        });
+
+        // ⏱️ Clean array windowing to display exactly the top 10 rows safely
+        const targetedTenPayments = filteredPayments.slice(0, 10);
+
         return (
-            <div className="w-full flex flex-col gap-6">
+            <div className="w-full flex flex-col gap-6 mt-10 ml-10">
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-sla-blue">Payment Transactions</h1>
@@ -95,15 +122,37 @@ export default function RegistrarPaymentsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {mockRecentPayments.map((log) => (
-                                    <TableRow key={log.id}>
-                                        <TableCell className="font-bold">{log.or}</TableCell>
-                                        <TableCell>{log.payee}</TableCell>
-                                        <TableCell className="text-muted-foreground">{log.date}</TableCell>
-                                        <TableCell>{log.method}</TableCell>
-                                        <TableCell className="text-right font-semibold text-sla-blue">{log.total}</TableCell>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-8 text-sm text-muted-foreground italic">
+                                            Retrieving recent transaction logs from the database...
+                                        </TableCell>
                                     </TableRow>
-                                ))}
+                                ) : targetedTenPayments.length > 0 ? (
+                                    targetedTenPayments.map((log) => (
+                                        <TableRow key={log.id}>
+                                            <TableCell className="font-bold text-slate-900">{log.or_number}</TableCell>
+                                            <TableCell>{log.payee_name}</TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {new Date(log.created_at).toLocaleDateString("en-US", {
+                                                    year: "numeric",
+                                                    month: "long",
+                                                    day: "numeric",
+                                                })}
+                                            </TableCell>
+                                            <TableCell>{log.mode_of_payment}</TableCell>
+                                            <TableCell className="text-right font-semibold text-sla-blue">
+                                                ₱{Number(log.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-8 text-sm text-muted-foreground italic">
+                                            No recent payment transactions match your query criteria.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -139,6 +188,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
         onSuccess: () => {
             toast.success("Family collection entries committed safely!");
             queryClient.invalidateQueries({ queryKey: ["siblingBalances"] });
+            queryClient.invalidateQueries({ queryKey: ["recentPayments"] }); // ✅ Refresh dashboard ledger immediately
             setIsReceiptModalOpen(true);
         },
         onError: (error: any) => {
@@ -199,7 +249,6 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
         setAllocations((prev) => prev.filter((r) => r.rowId !== rowId));
     };
 
-    // 💡 NEW STATE HANDLER: Drops an entire student allocation card from being tracked entirely
     const excludeStudentFromTransaction = (studentId: string) => {
         setAllocations((prev) => prev.filter((r) => r.studentId !== studentId));
         toast.success("Student skipped from this payment remittance bundle.");
@@ -236,7 +285,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
     };
 
     return (
-        <div className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-6 mt-10 ml-10">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm" onClick={onBack} disabled={isPending} className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -326,7 +375,6 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                                                             + Split Payment Indicator
                                                         </Button>
 
-                                                        {/* ❌ THE SKIP TARGET STUDENT BUTTON CONTAINER */}
                                                         <Button
                                                             type="button"
                                                             variant="ghost"

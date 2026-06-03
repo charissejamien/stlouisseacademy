@@ -86,3 +86,65 @@ export async function createFamilyPayments(payments: PaymentPayload[]) {
 
     return data;
 }
+
+
+export interface PaymentTransactionRecord {
+    id: string;
+    or_number: string;
+    payee_name: string;
+    created_at: string;
+    mode_of_payment: string;
+    amount: number;
+}
+
+/**
+ * Fetches the most recent payment transactions from the ledger database table
+ * sorted chronologically to populate the registrar payments dashboard.
+ */
+export async function getRecentPayments(): Promise<PaymentTransactionRecord[]> {
+    const supabase = await createClient();
+
+    // Querying the payments table and pulling parent relationship strings
+    const { data, error } = await supabase
+        .from("payments")
+        .select(`
+            id,
+            or_number,
+            mode_of_payment,
+            amount,
+            created_at,
+            students (
+                parent_id,
+                parents (
+                    first_name,
+                    last_name
+                )
+            )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(50); // Fetch a healthy window for client-side search indexing
+
+    if (error) {
+        console.error("Database error inside getRecentPayments action:", error);
+        throw new Error(`Failed to retrieve payments history: ${error.message}`);
+    }
+
+    if (!data) return [];
+
+    // Map the Supabase graph structure into the clean UI parameters expected by the frontend
+    return data.map((payment: any) => {
+        const parentInfo = payment.students?.parents;
+        const compiledPayeeName = parentInfo 
+            ? `${parentInfo.first_name} ${parentInfo.last_name}`
+            : "Unknown Payer";
+
+        return {
+            id: payment.id,
+            or_number: payment.or_number || "N/A",
+            payee_name: compiledPayeeName,
+            created_at: payment.created_at,
+            mode_of_payment: payment.mode_of_payment || "Cash",
+            amount: Number(payment.amount || 0),
+        };
+    });
+}

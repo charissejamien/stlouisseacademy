@@ -191,23 +191,31 @@ export async function deleteBookFee(id: string) {
 }
 
 {/* Tuition Fee Actions */}
-export async function saveTuitionFee(gradeLevel: string, baseTuition: number, miscellaneous: number, totalTuition: number, entranceFee: number, sortOrder: number) {
+export async function saveTuitionFee(
+    gradeLevel: string, 
+    baseTuition: number, 
+    miscellaneous: number, 
+    totalTuition: number, 
+    entranceFee: number
+) {
     const supabase = await createClient();
 
-    const {error} = await supabase
-    .from('tuition_fees')
-    .insert({
-        grade_level: gradeLevel,
-        base_tuition: baseTuition,
-        miscellaneous : miscellaneous,
-        total_tuition: totalTuition,
-        entrance_fee: entranceFee,
-        sort_order: sortOrder
-    });
+    const { data, error } = await supabase
+        .from('tuition_fees')
+        .insert({
+            grade_level: gradeLevel,
+            base_tuition: baseTuition,
+            miscellaneous: miscellaneous,
+            total_tuition: totalTuition,
+            entrance_fee: entranceFee,
+        })
+        .select();
 
     if (error) {
-       throw new Error (error.message);
+        throw new Error(error.message);
     }   
+
+    return data;
 }
 
 

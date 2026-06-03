@@ -1,80 +1,71 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2, GraduationCap, Users } from "lucide-react";
 import { getStudentsByParent } from "@/app/(portal)/parents/dashboard/actions";
 
-interface EnrollmentRelation {
+interface EnrollmentNestedRecord {
     grade_level: string;
 }
 
-interface StudentWithEnrollment {
+interface SiblingRecord {
     id: string;
     first_name: string;
-    middle_name?: string | null;
+    middle_name?: string;
     last_name: string;
-    enrollments: EnrollmentRelation[] | EnrollmentRelation | null;
+    enrollments: EnrollmentNestedRecord[];
 }
 
 export default function StudentSummary() {
-    const HARDCODED_PARENT_UUID = "26e7929e-77cd-4fea-847e-7c7cdb38db2d";
+    const currentParentId = "573de3a8-fc13-4b20-ace7-a214bffdd96e"; 
 
-    // React Query to fetch all registered kids for this parent
-    const { data: students = [], isLoading, isError, error } = useQuery<StudentWithEnrollment[]>({
-        queryKey: ["parentStudents", HARDCODED_PARENT_UUID],
-        queryFn: () => getStudentsByParent(HARDCODED_PARENT_UUID),
+    const { data: students = [], isLoading, isError } = useQuery<SiblingRecord[]>({
+        queryKey: ["parentStudents", currentParentId],
+        queryFn: () => getStudentsByParent(currentParentId), // Fixed overload function typing parameter signature
+        enabled: !!currentParentId,
     });
 
     if (isLoading) {
-        return <p className="text-sm text-muted-foreground italic">Retrieving family profiles layout...</p>;
+        return <Loader2 className="w-6 h-6 animate-spin text-sla-blue mt-4" />;
     }
 
-    if (isError) {
-        return <p className="text-sm text-destructive font-medium">Error loading students: {error instanceof Error ? error.message : "Unknown Error"}</p>;
-    }
-
-    if (students.length === 0) {
-        return <p className="text-sm text-muted-foreground italic">No student profiles are registered under this parent account yet.</p>;
+    if (isError || students.length === 0) {
+        return (
+            <div className="mt-3 p-6 bg-slate-50 border border-dashed rounded-xl flex items-center gap-3 text-muted-foreground">
+                <Users className="w-5 h-5 text-slate-400" />
+                <p className="text-sm">No registered student profiles found for this account portal link.</p>
+            </div>
+        );
     }
 
     return (
-        <div className="flex flex-wrap gap-6 mt-5">
-            {students.map((student) => {
-                // Formatting Philippine Name Layout: Last Name, First Name Middle Initial.
-                const middleInitial = student.middle_name ? `${student.middle_name.trim().charAt(0)}.` : "";
-                const formattedFullName = `${student.last_name}, ${student.first_name} ${middleInitial}`.trim();
-
-                // Safe fallback array check for Supabase 1-to-many relationship structures
-                const activeEnrollment = Array.isArray(student.enrollments) 
-                    ? student.enrollments[0] 
-                    : student.enrollments;
-                
-                const gradeLevelDisplay = activeEnrollment?.grade_level || "Not Enrolled";
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            {students.map((student: SiblingRecord) => {
+                const currentGradeLevel = student.enrollments?.[0]?.grade_level || "Not Assigned";
 
                 return (
-                    <div 
+                    // 🔄 THE LINK WRAPPER: Passes the real child database UUID through search params on layout trigger click
+                    <Link 
                         key={student.id} 
-                        className="bg-white px-10 py-5 rounded-md w-fit border border-slate-100 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                        href={`/parents/balance?studentId=${student.id}`}
+                        className="block cursor-pointer group transition-all"
                     >
-                        <p className="text-sla-blue text-[20px] font-semibold tracking-tight">{formattedFullName}</p>
-                        <p className="text-sla-gray text-[14px]">
-                            {gradeLevelDisplay} {activeEnrollment ? "- Amber" : ""}
-                        </p>
-                        
-                        <div className="bg-background p-5 rounded-md mt-5 flex flex-col gap-1 items-center min-w-[200px]">
-                            <p className="text-sla-gray text-[12px] font-medium tracking-wider">ATTENDANCE STATUS</p>
-                            <p className="text-green-700 text-[24px] font-semibold">PRESENT</p>
-                            <p className="text-gray-700 text-[12px] font-medium">recorded at 6:30 am</p>
+                        {/* 🎨 BACK TO ORIGINAL: Your exact original flex container layout alignment with the grey sidebar icon box badge */}
+                        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm group-hover:border-sla-blue/40 group-hover:shadow-md transition-all flex items-center gap-4">
+                            <div className="p-3 bg-slate-50 rounded-lg group-hover:bg-sla-blue/10 text-slate-600 group-hover:text-sla-blue transition-colors">
+                                <GraduationCap className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 text-base">
+                                    {student.first_name} {student.last_name}
+                                </h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Grade Level: <span className="font-semibold text-slate-600">{currentGradeLevel}</span>
+                                </p>
+                            </div>
                         </div>
-                        
-                        <div className="flex mt-3 justify-center">
-                            <button 
-                                className="bg-sla-blue text-white text-[14px] px-4 py-2 rounded-sm font-medium shadow-sm hover:bg-sla-blue/90 transition-colors"
-                                onClick={() => console.log(`Redirecting to details for student ID: ${student.id}`)}
-                            >
-                                View Student Details
-                            </button>
-                        </div>
-                    </div>
+                    </Link>
                 );
             })}
         </div>
