@@ -4,20 +4,59 @@ import { createClient } from "@/lib/supabase/server";
 
 
 
-{/* School Year Actions*/}
 export async function saveSchoolYear(startYear: string, endYear: string) {
     const supabase = await createClient();
 
-    const {error} = await supabase
-    .from('school_years')
-    .insert([{
-        start_year: startYear,
-        end_year: endYear,
-    }]);
+    // 1. Find the most recent school year in your database to use as a template template
+    const { data: previousYear } = await supabase
+        .from("school_years")
+        .select("id")
+        .order("start_year", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (error) {
-        throw new Error (error.message);
+    // 2. Insert the brand new school year row
+    const { data: newYear, error: syError } = await supabase
+        .from("school_years")
+        .insert({
+            start_year: startYear.trim(),
+            end_year: endYear.trim(),
+            is_active: false // Keep it false until you intentionally turn the toggle switch ON
+        })
+        .select("id")
+        .single();
+
+    if (syError) throw new Error(`Failed to create school year: ${syError.message}`);
+
+    // 3. 🚀 THE AUTO-ROLLOVER MATCH: If you have an old year, copy its fee settings forward
+    if (previousYear) {
+        // Fetch the tuition parameters tied to the previous school year row id
+        const { data: oldFees } = await supabase
+            .from("academic_year_fees") // Ensure this table name matches your Supabase layout
+            .select("grade_level_id, tuition_amount, miscellaneous_amount")
+            .eq("school_year_id", previousYear.id);
+
+        if (oldFees && oldFees.length > 0) {
+            // Re-map the exact same fee rows but point them to the new school year row id
+            const rolledFees = oldFees.map(fee => ({
+                school_year_id: newYear.id,
+                grade_level_id: fee.grade_level_id,
+                tuition_amount: fee.tuition_amount,
+                miscellaneous_amount: fee.miscellaneous_amount
+            }));
+
+            // Insert the duplicated fees matrix straight into your ledger schema
+            const { error: cloneError } = await supabase
+                .from("academic_year_fees")
+                .insert(rolledFees);
+
+            if (cloneError) {
+                console.error("School year created, but fee rollover encountered a fault:", cloneError);
+            }
+        }
     }
+
+    return { success: true };
 }
 
 export async function getSchoolYears() {
