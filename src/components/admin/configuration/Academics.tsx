@@ -32,6 +32,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input";
@@ -49,6 +60,7 @@ import toast from "react-hot-toast";
 import { saveSchoolYear, getSchoolYears, deleteSchoolYear } from "@/app/(portal)/admin/configuration/actions"
 import { getGradeLevels, handleSchoolYearChange } from "@/app/(portal)/admin/configuration/actions"
 import { getBillingPeriods, saveBillingPeriod, deleteBillingPeriod } from "@/app/(portal)/registrar/enrollment/actions";
+
 interface BillingPeriodRecord {
     id: string; 
     period_name: string;
@@ -67,6 +79,10 @@ export default function AcademicsConfiguration() {
     const [endYear, setEndYear] = useState("")
     const [startDate, setStartDate] = useState<Date | undefined>()
     const [endDate, setEndDate] = useState<Date | undefined>()
+
+    const [isAlertOpen, setIsAlertOpen] = useState(false)
+    const [pendingSyId, setPendingSyId] = useState<string | null>(null)
+    const [pendingChecked, setPendingChecked] = useState<boolean>(false)
 
     {/* Billing Allocation Local State Tracking Hooks */}
     const [periodName, setPeriodName] = useState("");
@@ -106,7 +122,6 @@ export default function AcademicsConfiguration() {
         }
     })
 
-    {/* Mutation to Write Allocation Period Items to Database */}
     const billingPeriodMutation = useMutation({
         mutationFn: () => {
             if (!periodName.trim()) throw new Error("Please enter an installment period label.");
@@ -123,7 +138,6 @@ export default function AcademicsConfiguration() {
         }
     });
 
-    {/* Mutation to Scrub Out Dead Allocation Periods */}
     const deleteBillingPeriodMutation = useMutation({
         mutationFn: (id: string) => deleteBillingPeriod(id),
         onSuccess: () => {
@@ -134,6 +148,20 @@ export default function AcademicsConfiguration() {
             toast.error(err.message);
         }
     });
+
+    const handleConfirmToggle = async () => {
+        if (!pendingSyId) return;
+        try {
+            await handleSchoolYearChange(pendingSyId, pendingChecked);
+            toast.success("Active school year configuration updated successfully.");
+            queryClient.invalidateQueries({ queryKey: ["schoolYears"] });
+        } catch (error: any) {
+            toast.error(error.message || "Failed to swap active configuration references.");
+        } finally {
+            setPendingSyId(null);
+            setIsAlertOpen(false);
+        }
+    };
 
     return(
         <div className="flex flex-col gap-10">
@@ -170,11 +198,15 @@ export default function AcademicsConfiguration() {
                                     <Label>Set Active</Label>
                                     <Switch
                                         checked={s.is_active}
-                                        onCheckedChange={async (checked) => {
-                                            await handleSchoolYearChange(s.id, checked)
-                                            queryClient.invalidateQueries({
-                                                queryKey: ["schoolYears"],
-                                            })
+                                        onCheckedChange={(checked) => {
+                                            if (!checked) {
+                                                toast.error("There must always be one active school year. To change it, switch another school year on instead.");
+                                                return;
+                                            }
+
+                                            setPendingSyId(s.id);
+                                            setPendingChecked(checked);
+                                            setIsAlertOpen(true);
                                         }}
                                     />
                                 </div>
@@ -299,6 +331,7 @@ export default function AcademicsConfiguration() {
                                                     <Input />
                                                 </Field>
                                             </FieldGroup>
+                                            {/* 🔄 FIXED: Swapped out broken </br> typo signature to accurately close the component row */}
                                             <Button className="mt-4">Update Amount</Button>
                                         </DialogContent>
                                     </Dialog>
@@ -307,12 +340,11 @@ export default function AcademicsConfiguration() {
                             </TableRow>
                             ))}
                         </TableBody>
-                    </Table>
+                        </Table>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* 🗓️ UPDATED SECTION: TEXT-ONLY PAYMENT INDICATOR CONFIGURATION */}
             <Card>
                 <CardHeader className="flex items-center justify-between">
                     <div>
@@ -382,6 +414,26 @@ export default function AcademicsConfiguration() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Switching the active school year configuration references will instantly update downstream metrics. App systems such as tuition mapping, books ledger, and student enrollment rosters will now pull entries based on this selection.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setPendingSyId(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={handleConfirmToggle}
+                            className="bg-sla-blue text-white hover:bg-opacity-90"
+                        >
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

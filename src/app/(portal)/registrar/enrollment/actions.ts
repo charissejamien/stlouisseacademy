@@ -135,17 +135,33 @@ export async function getBooks() {
 
 export async function saveCompleteEnrollment({ parentId, students, payment }: SaveCompleteEnrollmentPayload) {
     const supabase = await createClient();
+    let parent = null;
 
-    const { data: parent, error: parentError } = await supabase
-        .from("parents")
-        .select("first_name, last_name, email")
-        .eq("id", parentId)
-        .single();
+    // ⚡ NEW CODE LAYER: Check if we are running in Executive Staging Bypass Mode
+    const isStagingMode = parentId === "staging-unlinked-parent-id";
 
-    if (parentError || !parent) {
-        throw new Error("Could not find parent profile for email routing configuration.");
+    if (isStagingMode) {
+        // Pre-bake mock parent info for internal loops so the database queries don't complain
+        parent = {
+            first_name: "Staging",
+            last_name: "Unlinked Parent",
+            email: null
+        };
+    } else {
+        // 🔒 Standard Registrar Mode: Perform the real database parent validation check
+        const { data: realParent, error: parentError } = await supabase
+            .from("parents")
+            .select("first_name, last_name, email")
+            .eq("id", parentId)
+            .single();
+
+        if (parentError || !realParent) {
+            throw new Error("Could not find parent profile for email routing configuration.");
+        }
+        parent = realParent;
     }
 
+    // Fetch the active school year configuration references
     const { data: activeSY, error: syError } = await supabase
         .from("school_years")
         .select("id, start_year, end_year")
@@ -168,7 +184,9 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
         const { data: newStudent, error: studentError } = await supabase
             .from("students")
             .insert({
-                parent: parentId, // Links UUID string cleanly
+                // ⚡ STAGING WORKFLOW: If in staging mode, insert NULL for parent_id 
+                // so your cleanup page can easily track and filter them out later!
+                parent: isStagingMode ? null : parentId, 
                 student_id: uniqueStudentId,
                 first_name: student.firstName,
                 middle_name: student.middleName || null,
@@ -217,32 +235,33 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
         }
     }
 
-    // if (parent.email) {
-    //     try {
-    //         const combinedAmountPaid = students.reduce(
-    //             (outerSum, s) => outerSum + s.paymentsDistributed.reduce((innerSum, p) => innerSum + p.amountPaid, 0), 0
-    //         );
+    // ✉️ EMAIL ROUTING ROUTER: Only fire email logs if we are NOT in staging mode
+    if (!isStagingMode && parent.email) {
+        try {
+            const combinedAmountPaid = students.reduce(
+                (outerSum, s) => outerSum + s.paymentsDistributed.reduce((innerSum, p) => innerSum + p.amountPaid, 0), 0
+            );
 
-    //         const htmlContent = getEnrollmentEmailHtml({
-    //             parentName: `${parent.first_name} ${parent.last_name}`,
-    //             schoolYearLabel: `${activeSY.start_year}-${activeSY.end_year}`,
-    //             students: students,
-    //             orNumber: payment.orNumber,
-    //             paymentMethod: payment.paymentMethod,
-    //             paymentSpecifics: "Distributed Student Fees Summary",
-    //             amountPaid: combinedAmountPaid,
-    //         });
+            const htmlContent = getEnrollmentEmailHtml({
+                parentName: `${parent.first_name} ${parent.last_name}`,
+                schoolYearLabel: `${activeSY.start_year}-${activeSY.end_year}`,
+                students: students,
+                orNumber: payment.orNumber,
+                paymentMethod: payment.paymentMethod,
+                paymentSpecifics: "Distributed Student Fees Summary",
+                amountPaid: combinedAmountPaid,
+            });
 
-    //         await resend.emails.send({
-    //             from: "St. Louisse Academy <onboarding@resend.dev>",
-    //             to: [parent.email],
-    //             subject: `Enrollment Confirmed - SY ${activeSY.start_year}-${activeSY.end_year}`,
-    //             html: htmlContent,
-    //         });
-    //     } catch (emailError) {
-    //         console.error("Resend API failed to ship confirmation email payload:", emailError);
-    //     }
-    // }
+            await resend.emails.send({
+                from: "St. Louisse Academy <onboarding@resend.dev>",
+                to: [parent.email],
+                subject: `Enrollment Confirmed - SY ${activeSY.start_year}-${activeSY.end_year}`,
+                html: htmlContent,
+            });
+        } catch (emailError) {
+            console.error("Resend API failed to ship confirmation email payload:", emailError);
+        }
+    }
 
     return { success: true };
 }

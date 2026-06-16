@@ -62,7 +62,7 @@ export default function SchoolFeesConfiguration() {
     const [merchandiseModal, setMerchandiseModal] = useState(false)
 
     {/* Tuition Fees Local Inputs States */}
-    const [selectedGradeLevel, setSelectedGradeLevel] = useState("") // ✅ Added string layout binding tracking state
+    const [selectedGradeLevel, setSelectedGradeLevel] = useState("")
     const [baseTuition, setBaseTuition] = useState(0)
     const [miscellaneous, setMiscellaneous] = useState(0)
     const [entranceFee, setEntranceFee] = useState(0)
