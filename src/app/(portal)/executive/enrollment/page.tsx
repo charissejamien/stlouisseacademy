@@ -27,13 +27,12 @@ const STAGING_PARENT_CONTEXT = {
 };
 
 export default function ExecutiveEnrollment() {
-    // 🚀 BYPASS TRIGGER: We initialize step to 2 instead of 1, and pre-load the staging parent row
     const [step, setStep] = useState(2);
     const [enrolledStudents, setEnrolledStudents] = useState<StudentData[]>([]);
 
     const handleResetAllSteps = () => {
         setEnrolledStudents([]);
-        setStep(2); // Loop straight back to student typing screen on save complete
+        setStep(2);
     };
 
     const handleGoBack = () => {

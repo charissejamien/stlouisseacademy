@@ -86,7 +86,7 @@ export async function getDPRRowsByDate(dateString: string): Promise<PaymentRowIt
             id,
             amount,
             or_number,
-            billing_period,
+            payment_specifics,
             created_at,
             students (
                 first_name,
@@ -123,7 +123,7 @@ export async function getDPRRowsByDate(dateString: string): Promise<PaymentRowIt
             id: p.id,
             studentName: studentFullName, 
             orNumber: p.or_number,
-            allocation: p.billing_period || "General Fees", // Displays targeted dynamic allocation month / tag name
+            allocation: p.payment_specifics || "Entrance Fee", // Displays targeted dynamic allocation month / tag name
             amount: Number(p.amount || 0),
             parentTotalCollection: orTotals[p.or_number]
         };
