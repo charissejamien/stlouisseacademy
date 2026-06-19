@@ -3,18 +3,15 @@
 import React, { useState } from "react";
 import { 
     Search, 
-    Filter, 
     GraduationCap, 
     FileWarning, 
-    CheckCircle2, 
     AlertTriangle, 
     DollarSign, 
     Receipt, 
     ArrowRight,
-    UserX,
     CreditCard
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, ArrowLeft, User, Check, ChevronsUpDown, Trash2, Printer, CheckCircle2 } from "lucide-react";
+import { Search, Plus, ArrowLeft, User, Check, ChevronsUpDown, Printer, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +52,6 @@ interface AddPaymentProps {
     onBack: () => void;
 }
 
-// ✅ Added strong interface contract for database payment transactions
 interface PaymentTransactionRecord {
     id: string;
     or_number: string;
@@ -63,7 +62,6 @@ interface PaymentTransactionRecord {
 }
 
 export default function RegistrarPaymentsPage() {
-    const queryClient = useQueryClient();
     const [view, setView] = useState<"dashboard" | "add-payment">("dashboard");
     const [mainSearchQuery, setMainSearchQuery] = useState("");
 

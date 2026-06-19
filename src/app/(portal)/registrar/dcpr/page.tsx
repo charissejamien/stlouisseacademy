@@ -48,7 +48,7 @@ export default function RegistrarDCPRPage() {
     return (
         <div className="w-full flex flex-col gap-6 mt-10 ml-10">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-sla-blue">Daily Cashier's Position Report (DCPR)</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-sla-blue">Daily Cashier&aposs Position Report (DCPR)</h1>
                 <p className="text-sm text-muted-foreground">Review audited transaction collection logs and verification statuses from school operations.</p>
             </div>
 
@@ -136,7 +136,7 @@ function DailyPaymentsBreakdownView({ dateString, onBack }: BreakdownProps) {
                 <CardHeader className="border-b bg-slate-50/40 py-4 flex flex-row items-center justify-between">
                     <div>
                         <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">St. Louisse Academy Ledger</span>
-                        <CardTitle className="text-lg font-bold text-slate-800 mt-0.5">Daily Cashier's Position Report</CardTitle>
+                        <CardTitle className="text-lg font-bold text-slate-800 mt-0.5">Daily Cashier&aposs Position Report</CardTitle>
                     </div>
                     <div className="text-right flex flex-col items-end gap-1">
                         <span className="font-mono text-sm font-bold text-slate-900 bg-white px-3 py-1 border rounded shadow-sm">{dateString}</span>

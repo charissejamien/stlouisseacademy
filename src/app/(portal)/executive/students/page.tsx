@@ -18,12 +18,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 import { getMasterStudentList } from "./actions";
+import { useRouter } from "next/navigation";
 
 const availableGradeLevels = ["All Grades", "Nursery", "Pre-Kindergarten", "Kindergarten", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
 export default function StudentMasterListPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedGrade, setSelectedGrade] = useState("All Grades");
+
+    const router = useRouter();
 
     const { data: students = [], isLoading } = useQuery({
         queryKey: ["masterStudentList"],
@@ -151,7 +154,7 @@ export default function StudentMasterListPage() {
                                 </tr>
                             ) : filteredStudents.length > 0 ? (
                                 filteredStudents.map((student) => (
-                                    <tr key={student.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer">
+                                    <tr key={student.id} onClick={() => router.push(`/executive/students/${student.id}`)} className="hover:bg-slate-50/40 transition-colors cursor-pointer">
                                         <td className="py-3.5 px-6 font-mono font-bold text-indigo-600">{student.student_id}</td>
                                         <td className="py-3.5 px-6 font-bold text-slate-900">
                                             {student.last_name}, {student.first_name} {student.middle_name || ""}

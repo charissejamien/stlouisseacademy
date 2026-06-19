@@ -2,21 +2,12 @@
 
 import React, { useState } from "react";
 import { 
-    Sparkles, 
-    Users, 
     Flag, 
-    UserCheck, 
-    HelpCircle, 
-    ArrowRight, 
-    Plus, 
-    UserMinus, 
     UsersRound,
     CheckCircle2,
-    Calendar,
     Settings2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
