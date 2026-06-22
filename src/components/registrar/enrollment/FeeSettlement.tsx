@@ -177,8 +177,11 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
     const mutation = useMutation({
         mutationFn: () => saveCompleteEnrollment({
             parentId: parent.id,
+            // 🌟 FIX: Change from enrolledStudents.map to computedBreakdowns.map
             students: computedBreakdowns.map((student, idx) => ({
                 ...student,
+                tuitionTotal: student.tuitionTotal, // Now safely contains the numeric value
+                bookTotal: student.bookTotal,       // Now safely contains the numeric value
                 backdatedEnrollmentDate: student.backdatedEnrollmentDate || transactionDate,
                 paymentsDistributed: allocations[idx].items.map((item) => ({
                     paymentSpecifics: item.paymentSpecifics,

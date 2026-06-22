@@ -128,7 +128,18 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
             return;
         }
         
-        const cleanData = students.map(({ formId, ...rest }) => rest);
+        // 🌟 FIX: Map calculated fees right before completing the step payload
+        const cleanData = students.map(({ formId, ...rest }) => {
+            const tuitionMatch = tuitionFeesList.find((t) => t.grade_level === rest.gradeLevel);
+            const bookMatch = bookFeesList.find((b) => b.grade_level === rest.gradeLevel);
+
+            return {
+                ...rest,
+                tuitionTotal: tuitionMatch ? Number(tuitionMatch.total_tuition) : 0,
+                bookTotal: bookMatch ? Number(bookMatch.amount) : 0,
+            };
+        });
+        
         onEnrollmentComplete(cleanData);
     };
 

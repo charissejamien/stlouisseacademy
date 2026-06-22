@@ -16,6 +16,88 @@ export interface MasterStudentRow {
     parent_name: string;
 }
 
+export interface TransactionRow {
+    id: string;
+    context: string;
+    amount: number;
+    date: string;
+    method: string;
+}
+
+export interface CompleteStudentProfile {
+    id: string;
+    student_id: string;
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
+    grade_level: string;
+    section_name: string;
+    advisor_name: string;
+    date_enrolled: string;
+    classification: string;
+    total_assessment: number;
+    total_paid: number;
+    total_books_fee: number;    // 📚 Standardized property
+    total_books_paid: number;   // 📚 Standardized property
+    balance_remaining: number;
+    transactions: TransactionRow[];
+}
+
+interface SupabaseSchoolYearJoin {
+    is_active: boolean;
+}
+
+interface SupabaseEnrollmentJoin {
+    grade_level: string;
+    student_type: string;
+    status?: string;
+    school_years: SupabaseSchoolYearJoin | null;
+}
+
+interface SupabaseParentJoin {
+    first_name: string;
+    last_name: string;
+}
+
+interface SupabaseStudentAccountCardJoin {
+    total_tuition_fee: number | null;
+    total_books_fee: number | null;
+    school_years: SupabaseSchoolYearJoin | null;
+}
+
+interface SupabasePaymentJoin {
+    id: string;
+    or_number: string | null;
+    amount: number | null;
+    mode_of_payment: string | null;
+    created_at: string;
+    payment_specifics: string | null;
+}
+
+interface SupabaseMasterStudentQueryResult {
+    id: string;
+    student_id: string;
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
+    gender: string;
+    created_at: string;
+    parents: SupabaseParentJoin | null;
+    enrollments: SupabaseEnrollmentJoin[] | null;
+}
+
+interface SupabaseStudentProfileQueryResult {
+    id: string;
+    student_id: string;
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
+    created_at: string;
+    enrollments: SupabaseEnrollmentJoin[] | null;
+    student_account_card: SupabaseStudentAccountCardJoin[] | null;
+    payments: SupabasePaymentJoin[] | null;
+}
+
 export async function getMasterStudentList(): Promise<MasterStudentRow[]> {
     const supabase = await createClient();
 
@@ -50,9 +132,11 @@ export async function getMasterStudentList(): Promise<MasterStudentRow[]> {
 
     if (!data) return [];
 
-    return data.map((student: any) => {
+    const typedData = data as unknown as SupabaseMasterStudentQueryResult[];
+
+    return typedData.map((student) => {
         const activeEnrollment = student.enrollments?.find(
-            (e: any) => e.school_years?.is_active === true
+            (e) => e.school_years?.is_active === true
         ) || student.enrollments?.[0];
 
         const parentProfile = student.parents;
@@ -113,8 +197,7 @@ export interface CompleteStudentProfile {
 export async function getStudentInformation(studentUUID: string): Promise<CompleteStudentProfile> {
     const supabase = await createClient();
 
-    // 🏆 Relational multi-table join match query following your table constraints
-    const { data: student, error } = await supabase
+    const { data, error } = await supabase
         .from("students")
         .select(`
             id,
@@ -130,6 +213,7 @@ export async function getStudentInformation(studentUUID: string): Promise<Comple
             ),
             student_account_card (
                 total_tuition_fee,
+                total_books_fee,
                 school_years ( is_active )
             ),
             payments (
@@ -144,25 +228,41 @@ export async function getStudentInformation(studentUUID: string): Promise<Comple
         .eq("id", studentUUID)
         .single();
 
-    if (error || !student) {
+    if (error || !data) {
         console.error("Error fetching absolute student account metadata details:", error);
         throw new Error(`Failed to map student profile parameters: ${error?.message || "Record not found"}`);
     }
 
+    const student = data as unknown as SupabaseStudentProfileQueryResult;
+
     // ⚡ Isolate active school year contexts or fallback cleanly to baseline indices
-    const activeEnrollment = student.enrollments?.find((e: any) => e.school_years?.is_active === true) || student.enrollments?.[0];
-    const activeAssessment = student.student_account_card?.find((a: any) => a.school_years?.is_active === true) || student.student_account_card?.[0];
+    const activeEnrollment = student.enrollments?.find((e) => e.school_years?.is_active === true) || student.enrollments?.[0];
+    const activeAssessment = student.student_account_card?.find((a) => a.school_years?.is_active === true) || student.student_account_card?.[0];
 
-    // Calculate aggregated financial values from your payments table loop array
-    const baseTotalAssessment = activeAssessment?.total_tuition_fee || 0;
-    const sumTotalPaid = student.payments?.reduce((sum: number, pay: any) => sum + (pay.amount || 0), 0) || 0;
-    const calculatedRemainingBalance = Math.max(0, baseTotalAssessment - sumTotalPaid);
+    // Isolate base values from account card parameters safely
+    const totalTuitionAssessment = Number(activeAssessment?.total_tuition_fee || 0);
+    const totalBooksAssessment = Number(activeAssessment?.total_books_fee || 0);
+    const combinedGrossAssessment = totalTuitionAssessment + totalBooksAssessment;
 
-    // Map your custom transaction rows layout
-    const formattedTransactions: TransactionRow[] = (student.payments || []).map((pay: any) => ({
+    // Filter payment histories dynamically to calculate separate ledger balances
+    const paymentsArray = student.payments || [];
+    
+    const tuitionPaid = paymentsArray
+        .filter((pay) => !pay.payment_specifics?.toLowerCase().includes("book"))
+        .reduce((sum, pay) => sum + Number(pay.amount || 0), 0);
+
+    const booksPaid = paymentsArray
+        .filter((pay) => pay.payment_specifics?.toLowerCase().includes("book"))
+        .reduce((sum, pay) => sum + Number(pay.amount || 0), 0);
+
+    const sumTotalPaid = tuitionPaid + booksPaid;
+    const calculatedRemainingBalance = Math.max(0, combinedGrossAssessment - sumTotalPaid);
+
+    // Map transaction table rows layout
+    const formattedTransactions: TransactionRow[] = paymentsArray.map((pay) => ({
         id: pay.or_number || `OR-${pay.id.slice(0, 4).toUpperCase()}`,
         context: pay.payment_specifics || "Enrollment Fee",
-        amount: pay.amount || 0,
+        amount: Number(pay.amount || 0),
         date: new Date(pay.created_at).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
@@ -172,13 +272,12 @@ export async function getStudentInformation(studentUUID: string): Promise<Comple
     }));
 
     return {
-        id: student.id, // Keep the raw UUID for reference structures
-        student_id: student.student_id, // e.g., "20260001"
+        id: student.id,
+        student_id: student.student_id,
         first_name: student.first_name,
         middle_name: student.middle_name,
         last_name: student.last_name,
         grade_level: activeEnrollment?.grade_level || "Not Assigned",
-        // Fallbacks for section allocations until assigned through your sectioning workspace
         section_name: "Unassigned Room", 
         advisor_name: "No Advisor Linked", 
         date_enrolled: new Date(student.created_at).toLocaleDateString("en-US", {
@@ -187,8 +286,10 @@ export async function getStudentInformation(studentUUID: string): Promise<Comple
             day: "numeric"
         }),
         classification: activeEnrollment?.student_type || "Regular",
-        total_assessment: baseTotalAssessment,
-        total_paid: sumTotalPaid,
+        total_assessment: totalTuitionAssessment,
+        total_paid: tuitionPaid,
+        total_books_fee: totalBooksAssessment,
+        total_books_paid: booksPaid,
         balance_remaining: calculatedRemainingBalance,
         transactions: formattedTransactions
     };

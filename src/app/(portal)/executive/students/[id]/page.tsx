@@ -18,8 +18,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-// ✅ Import your dynamic server action fetcher
-import { getStudentInformation } from "../actions";
+// ✅ Import your strict interface schema alongside the fetcher action
+import { getStudentInformation, CompleteStudentProfile } from "../actions";
 
 export default function StudentProfileView() {
     const params = useParams();
@@ -28,8 +28,8 @@ export default function StudentProfileView() {
     // Grab your dynamic ID string parameter slot cleanly
     const studentId = params?.id as string;
 
-    // ✅ Securely fetch your dynamic server payload dataset using the anonymous arrow wrapper
-    const { data: student, isLoading, error } = useQuery({
+    // ✅ Securely fetch your dynamic server payload dataset matching the explicit profile type schema
+    const { data: student, isLoading, error } = useQuery<CompleteStudentProfile>({
         queryKey: ["students", studentId],
         queryFn: () => getStudentInformation(studentId),
         enabled: !!studentId
@@ -154,28 +154,42 @@ export default function StudentProfileView() {
                                 </span>
                             </div>
 
-                            <div className="flex justify-between items-center border-b pb-2 text-xs">
-                                <span className="text-slate-400 font-medium">Total Tuition Fee:</span>
-                                <span className="font-bold text-slate-700">
-                                    ₱{isLoading ? "0.00" : student?.total_assessment.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                </span>
+                            {/* 📋 Tuition Fees Subsection */}
+                            <div className="bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 text-xs">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Tuition Ledger</span>
+                                <div className="flex justify-between text-slate-500">
+                                    <span>Gross Contract:</span>
+                                    <span className="font-semibold text-slate-700">₱{isLoading ? "0.00" : student?.total_assessment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-500">
+                                    <span>Liquidated Paid:</span>
+                                    <span className="font-semibold text-emerald-700">₱{isLoading ? "0.00" : student?.total_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
                             </div>
 
-                            <div className="flex justify-between items-center border-b pb-2 text-xs">
-                                <span className="text-slate-400 font-medium">Total Tuition Paid:</span>
-                                <span className="font-black text-emerald-700">
-                                    ₱{isLoading ? "0.00" : student?.total_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                </span>
+                            {/* 📚 Books Fees Subsection */}
+                            <div className="bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 text-xs mt-1">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Books Ledger</span>
+                                <div className="flex justify-between text-slate-500">
+                                    <span>Gross Assessment:</span>
+                                    {/* ✅ Type safe selection property mapping */}
+                                    <span className="font-semibold text-slate-700">₱{isLoading ? "0.00" : student?.total_books_fee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-500">
+                                    <span>Liquidated Paid:</span>
+                                    {/* ✅ Type safe selection property mapping */}
+                                    <span className="font-semibold text-emerald-700">₱{isLoading ? "0.00" : student?.total_books_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Dynamic Remaining Balance Swap Color Configurations depending on liquidation state */}
+                        {/* Dynamic Remaining Combined Balance Block */}
                         <div className={`p-4 rounded-xl border border-dashed mt-4 flex flex-col gap-1 ${
                             student?.balance_remaining === 0 
                                 ? "bg-emerald-50/50 border-emerald-200 text-emerald-900" 
                                 : "bg-rose-50/50 border-rose-200 text-rose-900"
                         }`}>
-                            <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Remaining Account Balance</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Total Running Dues Due</span>
                             <span className="text-2xl font-black tracking-tight">
                                 ₱{isLoading ? "0.00" : student?.balance_remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </span>

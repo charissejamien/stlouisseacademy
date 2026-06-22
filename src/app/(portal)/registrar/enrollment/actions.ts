@@ -231,6 +231,7 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
                 student_id: newStudent.id,
                 school_year_id: activeSY.id,
                 total_tuition_fee: student.tuitionTotal,
+                total_books_fee: student.bookTotal,
                 created_at: targetTimestamp 
             });
 
