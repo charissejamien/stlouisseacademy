@@ -27,6 +27,7 @@ interface StudentData {
     gender: string;
     gradeLevel: string;
     studentType: string;
+    backdatedEnrollmentDate?: string;
 }
 
 interface FeeSettlementProps {
@@ -63,7 +64,7 @@ interface StudentAllocationGroup {
 
 interface BillingPeriodRecord {
     id: string;
-    period_name: string; // e.g., 'Downpayment', 'July Installment', 'August Installment'
+    period_name: string;
     due_date: string;
 }
 
@@ -87,20 +88,27 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
     const [orNumber, setOrNumber] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("Cash");
 
-    const [allocations, setAllocations] = useState<StudentAllocationGroup[]>(
-        enrolledStudents.map((s) => ({
+    // Formats today's date safely as a default YYYY-MM-DD local string fallback descriptor
+    const [transactionDate, setTransactionDate] = useState(() => {
+        const today = new Date();
+        const offset = today.getTimezoneOffset();
+        const localToday = new Date(today.getTime() - (offset * 60 * 1000));
+        return localToday.toISOString().split("T")[0];
+    });
+
+    // ✅ PURE LAZY INITIALIZATION: Eradicates component render impurity alerts
+    const [allocations, setAllocations] = useState<StudentAllocationGroup[]>(() => 
+        enrolledStudents.map((s, idx) => ({
             studentName: `${s.firstName} ${s.lastName}`,
             items: [
-                { rowId: "initial-0", paymentSpecifics: "Entrance Fee", amountPaid: "" }
+                { 
+                    rowId: `initial-row-${idx}`, 
+                    paymentSpecifics: "Entrance Fee", 
+                    amountPaid: "" 
+                }
             ]
         }))
     );
-
-    const currentDate = new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    });
 
     const parentFullName = `${parent.first_name} ${parent.last_name}`;
 
@@ -118,18 +126,25 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
         };
     });
 
-    const overallTuitionFee = computedBreakdowns.reduce((sum, item) => sum + item.tuitionTotal, 0);
-    const overallBookFee = computedBreakdowns.reduce((sum, item) => sum + item.bookTotal, 0);
-    const totalAssessmentDue = overallTuitionFee + overallBookFee;
-
+    // ✅ DETERMINISTIC ACTION STATE: Generates clean list counters instead of volatile math hooks
     const addPaymentRow = (studentIndex: number) => {
-        const newId = `${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
         setAllocations((prev) =>
             prev.map((group, idx) => {
                 if (idx !== studentIndex) return group;
+
+                const nextRowNumber = group.items.length + 1;
+                const newId = `allocated-row-${studentIndex}-${nextRowNumber}`;
+
                 return {
                     ...group,
-                    items: [...group.items, { rowId: newId, paymentSpecifics: "Advance Tuition Fee", amountPaid: "" }]
+                    items: [
+                        ...group.items, 
+                        { 
+                            rowId: newId, 
+                            paymentSpecifics: "Advance Tuition Fee", 
+                            amountPaid: "" 
+                        }
+                    ]
                 };
             })
         );
@@ -162,8 +177,12 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
     const mutation = useMutation({
         mutationFn: () => saveCompleteEnrollment({
             parentId: parent.id,
+            // 🌟 FIX: Change from enrolledStudents.map to computedBreakdowns.map
             students: computedBreakdowns.map((student, idx) => ({
                 ...student,
+                tuitionTotal: student.tuitionTotal, // Now safely contains the numeric value
+                bookTotal: student.bookTotal,       // Now safely contains the numeric value
+                backdatedEnrollmentDate: student.backdatedEnrollmentDate || transactionDate,
                 paymentsDistributed: allocations[idx].items.map((item) => ({
                     paymentSpecifics: item.paymentSpecifics,
                     amountPaid: Number(item.amountPaid || 0)
@@ -227,8 +246,6 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
                             </div>
                         </div>
                     ))}
-
-                    
                 </div>
 
                 <div className="xl:col-span-2">
@@ -236,14 +253,26 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
                         <CardTitle className="px-5 pt-5 text-xl text-sla-blue">Process Payment Entry</CardTitle>
                         <CardContent className="flex flex-col gap-6 mt-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/40 p-4 rounded-md border">
+                                
                                 <Field>
                                     <FieldLabel>Transaction Date</FieldLabel>
-                                    <Input value={currentDate} disabled className="bg-muted text-muted-foreground" />
+                                    <Input 
+                                        type="date"
+                                        value={transactionDate} 
+                                        onChange={(e) => setTransactionDate(e.target.value)}
+                                        className="bg-white border text-slate-900 cursor-pointer text-sm" 
+                                        style={{ colorScheme: "light" }}
+                                    />
+                                    <span className="text-[10px] text-amber-600 font-medium mt-0.5 block px-0.5">
+                                        ⚠️ Changes financial post timestamp
+                                    </span>
                                 </Field>
+
                                 <Field>
                                     <FieldLabel>Official Receipt (OR) Number</FieldLabel>
                                     <Input value={orNumber} onChange={(e) => setOrNumber(e.target.value)} placeholder="Enter OR Sequence ID" />
                                 </Field>
+
                                 <Field>
                                     <FieldLabel>Payment Method Channel</FieldLabel>
                                     <Select value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -280,24 +309,23 @@ export default function FeeSettlement({ parent, enrolledStudents, onComplete }: 
                                         {group.items.map((item) => (
                                             <div key={item.rowId} className="flex flex-col md:flex-row gap-4 items-end">
                                                 <Field className="flex-1">
-    <FieldLabel>Payment Allocation Specifics</FieldLabel>
-    <Select 
-        value={item.paymentSpecifics} 
-        onValueChange={(val) => updatePaymentRowField(studentIdx, item.rowId, "paymentSpecifics", val)}
-    >
-        <SelectTrigger>
-            <SelectValue placeholder="Select Allocation Month" />
-        </SelectTrigger>
-        <SelectContent>
-            {/* 🗓️ This now dynamically loops through your actual database months! */}
-            {billingPeriods.map((period) => (
-                <SelectItem key={period.id} value={period.period_name}>
-                    {period.period_name}
-                </SelectItem>
-            ))}
-        </SelectContent>
-    </Select>
-</Field>
+                                                    <FieldLabel>Payment Allocation Specifics</FieldLabel>
+                                                    <Select 
+                                                        value={item.paymentSpecifics} 
+                                                        onValueChange={(val) => updatePaymentRowField(studentIdx, item.rowId, "paymentSpecifics", val)}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select Allocation Month" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {billingPeriods.map((period) => (
+                                                                <SelectItem key={period.id} value={period.period_name}>
+                                                                    {period.period_name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </Field>
 
                                                 <Field className="flex-1">
                                                     <FieldLabel>Amount Tendered Paid (₱)</FieldLabel>

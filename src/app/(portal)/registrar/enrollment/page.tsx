@@ -1,20 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import EnrollmentContainer from "@/components/registrar/enrollment/EnrollmentContainer";
 
-type Parent = {
-    id: number;
-    first_name: string;
-    middle_name?: string;
-    last_name: string;
-    email?: string;
-    contact_number?: string;
-};
+// type Parent = {
+//     id: number;
+//     first_name: string;
+//     middle_name?: string;
+//     last_name: string;
+//     email?: string;
+//     contact_number?: string;
+// };
 
 export default function Enrollment() {
-
-    const [parent, setParent] = useState<Parent | null>(null);
 
     return (
         <div className="w-[90%] mx-auto">

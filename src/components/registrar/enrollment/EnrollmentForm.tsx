@@ -32,6 +32,7 @@ interface StudentEnrollment {
     gender: string;
     gradeLevel: string;
     studentType: string;
+    backdatedEnrollmentDate?: string;
 }
 
 interface EnrollmentFormProps {
@@ -48,7 +49,6 @@ interface TuitionFeeRecord {
     entrance_fee: number;
 }
 
-// 🔄 INJECTED: Added book model structural parameters contract data interface
 interface BookFeeRecord {
     id: string;
     grade_level: string;
@@ -74,7 +74,6 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
     const { data: schoolYear } = useQuery<SchoolYearRecord[]>({ queryKey: ["schoolYear"], queryFn: getActiveSchoolYear });
     const { data: gradeLevels } = useQuery<GradeLevelRecord[]>({ queryKey: ["gradeLevels"], queryFn: getGradeLevels });
     const { data: tuitionFeesList = [] } = useQuery<TuitionFeeRecord[]>({ queryKey: ["tuitionFees"], queryFn: getTuitionFees });
-    // 🔄 INJECTED: TanStack clean query fetcher hook for pulling operational book costs schema
     const { data: bookFeesList = [] } = useQuery<BookFeeRecord[]>({ queryKey: ["books"], queryFn: getBooks });
 
     const [students, setStudents] = useState<StudentEnrollment[]>([
@@ -87,6 +86,7 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
             gender: "",
             gradeLevel: "",
             studentType: "",
+            backdatedEnrollmentDate: ""
         }
     ]);
 
@@ -121,14 +121,25 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
 
     const handleSubmit = () => {
         const hasMissingFields = students.some(
-            s => !s.firstName || !s.lastName || !s.dateOfBirth || !s.gender || !s.gradeLevel || !s.studentType
+            s => !s.firstName || !s.lastName || !s.gradeLevel || !s.studentType
         );
         if (hasMissingFields) {
             alert("Please fill out all required basic information and placement details.");
             return;
         }
         
-        const cleanData = students.map(({ formId, ...rest }) => rest);
+        // 🌟 FIX: Map calculated fees right before completing the step payload
+        const cleanData = students.map(({ formId, ...rest }) => {
+            const tuitionMatch = tuitionFeesList.find((t) => t.grade_level === rest.gradeLevel);
+            const bookMatch = bookFeesList.find((b) => b.grade_level === rest.gradeLevel);
+
+            return {
+                ...rest,
+                tuitionTotal: tuitionMatch ? Number(tuitionMatch.total_tuition) : 0,
+                bookTotal: bookMatch ? Number(bookMatch.amount) : 0,
+            };
+        });
+        
         onEnrollmentComplete(cleanData);
     };
 
@@ -171,12 +182,13 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
                             <div className="flex flex-col gap-5 flex-1">
                                 <Card>
                                     <CardTitle className="px-5 pt-5">Academic Placement</CardTitle>
-                                    <CardContent className="flex gap-5 items-center">
+                                    <CardContent className="flex gap-5 items-center flex-wrap">
                                         {schoolYear?.map((s) => (
                                             <Label key={s.id} className="font-semibold bg-input/50 py-3 px-5 rounded-md">
                                                 SY {s.start_year} - {s.end_year}
                                             </Label>
                                         ))}
+                                        
                                         <Select 
                                             value={student.gradeLevel} 
                                             onValueChange={(val) => updateStudentField(index, "gradeLevel", val)}
@@ -190,6 +202,7 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
                                                 ))}
                                             </SelectContent>
                                         </Select>
+
                                         <Select 
                                             value={student.studentType} 
                                             onValueChange={(val) => updateStudentField(index, "studentType", val)}
@@ -203,6 +216,20 @@ export default function EnrollmentForm({ parent, onEnrollmentComplete }: Enrollm
                                                 ))}
                                             </SelectContent>
                                         </Select>
+
+                                        {/* ⚡ INJECTED: Backdated Enrollment Calendar Picker Input Control */}
+                                        <Field className="flex flex-col gap-1">
+                                            <Input 
+                                                type="date"
+                                                value={student.backdatedEnrollmentDate || ""}
+                                                onChange={(e) => updateStudentField(index, "backdatedEnrollmentDate", e.target.value)}
+                                                className="w-[180px] h-[38px] text-xs font-medium"
+                                            />
+                                            <span className="text-[9px] text-muted-foreground italic px-1">
+                                                Enrollment Date Override (Optional)
+                                            </span>
+                                        </Field>
+
                                     </CardContent>
                                 </Card>
 

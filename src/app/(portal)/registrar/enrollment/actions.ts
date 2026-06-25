@@ -21,6 +21,7 @@ interface EnrollmentStudentInput {
     studentType: string;
     tuitionTotal: number;
     bookTotal: number;
+    backdatedEnrollmentDate?: string;
     paymentsDistributed: DistributedPaymentItem[];
 }
 
@@ -30,7 +31,7 @@ interface EnrollmentPaymentInput {
 }
 
 interface SaveCompleteEnrollmentPayload {
-    parentId: string; // Changed from number to string to support UUID strings
+    parentId: string; 
     students: EnrollmentStudentInput[];
     payment: EnrollmentPaymentInput;
 }
@@ -137,18 +138,16 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
     const supabase = await createClient();
     let parent = null;
 
-    // ⚡ NEW CODE LAYER: Check if we are running in Executive Staging Bypass Mode
+    // Check if running in Executive Staging Bypass Mode
     const isStagingMode = parentId === "staging-unlinked-parent-id";
 
     if (isStagingMode) {
-        // Pre-bake mock parent info for internal loops so the database queries don't complain
         parent = {
             first_name: "Staging",
             last_name: "Unlinked Parent",
             email: null
         };
     } else {
-        // 🔒 Standard Registrar Mode: Perform the real database parent validation check
         const { data: realParent, error: parentError } = await supabase
             .from("parents")
             .select("first_name, last_name, email")
@@ -161,7 +160,6 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
         parent = realParent;
     }
 
-    // Fetch the active school year configuration references
     const { data: activeSY, error: syError } = await supabase
         .from("school_years")
         .select("id, start_year, end_year")
@@ -181,24 +179,38 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
         const uniqueStudentId = `${currentYearPrefix}${paddedSequence}`;
         sequenceCounter++;
 
+        // ✅ FIX: Verify backdated string has actual content and isn't an empty string ""
+        const hasBackdateOverride = student.backdatedEnrollmentDate && student.backdatedEnrollmentDate.trim() !== "";
+        
+        // If it's an empty string or null, default directly to system now() to satisfy database constraints
+        const targetTimestamp = hasBackdateOverride 
+            ? new Date(student.backdatedEnrollmentDate!).toISOString()
+            : new Date().toISOString();
+
+        // ✅ FIX: Convert empty string birthdates directly to valid database NULL markers
+        const sanitizedDateOfBirth = student.dateOfBirth && student.dateOfBirth.trim() !== "" 
+            ? student.dateOfBirth 
+            : null;
+
+        // Save the profile
         const { data: newStudent, error: studentError } = await supabase
             .from("students")
             .insert({
-                // ⚡ STAGING WORKFLOW: If in staging mode, insert NULL for parent_id 
-                // so your cleanup page can easily track and filter them out later!
                 parent: isStagingMode ? null : parentId, 
                 student_id: uniqueStudentId,
                 first_name: student.firstName,
                 middle_name: student.middleName || null,
                 last_name: student.lastName,
-                date_of_birth: student.dateOfBirth,
-                gender: student.gender
+                date_of_birth: sanitizedDateOfBirth, 
+                gender: student.gender,
+                created_at: targetTimestamp 
             })
             .select("id")
             .single();
 
         if (studentError) throw new Error(`Failed to save student profile: ${studentError.message}`);
 
+        // Save the enrollment ledger record row
         const { error: enrollmentError } = await supabase
             .from("enrollments")
             .insert({
@@ -206,21 +218,26 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
                 school_year_id: activeSY.id,
                 grade_level: student.gradeLevel,
                 student_type: student.studentType,
-                status: "Enrolled"
+                status: "Enrolled",
+                created_at: targetTimestamp 
             });
 
         if (enrollmentError) throw new Error(`Failed to write enrollment context: ${enrollmentError.message}`);
 
+        // Save initial account card assessment calculation records
         const { error: assessmentError } = await supabase
             .from("student_account_card")
             .insert({
                 student_id: newStudent.id,
                 school_year_id: activeSY.id,
-                total_tuition_fee: student.tuitionTotal
+                total_tuition_fee: student.tuitionTotal,
+                total_books_fee: student.bookTotal,
+                created_at: targetTimestamp 
             });
 
         if (assessmentError) throw new Error(`Failed to log initial assessment calculations: ${assessmentError.message}`);
 
+        // Save payments distributed loop logs
         for (const paymentRow of student.paymentsDistributed) {
             const { error: paymentError } = await supabase
                 .from("payments")
@@ -228,14 +245,15 @@ export async function saveCompleteEnrollment({ parentId, students, payment }: Sa
                     student_id: newStudent.id,    
                     or_number: payment.orNumber,
                     amount: paymentRow.amountPaid,
-                    mode_of_payment: payment.paymentMethod
+                    mode_of_payment: payment.paymentMethod,
+                    created_at: targetTimestamp ,
+                    payment_specifics: paymentRow.paymentSpecifics
                 });
 
             if (paymentError) throw new Error(`Failed to process distributed financial record entry: ${paymentError.message}`);
         }
     }
 
-    // ✉️ EMAIL ROUTING ROUTER: Only fire email logs if we are NOT in staging mode
     if (!isStagingMode && parent.email) {
         try {
             const combinedAmountPaid = students.reduce(
@@ -296,11 +314,6 @@ export async function deleteBillingPeriod(id: string) {
     return { success: true };
 }
 
-
-
-
-
-
 interface ParentInvitationPayload {
     email: string;
     firstName: string;
@@ -308,20 +321,16 @@ interface ParentInvitationPayload {
 }
 
 export async function inviteParentAccount({ email, firstName, lastName }: ParentInvitationPayload) {
-    // We need the service_role client here because normal clients can't arbitrarily create/invite auth users
     const supabase = await createClient(); 
 
-    // 1. Send an official Supabase Auth Invite
-    // This automatically creates a user record in auth.users with a 'invited' status
     const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
         email,
         {
             data: {
                 first_name: firstName,
                 last_name: lastName,
-                role: "parent" // Custom metadata parameter to control page routing guards
+                role: "parent" 
             },
-            // The URL the parent is redirected to after clicking the email link to set their password
             redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/set-password` 
         }
     );

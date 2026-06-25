@@ -6,8 +6,6 @@ import { cn } from "@/lib/utils";
 import { Toaster } from 'react-hot-toast';
 import QueryProvider from "@/providers/query-provider";
 
-// ❌ Removed the public Header and Footer imports to prevent them from rendering globally
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 // Configure the font
