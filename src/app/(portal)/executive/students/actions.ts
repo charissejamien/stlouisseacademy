@@ -294,3 +294,124 @@ export async function getStudentInformation(studentUUID: string): Promise<Comple
         transactions: formattedTransactions
     };
 }
+
+
+export interface UpdateStudentProfilePayload {
+    studentId: string;
+    schoolYearId: string;
+    editedBy: string;
+    firstName: string;
+    lastName: string;
+    gradeLevel: string;
+    classroomSection: string;
+    facultyAdvisor: string;
+}
+
+export interface UpdateStudentProfilePayload {
+    studentId: string;
+    schoolYearId: string;
+    editedBy: string;
+    firstName: string;
+    lastName: string;
+    gradeLevel: string;
+    classroomSection: string;
+    facultyAdvisor: string;
+}
+
+interface AuditLogInsertion {
+    student_id: string;
+    school_year_id: string;
+    field_changed: string;
+    old_value: string | null;
+    new_value: string;
+    edited_by: string;
+}
+
+/**
+ * Updates a student profile record and sequentially computes differentials 
+ * to insert row history inside your existing audit_students table.
+ */
+export async function updateStudentProfileRegistry(payload: UpdateStudentProfilePayload): Promise<void> {
+    const supabase = await createClient();
+
+    // 1. 🌟 FIXED: Use inner relational lookup to fetch grade_level from enrollments table
+    const { data: currentStudent, error: fetchError } = await supabase
+        .from("students")
+        .select(`
+            first_name, 
+            last_name, 
+            enrollments(grade_level)
+        `)
+        .eq("id", payload.studentId)
+        .single();
+
+    if (fetchError || !currentStudent) {
+        console.error("Failed to fetch historical profile state for auditing:", fetchError);
+        throw new Error("Could not verify historical record parameters.");
+    }
+
+    // Safely extract the inner relation array item if it exists
+    // (Handles fallback string gracefully if no enrollment record exists yet)
+    const enrollmentRecords = currentStudent.enrollments as unknown as { grade_level: string }[] | { grade_level: string } | null;
+    const historicalGradeLevel = Array.isArray(enrollmentRecords)
+        ? enrollmentRecords[0]?.grade_level
+        : (enrollmentRecords as { grade_level: string })?.grade_level || "";
+
+    // 2. Perform the primary table updates
+    const { error: updateError } = await supabase
+        .from("students")
+        .update({
+            first_name: payload.firstName,
+            last_name: payload.lastName,
+        })
+        .eq("id", payload.studentId);
+
+    if (updateError) {
+        console.error("Failed to modify target student directory line:", updateError);
+        throw new Error(`Profile update failed: ${updateError.message}`);
+    }
+
+    // 3. 🌟 OPTIONAL: Update the grade_level column directly inside the enrollments table 
+    // to match the modified value chosen in the dropdown.
+    const { error: enrollmentUpdateError } = await supabase
+        .from("enrollments")
+        .update({ grade_level: payload.gradeLevel })
+        .eq("student_id", payload.studentId);
+
+    if (enrollmentUpdateError) {
+        console.warn("Warning: Enrollment grade_level sync failed:", enrollmentUpdateError);
+    }
+
+    // 4. Evaluate changed fields inside TypeScript application context
+    const auditLogs: AuditLogInsertion[] = [];
+
+    const checkAndLog = (fieldKey: string, dbValue: string | null, newValue: string) => {
+        if ((dbValue || "").trim() !== newValue.trim()) {
+            auditLogs.push({
+                student_id: payload.studentId,
+                school_year_id: payload.schoolYearId,
+                field_changed: fieldKey,
+                old_value: dbValue,
+                new_value: newValue,
+                edited_by: payload.editedBy
+            });
+        }
+    };
+
+    checkAndLog("first_name", currentStudent.first_name, payload.firstName);
+    checkAndLog("last_name", currentStudent.last_name, payload.lastName);
+    checkAndLog("grade_level", historicalGradeLevel, payload.gradeLevel);
+    // checkAndLog("section_name", currentStudent.section_name, payload.classroomSection);
+    // checkAndLog("advisor_name", currentStudent.advisor_name, payload.facultyAdvisor);
+
+    // 5. Batch insert into your existing audit_students table if edits occurred
+    if (auditLogs.length > 0) {
+        const { error: auditError } = await supabase
+            .from("audit_students")
+            .insert(auditLogs);
+
+        if (auditError) {
+            console.error("Non-blocking warning: Audit log tracks failed to record:", auditError);
+        }
+    }
+}

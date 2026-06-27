@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from 'react-hot-toast';
 import QueryProvider from "@/providers/query-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -42,15 +43,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", inter.variable, montserrat.variable, ebGaramond.variable)}>
       <body className={`${poppins.className} antialiased`}>
-        {/* ✅ Global notification toast handlers */}
+
         <Toaster position="top-center"/>
         
-        {/* ✅ Global Tanstack Query cache context providers */}
         <QueryProvider>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </QueryProvider>
         
-        {/* ❌ Public layout blocks completely stripped out from here */}
       </body>
     </html>
   );
