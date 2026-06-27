@@ -189,7 +189,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
             queryClient.invalidateQueries({ queryKey: ["recentPayments"] }); // ✅ Refresh dashboard ledger immediately
             setIsReceiptModalOpen(true);
         },
-        onError: (error: any) => {
+        onError: (error) => {
             toast.error(`Database Error: ${error.message}`);
         }
     });
