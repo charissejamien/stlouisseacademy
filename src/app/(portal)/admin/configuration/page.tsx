@@ -1,6 +1,7 @@
 import AcademicsConfiguration from "@/components/admin/configuration/Academics";
 import SchoolFeesConfiguration from "@/components/admin/configuration/SchoolFees";
 import DiscountsConfiguration from "@/components/admin/configuration/Discounts";
+import RegistrarConfiguration from "@/components/admin/configuration/Registrar";
 
 import {
   Tabs,
@@ -21,6 +22,7 @@ export default async function Fees() {
                     <TabsTrigger value="academics">Academics</TabsTrigger>
                     <TabsTrigger value="fees">School Fees</TabsTrigger>
                     <TabsTrigger value="discounts">Discounts</TabsTrigger>
+                    <TabsTrigger value="registrar">Registrar</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="academics">
@@ -33,6 +35,10 @@ export default async function Fees() {
 
                 <TabsContent value="discounts">
                     <DiscountsConfiguration/>
+                </TabsContent>
+
+                <TabsContent value="registrar">
+                    <RegistrarConfiguration/>
                 </TabsContent>
             </Tabs>
 
