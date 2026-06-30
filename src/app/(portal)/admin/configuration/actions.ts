@@ -497,3 +497,72 @@ export async function saveSubsidy(name: string, amount: string) {
 
 
 
+export interface ExpenseCategoryRecord {
+    id: string;
+    name: string;
+    keywords: string;
+}
+
+// ==========================================
+// EXPENSE CATEGORIES SMART RULES OPERATIONS
+// ==========================================
+
+export async function getExpenseCategories(): Promise<ExpenseCategoryRecord[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("expenses_categories")
+        .select("id, name, keywords")
+        .order("name", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data || [];
+}
+
+export async function saveExpenseCategory(name: string, keywords: string): Promise<void> {
+    if (!name || !name.trim()) throw new Error("Category name cannot be empty.");
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from("expenses_categories")
+        .insert({
+            name: name.trim(),
+            keywords: keywords.toLowerCase().trim()
+        });
+
+    if (error) {
+        if (error.code === "23505") throw new Error(`The category "${name}" already exists.`);
+        throw new Error(error.message);
+    }
+}
+
+export async function updateExpenseCategory(id: string, name: string, keywords: string): Promise<void> {
+    if (!id) throw new Error("Missing targeted category reference mapping.");
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from("expenses_categories")
+        .update({
+            name: name.trim(),
+            keywords: keywords.toLowerCase().trim()
+        })
+        .eq("id", id);
+
+    if (error) throw new Error(error.message);
+}
+
+export async function deleteExpenseCategory(id: string): Promise<void> {
+    if (!id) throw new Error("Missing deletion row reference.");
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from("expenses_categories")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        if (error.code === "23503") throw new Error("Cannot delete this category because it has logged expenses linked to it.");
+        throw new Error(error.message);
+    }
+}
+
+
+
+
+

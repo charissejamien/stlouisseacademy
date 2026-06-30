@@ -2,10 +2,14 @@
 
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, GraduationCap, CheckCircle2, AlertCircle, Search, Users, ChevronDown } from "lucide-react";
+import { Loader2, GraduationCap, CheckCircle2, AlertCircle, Search, Users, ChevronDown, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getTuitionFeeByGradeGrouped, StudentListItem } from "../actions";
+
+interface ExtendedStudentListItem extends StudentListItem {
+    originGradeLevel: string;
+}
 
 export default function ExecutiveTuitionBalancesPage() {
     const ACTIVE_SCHOOL_YEAR_UUID = "8ca2cef9-7a33-41e4-aea5-5af8cc40625f"; 
@@ -28,12 +32,38 @@ export default function ExecutiveTuitionBalancesPage() {
         };
     }, [groupedData, selectedGradeKey]);
 
+    // 🎯 GLOBAL SEARCH FILTER MATRIX
     const filteredStudents = useMemo(() => {
-        if (!searchQuery.trim()) return activeGroup.students;
-        return activeGroup.students.filter((student: StudentListItem) =>
-            student.fullName.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [activeGroup.students, searchQuery]);
+        const query = searchQuery.trim().toLowerCase();
+        
+        // Mode A: Search box is empty -> Return selected grade level group
+        if (!query) {
+            return (activeGroup.students || []).map(s => ({ 
+                ...s, 
+                originGradeLevel: activeGroup.gradeLevel 
+            }));
+        }
+
+        // Mode B: Search has text -> Extract and scan ALL students across all levels
+        const globalAccumulatedRoster: ExtendedStudentListItem[] = [];
+        
+        Object.entries(groupedData).forEach(([tabKey, group]) => {
+            const formattedLabel = tabKey.match(/^\d+$/) ? `Grade ${tabKey}` : tabKey;
+            const studentsList = group?.students || [];
+            
+            studentsList.forEach((student: StudentListItem) => {
+                if (student.fullName && student.fullName.toLowerCase().includes(query)) {
+                    globalAccumulatedRoster.push({
+                        ...student,
+                        originGradeLevel: formattedLabel
+                    });
+                }
+            });
+        });
+
+        // Alphabetize globally by full name
+        return globalAccumulatedRoster.sort((a, b) => a.fullName.localeCompare(b.fullName));
+    }, [groupedData, activeGroup, searchQuery]);
 
     if (isLoading) {
         return (
@@ -52,13 +82,13 @@ export default function ExecutiveTuitionBalancesPage() {
         );
     }
 
-    // 🎯 GLOBAL CALCULATION INJECTIONS
     const allGroups = Object.values(groupedData);
-    const overallAssessed = allGroups.reduce((acc, g) => acc + g.totalAssessed, 0);
-    const overallCollected = allGroups.reduce((acc, g) => acc + g.totalCollected, 0);
-    const overallOutstanding = allGroups.reduce((acc, g) => acc + g.totalOutstanding, 0);
+    const overallAssessed = allGroups.reduce((acc, g) => acc + (g.totalAssessed || 0), 0);
+    const overallCollected = allGroups.reduce((acc, g) => acc + (g.totalCollected || 0), 0);
+    const overallOutstanding = allGroups.reduce((acc, g) => acc + (g.totalOutstanding || 0), 0);
 
     const trackingTabs = ["Nursery", "Pre-Kindergarten", "Kindergarten", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+    const isSearchingGlobally = searchQuery.trim().length > 0;
 
     return (
         <div className="w-full h-screen p-6 flex flex-col gap-4 overflow-hidden bg-white antialiased">
@@ -67,7 +97,7 @@ export default function ExecutiveTuitionBalancesPage() {
                 <p className="text-xs text-slate-400 mt-0.5">Real-time tuition balance and collection monitor ledger.</p>
             </div>
             
-            {/* 🎯 GLOBAL FINANCIAL SUMMARY STATISTICS TILES (Now 3 Columns Grid) */}
+            {/* GLOBAL TILES SUMMARY */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full shrink-0">
                 <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Global Tuition Assessed</span>
@@ -89,7 +119,7 @@ export default function ExecutiveTuitionBalancesPage() {
                 </div>
             </div>
 
-            {/* CONTROL ROW MODULE */}
+            {/* CONTROLS BAR BAR */}
             <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-3 shrink-0">
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <label htmlFor="grade-select" className="text-xs font-bold text-slate-400 uppercase tracking-wide shrink-0">
@@ -106,7 +136,7 @@ export default function ExecutiveTuitionBalancesPage() {
                             className="w-full h-9 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 appearance-none outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer pr-8"
                         >
                             {trackingTabs.map((tabKey) => {
-                                const tabCount = groupedData[tabKey]?.students.length || 0;
+                                const tabCount = groupedData[tabKey]?.students?.length || 0;
                                 const labelText = tabKey.match(/^\d+$/) ? `Grade ${tabKey}` : tabKey;
                                 return (
                                     <option key={tabKey} value={tabKey}>
@@ -122,7 +152,7 @@ export default function ExecutiveTuitionBalancesPage() {
                 <div className="relative w-full sm:w-64 shrink-0">
                     <Input
                         type="text"
-                        placeholder="Search student profile name..."
+                        placeholder="Search student globally across all grades..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="h-9 text-xs pl-8 bg-white border-slate-200 rounded-xl font-medium placeholder:text-slate-400 focus-visible:ring-indigo-500"
@@ -131,36 +161,42 @@ export default function ExecutiveTuitionBalancesPage() {
                 </div>
             </div>
 
-            {/* MASTER SYSTEM GRID CONTAINER */}
+            {/* MAIN ROSTER TABLE CARD */}
             <Card className="w-full flex-1 flex flex-col border-slate-200 rounded-xl overflow-hidden bg-white shadow-3xs min-h-0">
                 <CardHeader className="border-b bg-slate-50/40 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 shrink-0">
                     <div>
                         <div className="flex items-center gap-2">
-                            <GraduationCap className="w-4 h-4 text-indigo-600" />
+                            {isSearchingGlobally ? (
+                                <Globe className="w-4 h-4 text-amber-600" />
+                            ) : (
+                                <GraduationCap className="w-4 h-4 text-indigo-600" />
+                            )}
                             <CardTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-                                <span>{activeGroup.gradeLevel}</span>
+                                <span>{isSearchingGlobally ? "Global Search Results" : activeGroup.gradeLevel}</span>
                                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 border px-2 py-0.5 rounded-md flex items-center gap-1">
                                     <Users className="w-3 h-3 text-slate-500" />
-                                    {activeGroup.students.length} Total Registered
+                                    {filteredStudents.length} {isSearchingGlobally ? "Matches Found" : "Total Registered"}
                                 </span>
                             </CardTitle>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 divide-x divide-slate-100 bg-white border border-slate-200/60 rounded-xl p-2.5 text-center min-w-[320px] sm:min-w-[380px] shadow-3xs">
-                        <div>
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Assessed</span>
-                            <span className="text-xs font-bold text-slate-800 font-mono block mt-0.5">₱{activeGroup.totalAssessed.toLocaleString()}</span>
+                    {!isSearchingGlobally && (
+                        <div className="grid grid-cols-3 divide-x divide-slate-100 bg-white border border-slate-200/60 rounded-xl p-2.5 text-center min-w-[320px] sm:min-w-[380px] shadow-3xs">
+                            <div>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Assessed</span>
+                                <span className="text-xs font-bold text-slate-800 font-mono block mt-0.5">₱{(activeGroup.totalAssessed || 0).toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-wider block">Collected</span>
+                                <span className="text-xs font-bold text-emerald-700 font-mono block mt-0.5">₱{(activeGroup.totalCollected || 0).toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span className="text-[8px] font-bold text-rose-600 uppercase tracking-wider block">Outstanding</span>
+                                <span className="text-xs font-bold text-rose-700 font-mono block mt-0.5">₱{(activeGroup.totalOutstanding || 0).toLocaleString()}</span>
+                            </div>
                         </div>
-                        <div>
-                            <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-wider block">Collected</span>
-                            <span className="text-xs font-bold text-emerald-700 font-mono block mt-0.5">₱{activeGroup.totalCollected.toLocaleString()}</span>
-                        </div>
-                        <div>
-                            <span className="text-[8px] font-bold text-rose-600 uppercase tracking-wider block">Outstanding</span>
-                            <span className="text-xs font-bold text-rose-700 font-mono block mt-0.5">₱{activeGroup.totalOutstanding.toLocaleString()}</span>
-                        </div>
-                    </div>
+                    )}
                 </CardHeader>
 
                 <CardContent className="p-0 flex-1 min-h-0 relative">
@@ -169,6 +205,7 @@ export default function ExecutiveTuitionBalancesPage() {
                             <thead className="sticky top-0 bg-slate-50/90 backdrop-blur-xs z-10 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b select-none shadow-3xs">
                                 <tr>
                                     <th className="py-3 px-6 bg-slate-50/90">Student Name</th>
+                                    {isSearchingGlobally && <th className="py-3 px-6 bg-slate-50/90">Grade Level</th>}
                                     <th className="py-3 px-6 text-right bg-slate-50/90">Assessed Fee</th>
                                     <th className="py-3 px-6 text-right bg-slate-50/90">Amount Paid</th>
                                     <th className="py-3 px-6 text-right bg-slate-50/90">Remaining Balance</th>
@@ -178,17 +215,30 @@ export default function ExecutiveTuitionBalancesPage() {
                             <tbody className="divide-y divide-slate-100 text-xs text-slate-700 font-medium">
                                 {filteredStudents.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="text-center py-16 text-slate-400 italic bg-white">No tracking entries found.</td>
+                                        <td colSpan={isSearchingGlobally ? 6 : 5} className="text-center py-16 text-slate-400 italic bg-white">
+                                            No student records match "{searchQuery}".
+                                        </td>
                                     </tr>
                                 ) : (
                                     filteredStudents.map((student) => {
-                                        const balance = student.feeAmount - student.amountPaid;
+                                        const balance = (student.feeAmount || 0) - (student.amountPaid || 0);
                                         return (
                                             <tr key={student.id} className="hover:bg-slate-50/30 transition-colors bg-white">
                                                 <td className="py-3 px-6 font-bold text-slate-900">{student.fullName}</td>
-                                                <td className="py-3 px-6 text-right font-mono text-slate-500">₱{student.feeAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                                <td className="py-3 px-6 text-right font-mono text-emerald-700 font-semibold">₱{student.amountPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                                <td className="py-3 px-6 text-right font-mono font-bold text-slate-800">{balance > 0 ? `₱${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "—"}</td>
+                                                {isSearchingGlobally && (
+                                                    <td className="py-3 px-6 font-bold text-indigo-600 font-mono text-[11px]">
+                                                        {student.originGradeLevel}
+                                                    </td>
+                                                )}
+                                                <td className="py-3 px-6 text-right font-mono text-slate-500">
+                                                    ₱{(student.feeAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="py-3 px-6 text-right font-mono text-emerald-700 font-semibold">
+                                                    ₱{(student.amountPaid || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td className="py-3 px-6 text-right font-mono font-bold text-slate-800">
+                                                    {balance > 0 ? `₱${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "—"}
+                                                </td>
                                                 <td className="py-3 px-6 text-center">
                                                     {student.isFullyPaid ? (
                                                         <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2.5 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wide">
