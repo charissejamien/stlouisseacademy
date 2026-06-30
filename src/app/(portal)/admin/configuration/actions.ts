@@ -412,20 +412,16 @@ export async function deleteVariant(id: string) {
 }
 
 {/* Discounts Actions */}
-export async function saveDiscount (name: string, category: string, amount: string) {
+export async function saveDiscount(name: string, category: string, amount: string) {
     const supabase = await createClient();
-
-    const {error} = await supabase
-    .from('discounts')
-    .insert({
-        name: name,
-        category: category,
-        amount: parseFloat(amount)
-    });
-
-    if (error) {
-        throw new Error (error.message);
-    }
+    const { error } = await supabase
+        .from("discounts")
+        .insert({
+            name: name,
+            category: category,
+            amount: parseFloat(amount)
+        });
+    if (error) throw new Error(error.message);
 }
 
 export async function getDiscounts() {
@@ -470,6 +466,34 @@ export async function deleteDiscount(id: string) {
     }
 }
 
+export async function getSubsidies() {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('discounts')
+        .select('*')
+        .eq('category', 'Subsidy');
+
+    if (error) {
+        throw new Error(error.message)
+    }
+    
+    return data
+}
+
+
+export async function saveSubsidy(name: string, amount: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from("discounts")
+        .insert({
+            name: name,
+            category: "Subsidy",
+            amount: parseFloat(amount)
+        });
+        
+    if (error) throw new Error(error.message);
+}
 
 
 

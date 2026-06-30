@@ -142,7 +142,8 @@ export default function ExecutiveBookBalancesPage() {
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-0 'flex-1 min-h-0 relative">
+                {/* 🎯 RESTORED CARDCONTENT WORKSPACE: Renders internal scrolling data table grids */}
+                <CardContent className="p-0 flex-1 min-h-0 relative">
                     <div className="absolute inset-0 overflow-y-auto overflow-x-auto">
                         <table className="w-full border-collapse text-left table-auto">
                             <thead className="sticky top-0 bg-slate-50/90 backdrop-blur-xs z-10 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b select-none shadow-3xs">

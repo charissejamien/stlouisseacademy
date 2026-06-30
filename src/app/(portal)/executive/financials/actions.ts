@@ -2,6 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+// ==========================================
+// CLIENT RESPONSE EXPORT INTERFACES
+// ==========================================
+
 export interface FinancialSummaryMetrics {
     grossAssessed: number;
     totalCollected: number;
@@ -45,6 +49,45 @@ export interface ExecutiveFinancialDataset {
     recentTransactions: AuditTransactionRecord[];
 }
 
+// ==========================================
+// DATABASE QUERY DEFINITIONS (ANTI-ANY GUARD)
+// ==========================================
+
+interface AccountCardRow {
+    student_id: string | null;
+    total_tuition_fee: number | null;
+    total_books_fee: number | null;
+}
+
+interface EnrollmentRow {
+    student_id: string | null;
+    grade_level: string | null;
+}
+
+interface NamePayload {
+    first_name: string | null;
+    last_name: string | null;
+}
+
+interface RelationalStudentData {
+    first_name: string | null;
+    last_name: string | null;
+    parent: NamePayload | NamePayload[] | null;
+}
+
+interface PaymentRow {
+    or_number: string | null;
+    amount: number | null;
+    mode_of_payment: string | null;
+    payment_specifics: string | null;
+    created_at: string;
+    students: RelationalStudentData | RelationalStudentData[] | null;
+}
+
+// ==========================================
+// EXECUTIVE LEDGER SERVICE FUNCTION
+// ==========================================
+
 /**
  * Compiles a real-time consolidated executive ledger tracking matrix by gathering 
  * metrics across core financial tables referencing your master student UUID.
@@ -53,11 +96,7 @@ export async function getExecutiveFinancialOverview(schoolYearId: string): Promi
     const supabase = await createClient();
 
     // 1. Execute parallel single-pass lookups across your distinct related tables
-    const [
-        { data: accounts, error: accountsError },
-        { data: enrollments, error: enrollmentsError },
-        { data: payments, error: paymentsError }
-    ] = await Promise.all([
+    const [accountsResult, enrollmentsResult, paymentsResult] = await Promise.all([
         supabase.from("student_account_card").select("student_id, total_tuition_fee, total_books_fee"),
         supabase.from("enrollments").select("student_id, grade_level").eq("school_year_id", schoolYearId),
         supabase.from("payments").select(`
@@ -71,14 +110,22 @@ export async function getExecutiveFinancialOverview(schoolYearId: string): Promi
     ]);
 
     // Error Handlers
-    if (accountsError || enrollmentsError || paymentsError) {
-        console.error("Critical core finance table aggregation failure:", { accountsError, enrollmentsError, paymentsError });
+    if (accountsResult.error || enrollmentsResult.error || paymentsResult.error) {
+        console.error("Critical core finance table aggregation failure:", {
+            accountsError: accountsResult.error,
+            enrollmentsError: enrollmentsResult.error,
+            paymentsError: paymentsResult.error
+        });
         throw new Error("Failed to synchronize relational ledger layers.");
     }
 
+    const accounts = accountsResult.data as unknown as AccountCardRow[] | null;
+    const enrollments = enrollmentsResult.data as unknown as EnrollmentRow[] | null;
+    const payments = paymentsResult.data as unknown as PaymentRow[] | null;
+
     // 2. Map structural lists into quick memory-map lookups using student UUID keys
     const accountMap = new Map<string, { tuition: number; books: number }>();
-    accounts?.forEach(acc => {
+    accounts?.forEach((acc) => {
         if (acc.student_id) {
             accountMap.set(acc.student_id, {
                 tuition: Number(acc.total_tuition_fee || 0),
@@ -93,22 +140,24 @@ export async function getExecutiveFinancialOverview(schoolYearId: string): Promi
     const gradeMap: Record<string, { assessed: number; collected: number }> = {};
 
     // Gather total collections directly from your payments table tracking lines
-    payments?.forEach(p => {
+    payments?.forEach((p) => {
         totalCollected += Number(p.amount || 0);
     });
 
     enrollments?.forEach((enrollment) => {
         const studentUUID = enrollment.student_id;
+        if (!studentUUID) return;
+
         const matchingFees = accountMap.get(studentUUID) || { tuition: 0, books: 0 };
-        
         const totalStudentCost = matchingFees.tuition + matchingFees.books;
         grossAssessed += totalStudentCost;
 
         const grade = enrollment.grade_level || "Unassigned Track";
-        if (!gradeMap[grade]) gradeMap[grade] = { assessed: 0, collected: 0 };
+        if (!gradeMap[grade]) {
+            gradeMap[grade] = { assessed: 0, collected: 0 };
+        }
         
         gradeMap[grade].assessed += totalStudentCost;
-        // (Assuming collection data per tier matches overall ratios for tracking estimations)
     });
 
     const outstandingReceivables = grossAssessed - totalCollected;
@@ -116,13 +165,12 @@ export async function getExecutiveFinancialOverview(schoolYearId: string): Promi
 
     // Build Grade Breakdown Matrix Array
     const gradeBreakdown: GradeTierBreakdown[] = Object.entries(gradeMap).map(([grade, data]) => {
-        // Simple mock allocation logic for grade levels since payments live in a flat ledger table
         const collectedEstimation = Math.min(data.assessed, data.assessed * (efficiencyRate / 100));
         const uncollected = data.assessed - collectedEstimation;
         const progress = data.assessed > 0 ? Math.round((collectedEstimation / data.assessed) * 100) : 0;
 
         return { grade, assessed: data.assessed, collected: collectedEstimation, uncollected, progress };
-    }).sort((a, b) => a.grade.localeCompare(b.grade));
+    }).sort((a, b) => a.grade.localeCompare(b.grade, undefined, { numeric: true, sensitivity: "base" }));
 
     // 4. Compute Inflow Channels
     let cashAmount = 0, cashCount = 0;
@@ -145,25 +193,40 @@ export async function getExecutiveFinancialOverview(schoolYearId: string): Promi
         }
     });
 
-    // 5. Parse Recent Transactions Table Contracts
+    // 5. Parse Recent Transactions Table Contracts safely handling relational objects vs arrays
     const recentTransactions: AuditTransactionRecord[] = (payments || []).map((p) => {
-        const studentInfo: any = p.students;
-        const parentInfo = studentInfo?.parent;
-        
-        const studentName = studentInfo ? `${studentInfo.first_name} ${studentInfo.last_name}` : "System Profile";
-        const parentName = parentInfo ? `${parentInfo.first_name} ${parentInfo.last_name}` : "Over-the-counter";
+    // Normalize single vs array responses from relational queries
+    const baseStudent = p.students;
+    const studentInfo: RelationalStudentData | null = Array.isArray(baseStudent) 
+        ? baseStudent[0] 
+        : baseStudent;
 
-        return {
-            id: p.or_number || "N/A",
-            parentName,
-            studentName,
-            context: p.payment_specifics || "School Account Remittance",
-            method: p.mode_of_payment || "Cash",
-            amount: Number(p.amount || 0),
-            date: new Date(p.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
-            status: "Success"
-        };
-    });
+    const baseParent = studentInfo?.parent;
+    
+    // 🎯 FIX: Add '|| null' at the end of the evaluation string
+    const parentInfo: NamePayload | null = Array.isArray(baseParent) 
+        ? baseParent[0] 
+        : (baseParent || null); 
+    
+    const studentName = studentInfo?.first_name && studentInfo?.last_name 
+        ? `${studentInfo.first_name} ${studentInfo.last_name}` 
+        : "System Profile";
+        
+    const parentName = parentInfo?.first_name && parentInfo?.last_name 
+        ? `${parentInfo.first_name} ${parentInfo.last_name}` 
+        : "Over-the-counter";
+
+    return {
+        id: p.or_number || "N/A",
+        parentName,
+        studentName,
+        context: p.payment_specifics || "School Account Remittance",
+        method: p.mode_of_payment || "Cash",
+        amount: Number(p.amount || 0),
+        date: new Date(p.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+        status: "Success"
+    };
+});
 
     return {
         metrics: { grossAssessed, totalCollected, outstandingReceivables, efficiencyRate, unlinkedSiblingsCount: 0 },
