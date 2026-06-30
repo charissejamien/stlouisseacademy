@@ -43,6 +43,22 @@ const JHS_GRADES = ["7", "8", "9", "10"];
 export async function getJhsEscGroupedRoster(activeSchoolYearId: string): Promise<Record<string, EscGradeGroup>> {
     const supabase = await createClient();
 
+    // 🎯 1. FORCE THE DATABASE UPDATE FIRST & AWAIT IT COMPLETELY
+    // We target variations like "7", "Grade 7", etc., to capture everything
+    const targetGradesFilter = [...JHS_GRADES, ...JHS_GRADES.map(g => `Grade ${g}`)];
+
+    const { error: patchError } = await supabase
+        .from("enrollments")
+        .update({ isESC: true })
+        .eq("school_year_id", activeSchoolYearId)
+        .is("isESC", null) // Finds all records that are still raw NULL
+        .in("grade_level", targetGradesFilter); 
+
+    if (patchError) {
+        console.error("Critical: Automatic ESC database batch update failed:", patchError);
+    }
+
+    // 🎯 2. FETCH THE FRESH DATA *AFTER* THE UPDATE PROMISE RESOLVES
     const { data, error } = await supabase
         .from("enrollments")
         .select(`
@@ -65,7 +81,6 @@ export async function getJhsEscGroupedRoster(activeSchoolYearId: string): Promis
 
     const rawRows = data as unknown as EnrollmentRow[] | null;
     
-    // Initialize the grouped database dictionary keys matching your target rows
     const groups: Record<string, EscGradeGroup> = {};
     JHS_GRADES.forEach((grade) => {
         groups[grade] = {
@@ -86,16 +101,17 @@ export async function getJhsEscGroupedRoster(activeSchoolYearId: string): Promis
             g => g === rawGrade || `grade ${g}`.toLowerCase() === rawGrade.toLowerCase()
         );
 
-        if (!dynamicLookupKey) return; // Skips Elementary / Primary tracks safely
+        if (!dynamicLookupKey) return; 
 
         const studentInfo = row.students as RelationalStudent | null;
         const displayLabel = studentInfo ? `${studentInfo.last_name}, ${studentInfo.first_name}` : "Unknown Profile";
 
-        // 🎯 SPECIFICATION: If row field is null, it defaults to TRUE since all students are under the grant by default
+        // 🎯 UI Fallback Match: If anything still slipped past the database patch query, 
+        // treat it as true on the client interface view.
         const currentEscStatus = row.isESC === null ? true : row.isESC;
 
         groups[dynamicLookupKey].students.push({
-            id: row.id, // Enrollment record primary tracking key
+            id: row.id, 
             fullName: displayLabel,
             enrollmentStatus: row.status || "Pending Verification",
             dateEnrolled: row.created_at ? new Date(row.created_at).toLocaleDateString("en-PH", {
@@ -106,7 +122,6 @@ export async function getJhsEscGroupedRoster(activeSchoolYearId: string): Promis
             isEsc: currentEscStatus
         });
 
-        // Increment cumulative header metadata counters
         groups[dynamicLookupKey].totalStudents += 1;
         if (currentEscStatus) {
             groups[dynamicLookupKey].totalGrantees += 1;
@@ -114,7 +129,6 @@ export async function getJhsEscGroupedRoster(activeSchoolYearId: string): Promis
         }
     });
 
-    // Alphabetize roster lists within individual structural blocks
     JHS_GRADES.forEach((g) => {
         groups[g].students.sort((a, b) => a.fullName.localeCompare(b.fullName));
     });

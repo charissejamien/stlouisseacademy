@@ -37,8 +37,8 @@ export interface CompleteStudentProfile {
     classification: string;
     total_assessment: number;
     total_paid: number;
-    total_books_fee: number;    // 📚 Standardized property
-    total_books_paid: number;   // 📚 Standardized property
+    total_books_fee: number;
+    total_books_paid: number;
     balance_remaining: number;
     transactions: TransactionRow[];
 }
@@ -51,6 +51,7 @@ interface SupabaseEnrollmentJoin {
     grade_level: string;
     student_type: string;
     status?: string;
+    isESC: boolean | null; // 🎯 INJECTED
     school_years: SupabaseSchoolYearJoin | null;
 }
 
@@ -194,54 +195,77 @@ export interface CompleteStudentProfile {
  * aggregating account logs dynamically via server execution context.
  * * @param studentUUID The primary key UUID value of the target student record row
  */
+/**
+ * Retrieves full academic and financial profiles for an individual student,
+ * aggregating account logs dynamically via server execution context.
+ * @param studentUUID The primary key UUID value of the target student record row
+ */
 export async function getStudentInformation(studentUUID: string): Promise<CompleteStudentProfile> {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from("students")
-        .select(`
-            id,
-            student_id,
-            first_name,
-            middle_name,
-            last_name,
-            created_at,
-            enrollments (
-                grade_level,
-                student_type,
-                school_years ( is_active )
-            ),
-            student_account_card (
-                total_tuition_fee,
-                total_books_fee,
-                school_years ( is_active )
-            ),
-            payments (
+    // 🎯 1. Added 'isESC' into the enrollments select query, and fetched the active subsidy rate in parallel
+    const [profileResult, subsidyResult] = await Promise.all([
+        supabase
+            .from("students")
+            .select(`
                 id,
-                or_number,
-                amount,
-                mode_of_payment,
+                student_id,
+                first_name,
+                middle_name,
+                last_name,
                 created_at,
-                payment_specifics
-            )
-        `)
-        .eq("id", studentUUID)
-        .single();
+                enrollments (
+                    grade_level,
+                    student_type,
+                    isESC,
+                    school_years ( is_active )
+                ),
+                student_account_card (
+                    total_tuition_fee,
+                    total_books_fee,
+                    school_years ( is_active )
+                ),
+                payments (
+                    id,
+                    or_number,
+                    amount,
+                    mode_of_payment,
+                    created_at,
+                    payment_specifics
+                )
+            `)
+            .eq("id", studentUUID)
+            .single(),
+        supabase
+            .from("discounts")
+            .select("name, amount")
+            .eq("category", "Subsidy")
+    ]);
 
-    if (error || !data) {
-        console.error("Error fetching absolute student account metadata details:", error);
-        throw new Error(`Failed to map student profile parameters: ${error?.message || "Record not found"}`);
+    if (profileResult.error || !profileResult.data) {
+        console.error("Error fetching absolute student account metadata details:", profileResult.error);
+        throw new Error(`Failed to map student profile parameters: ${profileResult.error?.message || "Record not found"}`);
     }
 
-    const student = data as unknown as SupabaseStudentProfileQueryResult;
+    const student = profileResult.data as unknown as SupabaseStudentProfileQueryResult;
 
-    // ⚡ Isolate active school year contexts or fallback cleanly to baseline indices
+    // Resolve the active ESC configuration value dynamically from your settings table
+    const escDbRecord = (subsidyResult.data || []).find(s => /esc/i.test(s.name || ""));
+    const activeEscSubsidyAmount = escDbRecord ? Number(escDbRecord.amount || 0) : 9000;
+
+    // Isolate active school year contexts cleanly
     const activeEnrollment = student.enrollments?.find((e) => e.school_years?.is_active === true) || student.enrollments?.[0];
     const activeAssessment = student.student_account_card?.find((a) => a.school_years?.is_active === true) || student.student_account_card?.[0];
 
     // Isolate base values from account card parameters safely
-    const totalTuitionAssessment = Number(activeAssessment?.total_tuition_fee || 0);
+    let totalTuitionAssessment = Number(activeAssessment?.total_tuition_fee || 0);
     const totalBooksAssessment = Number(activeAssessment?.total_books_fee || 0);
+
+    // 🎯 2. APPLY DYNAMIC DEDUCTION: If student has isESC flagged as true, deduct the active subsidy rate
+    if (activeEnrollment?.isESC) {
+        totalTuitionAssessment = Math.max(0, totalTuitionAssessment - activeEscSubsidyAmount);
+    }
+
     const combinedGrossAssessment = totalTuitionAssessment + totalBooksAssessment;
 
     // Filter payment histories dynamically to calculate separate ledger balances
@@ -286,7 +310,7 @@ export async function getStudentInformation(studentUUID: string): Promise<Comple
             day: "numeric"
         }),
         classification: activeEnrollment?.student_type || "Regular",
-        total_assessment: totalTuitionAssessment,
+        total_assessment: totalTuitionAssessment, // Now cleanly reflects the subsidy reduction
         total_paid: tuitionPaid,
         total_books_fee: totalBooksAssessment,
         total_books_paid: booksPaid,

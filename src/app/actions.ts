@@ -111,10 +111,6 @@ export async function getJobOpenings() {
 }
 
 
-
-
-
-
 export async function getGradeLevels(){
     const supabase = await createClient();
 
@@ -127,4 +123,28 @@ export async function getGradeLevels(){
     }
 
     return data || [];
+}
+
+
+/* Function to get active school year id */
+
+interface SchoolYearRow {
+    id: string;
+}
+
+export async function getActiveSchoolYear() {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('school_years')
+        .select('*')
+        .eq('is_active', true);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    const activeRow = data as unknown as SchoolYearRow;
+
+    return activeRow.id;
 }

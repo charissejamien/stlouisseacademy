@@ -35,11 +35,18 @@ interface JoinedStudentData {
     last_name: string;
 }
 
-// 🌟 FIX: Define a strict type for the account card rows to remove the 'any' ESLint block
 interface AccountCardRow {
     student_id: string | null;
     total_books_fee?: number | null;
     total_tuition_fee?: number | null;
+}
+
+// Strictly map the relational selection response layout fields
+interface EnrollmentRow {
+    student_id: string | null;
+    grade_level: string | null;
+    isESC: boolean | null;
+    students: JoinedStudentData | null;
 }
 
 /**
@@ -49,22 +56,27 @@ async function getGroupedLedgerData(
     activeSchoolYearId: string, 
     feeColumn: "total_books_fee" | "total_tuition_fee", 
     isTuitionMode: boolean,
-    targetGrades: string[] // Pass allowed grades dynamically down
+    targetGrades: string[] 
 ): Promise<Record<string, GradeSummaryGroup>> {
     const supabase = await createClient();
 
-    const [accountsResult, enrollmentsResult, paymentsResult] = await Promise.all([
+    // 🎯 1. Added dynamic dynamic 'isESC' selection into the query queue alongside a select fetch for your dynamic subsidy rate table row
+    const [accountsResult, enrollmentsResult, paymentsResult, subsidyResult] = await Promise.all([
         supabase.from("student_account_card").select(`student_id, ${feeColumn}`),
-        supabase.from("enrollments").select(`student_id, grade_level, students (first_name, last_name)`).eq("school_year_id", activeSchoolYearId),
-        supabase.from("payments").select("student_id, amount, payment_specifics")
+        supabase.from("enrollments").select(`student_id, grade_level, isESC, students (first_name, last_name)`).eq("school_year_id", activeSchoolYearId),
+        supabase.from("payments").select("student_id, amount, payment_specifics"),
+        supabase.from("discounts").select("name, amount").eq("category", "Subsidy")
     ]);
 
-    if (accountsResult.error || enrollmentsResult.error || paymentsResult.error) {
+    if (accountsResult.error || enrollmentsResult.error || paymentsResult.error || subsidyResult.error) {
         throw new Error(`Failed to synchronize unified financial data metrics.`);
     }
 
+    // Identify your active ESC configuration value directly out of your new configuration table row
+    const escDbRecord = (subsidyResult.data || []).find(s => /esc/i.test(s.name || ""));
+    const activeEscSubsidyAmount = escDbRecord ? Number(escDbRecord.amount || 0) : 9000;
+
     const studentPaymentsMap = new Map<string, number>();
-    
     (paymentsResult.data || []).forEach((payment) => {
         if (!payment.student_id) return;
         const specifics = payment.payment_specifics ? payment.payment_specifics.toString().trim() : "";
@@ -80,8 +92,6 @@ async function getGroupedLedgerData(
     });
 
     const feesMap = new Map<string, number>();
-    
-    // 🎯 ESLINT FIX: Cast data accurately as an array of AccountCardRow instead of using 'any'
     const accountRows = accountsResult.data as unknown as AccountCardRow[] | null;
     (accountRows || []).forEach((card) => {
         if (card.student_id) {
@@ -101,7 +111,8 @@ async function getGroupedLedgerData(
         };
     });
 
-    (enrollmentsResult.data || []).forEach((row) => {
+    const enrollmentRows = enrollmentsResult.data as unknown as EnrollmentRow[] | null;
+    (enrollmentRows || []).forEach((row) => {
         if (!row.student_id || !row.grade_level) return;
         const rawGrade = row.grade_level.toString().trim();
         
@@ -111,10 +122,17 @@ async function getGroupedLedgerData(
 
         if (!dynamicLookupKey) return;
 
-        const studentInfo = row.students as unknown as JoinedStudentData | null;
+        const studentInfo = row.students;
         const studentName = studentInfo ? `${studentInfo.last_name}, ${studentInfo.first_name}` : "Unknown Student";
         
-        const feeAmount = feesMap.get(row.student_id) || 0;
+        // 🎯 2. CALCULATE DYNAMIC DISCOUNTS HERE
+        let feeAmount = feesMap.get(row.student_id) || 0;
+        
+        // If it's tuition mode and the student is flagged as ESC, dynamically subtract the amount
+        if (isTuitionMode && row.isESC) {
+            feeAmount = Math.max(0, feeAmount - activeEscSubsidyAmount);
+        }
+
         const amountPaid = studentPaymentsMap.get(row.student_id) || 0;
         const balance = feeAmount - amountPaid;
         const isFullyPaid = feeAmount > 0 && amountPaid >= feeAmount;
@@ -144,7 +162,6 @@ export async function getBooksFeeByGradeGrouped(activeSchoolYearId: string) {
 }
 
 export async function getTuitionFeeByGradeGrouped(activeSchoolYearId: string) {
-    // 🎯 INCLUDES HIGH SCHOOL GRADES: Added 7, 8, 9, 10 for Tuition mappings
     const tuitionGrades = ["Nursery", "Pre-Kindergarten", "Kindergarten", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
     return getGroupedLedgerData(activeSchoolYearId, "total_tuition_fee", true, tuitionGrades);
 }
