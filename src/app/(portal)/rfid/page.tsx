@@ -96,9 +96,9 @@ export default function RFIDGatePage() {
                         {isPending ? (
                             <span className="text-xs font-mono uppercase text-white/40 tracking-wider">Loading...</span>
                         ) : scanResult ? (
-                            <span className="text-xs font-mono uppercase text-white/60 tracking-wider">Image Box Container</span>
+                            <span className="text-xs font-mono uppercase text-white/60 tracking-wider"></span>
                         ) : (
-                            <span className="text-xs font-mono uppercase text-white/20 tracking-wider">Standby Frame</span>
+                            <span className="text-xs font-mono uppercase text-white/20 tracking-wider"></span>
                         )}
                     </div>
 

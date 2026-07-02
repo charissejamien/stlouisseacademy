@@ -11,41 +11,102 @@ import {
     MoreVertical, 
     Loader2
 } from "lucide-react";
-import { Card, CardContent,} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-
-import { getMasterStudentList } from "./actions";
 import { useRouter } from "next/navigation";
 
-const availableGradeLevels = ["All Grades", "Nursery", "Pre-Kindergarten", "Kindergarten", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+// 🎯 FIXED: Explicit import target matching your Master List structure definition
+import { getMasterStudentList, MasterStudentRow } from "./actions";
+
+// 🎯 UPDATED: Removed "All Grades" and made Nursery the baseline default array trace
+const availableGradeLevels = ["Nursery", "Pre-Kindergarten", "Kindergarten", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
 export default function StudentMasterListPage() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedGrade, setSelectedGrade] = useState("All Grades");
+    // 🎯 UPDATED: Default state initializer shifted directly to "Nursery"
+    const [selectedGrade, setSelectedGrade] = useState("Nursery");
 
     const router = useRouter();
 
-    const { data: students = [], isLoading } = useQuery({
+    const { data: students = [], isLoading } = useQuery<MasterStudentRow[]>({
         queryKey: ["masterStudentList"],
         queryFn: () => getMasterStudentList()
     });
+
     // ⚡ Reactive Live Filtration Engine
+    const isSearching = searchTerm.trim().length > 0;
+
     const filteredStudents = students.filter((student) => {
         const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
         const matchesSearch = 
             fullName.includes(searchTerm.toLowerCase()) || 
             student.student_id.includes(searchTerm) || 
-            student.parent_name.toLowerCase().includes(searchTerm.toLowerCase());
+            (student.parent_name && student.parent_name.toLowerCase().includes(searchTerm.toLowerCase()));
             
-        const matchesGrade = selectedGrade === "All Grades" || student.grade_level === selectedGrade;
+        // 🎯 UPDATED: If searching, skip grade filtering entirely to scan the full database.
+        if (isSearching) {
+            return matchesSearch;
+        }
 
-        return matchesSearch && matchesGrade
+        const matchesGrade = student.grade_level === selectedGrade;
+        return matchesSearch && matchesGrade;
     });
 
+    // 🎯 DYNAMIC RENDERING GROUP PARSER: Alphabetically sorts and chunks by gender when browsing grades normally
+    const malesList = filteredStudents
+        .filter((s) => s.gender.toLowerCase() === "male")
+        .sort((a, b) => a.last_name.localeCompare(b.last_name));
+
+    const femalesList = filteredStudents
+        .filter((s) => s.gender.toLowerCase() === "female")
+        .sort((a, b) => a.last_name.localeCompare(b.last_name));
+
+    const othersList = filteredStudents
+        .filter((s) => s.gender.toLowerCase() !== "male" && s.gender.toLowerCase() !== "female")
+        .sort((a, b) => a.last_name.localeCompare(b.last_name));
+
     const totalCount = students.length;
+
+    // Helper row renderer to enforce strict visual consistency across tables rows 
+    const renderStudentRow = (student: MasterStudentRow) => (
+        <tr key={student.id} onClick={() => router.push(`/executive/students/${student.id}`)} className="hover:bg-slate-50/40 transition-colors cursor-pointer">
+            <td className="py-3.5 px-6 font-mono font-bold text-indigo-600">{student.student_id}</td>
+            <td className="py-3.5 px-6 font-bold text-slate-900">
+                {student.last_name}, {student.first_name} {student.middle_name || ""}
+            </td>
+            <td className="py-3.5 px-6">
+                <span className="font-semibold bg-slate-100 text-slate-800 px-2 py-0.5 rounded text-[10px]">
+                    {student.grade_level}
+                </span>
+            </td>
+            <td className="py-3.5 px-6 font-medium text-slate-600">
+                <span className={`px-2 py-0.5 rounded text-[10px] ${
+                    student.student_type === "Scholar" ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-blue-50 text-blue-700 border border-blue-200"
+                }`}>
+                    {student.student_type}
+                </span>
+            </td>
+            <td className="py-3.5 px-6 font-semibold text-slate-700">{student.parent_name}</td>
+            <td className="py-3.5 px-6 font-medium text-slate-500">{student.gender}</td>
+            <td className="py-3.5 px-6 text-muted-foreground">{student.date_added}</td>
+            <td className="py-3.5 px-6 text-center">
+                <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                    student.status === "Enrolled" 
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}>
+                    {student.status}
+                </span>
+            </td>
+            <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                    <MoreVertical className="w-4 h-4" />
+                </Button>
+            </td>
+        </tr>
+    );
 
     return (
         <div className="w-[95%] max-w-(screen-2xl) mx-auto my-10 flex flex-col gap-8 antialiased">
@@ -73,10 +134,10 @@ export default function StudentMasterListPage() {
                 </div>
             </div>
 
-            {/* Quick Summary Cards (Fed by live mapped values) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Quick Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
                 <Card className="shadow-xs border-slate-100 bg-white h-fit">
-                    <CardContent className="pt-2 flex items-center gap-4">
+                    <CardContent className="pt-6 flex items-center gap-4">
                         <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
                             <Users className="w-5 h-5" />
                         </div>
@@ -89,40 +150,40 @@ export default function StudentMasterListPage() {
                     </CardContent>
                 </Card>
 
-                 {/* Search Field Control */}
-                    <div className="relative">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 -mt-4" />
-                        <Input 
-                            placeholder="Search Name, ID, or Parent..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 h-10 text-xs bg-white border-slate-200 shadow-xs"
-                        />
-                    </div>
+                {/* Search Field Control */}
+                <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Input 
+                        placeholder="Search full database by Name, ID, or Parent..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 h-10 text-xs bg-white border-slate-200 shadow-xs"
+                    />
+                </div>
 
-                    {/* Grade Level Filter Dropdown */}
-                    <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                        <SelectTrigger className="bg-white border-slate-200 h-10 text-xs text-slate-700 shadow-xs">
-                            <div className="flex items-center gap-2">
-                                <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                <SelectValue placeholder="Filter by Grade" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableGradeLevels.map((grade) => (
-                                <SelectItem key={grade} value={grade} className="text-xs">{grade}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                {/* Grade Level Filter Dropdown */}
+                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                    <SelectTrigger className="bg-white border-slate-200 h-10 text-xs text-slate-700 shadow-xs">
+                        <div className="flex items-center gap-2">
+                            <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <SelectValue placeholder="Filter by Grade" />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableGradeLevels.map((grade) => (
+                            <SelectItem key={grade} value={grade} className="text-xs">{grade}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             {/* Main Students Directory Table */}
             <Card className="shadow-sm border-slate-200 bg-white overflow-hidden">
-                <div className="pl-5 pb-5 border-b flex justify-between items-center">
+                <div className="p-5 border-b flex justify-between items-center">
                     <div>
                         <h3 className="text-base font-bold text-slate-800">Master Roster Records</h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Showing {filteredStudents.length} student matches from directory.
+                            Showing {filteredStudents.length} student matches.
                         </p>
                     </div>
                 </div>
@@ -152,50 +213,48 @@ export default function StudentMasterListPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : filteredStudents.length > 0 ? (
-                                filteredStudents.map((student) => (
-                                    <tr key={student.id} onClick={() => router.push(`/executive/students/${student.id}`)} className="hover:bg-slate-50/40 transition-colors cursor-pointer">
-                                        <td className="py-3.5 px-6 font-mono font-bold text-indigo-600">{student.student_id}</td>
-                                        <td className="py-3.5 px-6 font-bold text-slate-900">
-                                            {student.last_name}, {student.first_name} {student.middle_name || ""}
-                                        </td>
-                                        <td className="py-3.5 px-6">
-                                            <span className="font-semibold bg-slate-100 text-slate-800 px-2 py-0.5 rounded text-[10px]">
-                                                {student.grade_level}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-6 font-medium text-slate-600">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] ${
-                                                student.student_type === "Scholar" ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-blue-50 text-blue-700 border border-blue-200"
-                                            }`}>
-                                                {student.student_type}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-6 font-semibold text-slate-700">{student.parent_name}</td>
-                                        <td className="py-3.5 px-6 font-medium text-slate-500">{student.gender}</td>
-                                        <td className="py-3.5 px-6 text-muted-foreground">{student.date_added}</td>
-                                        <td className="py-3.5 px-6 text-center">
-                                            <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
-                                                student.status === "Enrolled" 
-                                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
-                                                    : "bg-amber-50 text-amber-700 border border-amber-200"
-                                            }`}>
-                                                {student.status}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5 px-4 text-center">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
-                                                <MoreVertical className="w-4 h-4" />
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
+                            ) : filteredStudents.length === 0 ? (
                                 <tr>
                                     <td colSpan={9} className="py-12 text-center text-sm text-muted-foreground italic font-medium">
                                         No student listings matched your criteria or search filters.
                                     </td>
                                 </tr>
+                            ) : isSearching ? (
+                                // 🎯 SEARCH ROUTE: Render simple uniform results list bypassing gender blocks
+                                filteredStudents.map((s) => renderStudentRow(s))
+                            ) : (
+                                // 🎯 STANDARD VIEW ROUTE: Grouped explicitly by Gender and sorted alphabetically
+                                <>
+                                    {/* MALE GROUP HEADER & ROWS */}
+                                    {malesList.length > 0 && (
+                                        <tr className="bg-slate-100/60 font-black tracking-wider text-[10px] text-indigo-700 select-none pointer-events-none">
+                                            <td colSpan={9} className="py-2 px-6 border-y bg-indigo-50/40 uppercase">
+                                                Male Section — ({malesList.length} Students)
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {malesList.map((s) => renderStudentRow(s))}
+
+                                    {/* FEMALE GROUP HEADER & ROWS */}
+                                    {femalesList.length > 0 && (
+                                        <tr className="bg-slate-100/60 font-black tracking-wider text-[10px] text-rose-700 select-none pointer-events-none">
+                                            <td colSpan={9} className="py-2 px-6 border-y bg-rose-50/30 uppercase mt-4">
+                                                Female Section — ({femalesList.length} Students)
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {femalesList.map((s) => renderStudentRow(s))}
+
+                                    {/* FALLBACK GROUP FOR OTHER/UNSPECIFIED GENDERS */}
+                                    {othersList.length > 0 && (
+                                        <tr className="bg-slate-100/60 font-black tracking-wider text-[10px] text-slate-600 select-none pointer-events-none">
+                                            <td colSpan={9} className="py-2 px-6 border-y bg-slate-100/40 uppercase">
+                                                Unspecified Gender Section — ({othersList.length} Students)
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {othersList.map((s) => renderStudentRow(s))}
+                                </>
                             )}
                         </tbody>
                     </table>
