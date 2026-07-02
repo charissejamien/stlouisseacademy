@@ -6,15 +6,14 @@ import toast from "react-hot-toast";
 import {
     Plus,
     Search,
-    Filter,
-    Download,
     Banknote,
     ReceiptText,
     CalendarDays,
     Trash2,
-    Loader2
+    Loader2,
+    ChevronDown
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,13 +25,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 import { 
     getExpenses,
     saveExpense,
     deleteExpense,
-    ExpenseListItem
 } from "./actions";
 
 import { getExpenseCategories } from "../../admin/configuration/actions";
@@ -66,7 +75,7 @@ export default function RegistrarExpensesPage() {
     });
 
     // 🎯 QUERY B: FETCH LIVE EXPENSES ENTRIES
-    const { data: expensesList = [], isLoading, error } = useQuery({
+    const { data: expensesList = [], isLoading} = useQuery({
         queryKey: ["expensesRecordSheet"],
         queryFn: getExpenses
     });
@@ -85,8 +94,8 @@ export default function RegistrarExpensesPage() {
             setIsAddModalOpen(false);
             queryClient.invalidateQueries({ queryKey: ["expensesRecordSheet"] });
         },
-        onError: (err: any) => {
-            toast.error(err.message || "Failed to commit record entry.");
+        onError: (error) => {
+            toast.error(error.message || "Failed to commit record entry.");
         }
     });
 
@@ -96,6 +105,9 @@ export default function RegistrarExpensesPage() {
         onSuccess: () => {
             toast.success("Expense record deleted.");
             queryClient.invalidateQueries({ queryKey: ["expensesRecordSheet"] });
+        },
+        onError: (error) => {
+            toast.error(error.message || "Failed to delete resource entry.");
         }
     });
 
@@ -103,26 +115,20 @@ export default function RegistrarExpensesPage() {
     const handleDescriptionChange = (textValue: string) => {
         setFormDescription(textValue);
         
-        // Clean text string parameters and slice down into individual word indices
         const inputWords = textValue.toLowerCase().split(/\s+/);
         
-        // Match user's text tokens against structural rules arrays from the DB cache
         const automaticallyMatchedCategory = dbCategories.find(category => {
             if (!category.keywords) return false;
-            
-            // Re-map column comma strings to normalized array items
             const ruleKeywords = category.keywords.split(",").map(kw => kw.trim().toLowerCase());
-            
             return inputWords.some(word => ruleKeywords.includes(word));
         });
 
-        // Auto-select dropdown match state row dynamically if matched target is hit
         if (automaticallyMatchedCategory) {
             setFormCategoryUUID(automaticallyMatchedCategory.id);
         }
     };
 
-    // 🎯 REFACTORED COMPLEX FILTER CHAIN (CATEGORIES + CALENDAR DAYS ENGINE)
+    // 🎯 FILTER CHAIN (CATEGORIES DROPDOWN + CALENDAR DAYS DROPDOWN)
     const filteredExpenses = useMemo(() => {
         return expensesList.filter(item => {
             const matchesSearch = item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -197,7 +203,6 @@ export default function RegistrarExpensesPage() {
                         <div className="flex flex-col gap-3.5 py-3 text-xs">
                             <Field className="flex flex-col gap-1">
                                 <FieldLabel className="font-bold text-slate-700">Expense Particulars / Description</FieldLabel>
-                                {/* 🎯 ATTACHED REAL-TIME SMART TRIGGER HANDLER CONTAINER */}
                                 <Input value={formDescription} onChange={(e) => handleDescriptionChange(e.target.value)} placeholder="e.g., Chalk, Bond Paper, Marker packs" className="h-9 text-xs bg-white border-slate-200 rounded-lg font-medium" />
                             </Field>
 
@@ -272,63 +277,63 @@ export default function RegistrarExpensesPage() {
                 </div>
             </div>
 
-            {/* LIVE DATA SEGMENT AND DATE FILTER ROWS */}
-            <div className="w-full flex flex-col gap-3 border-b border-slate-100 pb-3 shrink-0">
-                <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* CONTROL BAR: DROPDOWNS INTEGRATION */}
+            <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-3 shrink-0">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     
-                    {/* Category List Row Filter Buttons */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            onClick={() => setSelectedCategoryId("all")}
-                            className={`px-3 py-1 text-xs font-bold transition-all rounded-lg border ${
-                                selectedCategoryId === "all" ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "bg-slate-50 border-slate-200/60 text-slate-500"
-                            }`}
-                        >
-                            All Categories
-                        </button>
-                        {dbCategories.map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setSelectedCategoryId(cat.id)}
-                                className={`px-3 py-1 text-xs font-bold transition-all rounded-lg border ${
-                                    selectedCategoryId === cat.id ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "bg-slate-50 border-slate-200/60 text-slate-500"
-                                }`}
+                    {/* Category Dropdown Menu */}
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="category-select" className="text-xs font-bold text-slate-400 uppercase tracking-wide shrink-0">
+                            Category:
+                        </label>
+                        <div className="relative w-full sm:w-48">
+                            <select
+                                id="category-select"
+                                value={selectedCategoryId}
+                                onChange={(e) => setSelectedCategoryId(e.target.value)}
+                                className="w-full h-9 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 appearance-none outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer pr-8"
                             >
-                                {cat.name}
-                            </button>
-                        ))}
+                                <option value="all">All Categories</option>
+                                {dbCategories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
                     </div>
 
-                    {/* Timeline Filter Select Dropdown Node */}
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide">
-                        <span>Timeline:</span>
-                        {["All Time", "Today", "This Week", "This Month"].map((timeKey) => (
-                            <button
-                                key={timeKey}
-                                onClick={() => setDateFilter(timeKey as DateFilterType)}
-                                className={`px-2.5 py-1 text-[11px] font-bold transition-all rounded-md border ${
-                                    dateFilter === timeKey ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-slate-200 text-slate-600"
-                                }`}
+                    {/* Timeline Dropdown Menu */}
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="timeline-select" className="text-xs font-bold text-slate-400 uppercase tracking-wide shrink-0">
+                            Timeline:
+                        </label>
+                        <div className="relative w-full sm:w-40">
+                            <select
+                                id="timeline-select"
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value as DateFilterType)}
+                                className="w-full h-9 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs font-bold text-slate-800 appearance-none outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer pr-8"
                             >
-                                {timeKey}
-                            </button>
-                        ))}
+                                {["All Time", "Today", "This Week", "This Month"].map((timeKey) => (
+                                    <option key={timeKey} value={timeKey}>{timeKey}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
                     </div>
 
                 </div>
 
-                {/* Sub-search logic wrapper bar */}
-                <div className="flex items-center justify-end w-full">
-                    <div className="relative w-full sm:w-64">
-                        <Input
-                            type="text"
-                            placeholder="Search particulars description..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="h-9 text-xs pl-8 bg-white border-slate-200 rounded-xl font-medium placeholder:text-slate-400 focus-visible:ring-indigo-500"
-                        />
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    </div>
+                {/* Sub-search input wrapper */}
+                <div className="relative w-full sm:w-64 shrink-0">
+                    <Input
+                        type="text"
+                        placeholder="Search particulars description..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-9 text-xs pl-8 bg-white border-slate-200 rounded-xl font-medium placeholder:text-slate-400 focus-visible:ring-indigo-500"
+                    />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 </div>
             </div>
 
@@ -379,9 +384,31 @@ export default function RegistrarExpensesPage() {
                                                })}
                                             </td>
                                             <td className="py-3.5 px-6 text-center">
-                                                <Button onClick={() => deleteExpenseMutation.mutate(item.id)} variant="ghost" size="icon" className="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Delete Voucher">
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </Button>
+                                                {/* 🎯 INTEGRATED INTERCEPTING INTERFACE INTERACTIVE OVERLAY MODAL */}
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Delete Voucher">
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent className="bg-white rounded-xl border max-w-sm">
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle className="text-sm font-black text-slate-900 tracking-tight">Void Expense Voucher?</AlertDialogTitle>
+                                                            <AlertDialogDescription className="text-xs text-slate-500 leading-relaxed">
+                                                                Are you sure you want to remove <span className="font-bold text-slate-800">{item.expense_number}</span>? This will permanently wipe the entry from financial books.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter className="text-xs">
+                                                            <AlertDialogCancel className="h-8 font-semibold text-xs border-slate-200 rounded-lg">Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction 
+                                                                onClick={() => deleteExpenseMutation.mutate(item.id)}
+                                                                className="h-8 font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white rounded-lg"
+                                                            >
+                                                                Void Record
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </td>
                                         </tr>
                                     ))
