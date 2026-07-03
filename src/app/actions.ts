@@ -148,3 +148,18 @@ export async function getActiveSchoolYear() {
 
     return activeRow.id;
 }
+
+export async function getAllSchoolYears() {
+    const supabase = await createClient();
+
+    const {data, error} = await supabase
+    .from('school_years')
+    .select('*');
+
+
+    if (error) {
+        throw new Error(error.message)
+    }
+
+    return data;
+}
