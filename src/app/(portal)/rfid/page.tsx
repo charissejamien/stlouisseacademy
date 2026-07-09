@@ -92,11 +92,16 @@ export default function RFIDGatePage() {
 
                 <div className="w-full max-w-6xl mx-auto flex items-center gap-12 px-6 mb-16">
                     
-                    <div className="w-64 h-64 border-2 border-white bg-transparent shrink-0 flex items-center justify-center">
+                    <div className="w-64 h-64 border-2 border-white bg-transparent shrink-0 flex items-center justify-center relative overflow-hidden">
                         {isPending ? (
                             <span className="text-xs font-mono uppercase text-white/40 tracking-wider">Loading...</span>
-                        ) : scanResult ? (
-                            <span className="text-xs font-mono uppercase text-white/60 tracking-wider"></span>
+                        ) : scanResult?.profileUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img 
+                                src={scanResult.profileUrl} 
+                                alt="Profile Avatar" 
+                                className="w-full h-full object-cover"
+                            />
                         ) : (
                             <span className="text-xs font-mono uppercase text-white/20 tracking-wider"></span>
                         )}
@@ -113,7 +118,7 @@ export default function RFIDGatePage() {
                             </h2>
                         ) : (
                             <h2 className="text-[3.5rem] font-bold leading-tight tracking-wide text-white/40 uppercase">
-                                Please Tap Student ID Card
+                                Please Tap ID
                             </h2>
                         )}
                     </div>

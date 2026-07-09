@@ -12,7 +12,6 @@ import {
     ShieldCheck, 
     CreditCard, 
     Receipt, 
-    Clock,
     UserCheck,
     Loader2,
     UserCog,
@@ -62,7 +61,6 @@ export default function StudentProfileView() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDiscountDialogOpen, setIsDiscountDialogOpen] = useState(false);
     
-    // 🎯 Tracks multiple stacked toggles inside state array
     const [selectedDiscountIds, setSelectedDiscountIds] = useState<string[]>([]);
 
     // Profile inputs states
@@ -101,14 +99,12 @@ export default function StudentProfileView() {
         onError: (err: Error) => toast.error(err.message)
     });
 
-    // Handle user clicking buttons inside the modal
     const handleToggleDiscount = (id: string) => {
         setSelectedDiscountIds((prev) => 
             prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
         );
     };
 
-    // 🎯 Group discounts cleanly by category for layout rendering
     const categoriesMap = discountOptions.reduce((acc: Record<string, typeof discountOptions>, item) => {
         const cat = item.category || "General Incentives";
         if (!acc[cat]) acc[cat] = [];
@@ -223,21 +219,18 @@ export default function StudentProfileView() {
                     <CardHeader className="border-b pb-4 bg-slate-50/20 flex flex-row items-center justify-between">
                         <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                             <CreditCard className="w-4 h-4 text-slate-400" />
-                            <span>Financial Balance</span>
+                            <span>Statement Account</span>
                         </CardTitle>
 
-                        {/* 🎯 OVERHAULED MODAL DESIGN USING ACTION BUTTON SELECTION CLUSTERS */}
                         <Dialog open={isDiscountDialogOpen} onOpenChange={(open) => {
                             if (open) {
-                                // Safe, clean inline trigger allocation to block recursive state lurches
                                 setSelectedDiscountIds(student?.applied_discount_ids ?? []);
                             }
                             setIsDiscountDialogOpen(open);
                         }}>
                             <DialogTrigger asChild>
                                 <Button size="sm" variant="outline" className="h-7 text-[10px] font-extrabold text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50 border-indigo-200 rounded-md flex items-center gap-1 px-2.5 shadow-3xs">
-                                    <Percent className="w-3 h-3 stroke-[2.5]" />
-                                    <span>Manage Discounts</span>
+                                    <span>Manage</span>
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md bg-white p-6 shadow-2xl rounded-xl border flex flex-col gap-4">
@@ -246,7 +239,6 @@ export default function StudentProfileView() {
                                     <DialogDescription className="text-xs mt-0.5">Click items to activate or deactivate stacked ledger reductions.</DialogDescription>
                                 </DialogHeader>
                                 
-                                {/* 🎯 BUTTON SELECTION INTERFACE DIRECTLY INJECTIONS */}
                                 <div className="flex flex-col gap-4 max-h-[320px] overflow-y-auto pr-1 py-1">
                                     {Object.keys(categoriesMap).length === 0 ? (
                                         <p className="text-xs text-slate-400 italic text-center py-4">No discount structures templates available.</p>
@@ -296,97 +288,82 @@ export default function StudentProfileView() {
                         </Dialog>
                     </CardHeader>
                     
-                    <CardContent className="pt-5 flex flex-col gap-4 flex-1 justify-between">
-                        <div className="flex flex-col gap-3">
-                            <div className="flex justify-between items-center border-b pb-2 text-xs">
+                    <CardContent className="pt-5 flex flex-col gap-5 flex-1 justify-between">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex justify-between items-center text-xs border-b pb-2">
                                 <span className="text-slate-400 font-medium">Enrollment Date:</span>
                                 <span className="font-bold text-slate-800 flex items-center gap-1">
                                     <CalendarDays className="w-3.5 h-3.5 text-slate-400" /> {student.date_enrolled}
                                 </span>
                             </div>
 
-                            {/* Tuition Ledger Breakdown Card Box */}
+                            {/* Section 1: Breakdown / Assessments */}
                             <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100 flex flex-col gap-2 text-xs">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Tuition Ledger Breakdowns</span>
-                                
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Tuition Fees</span>
                                 <div className="flex justify-between text-slate-500">
-                                    <span>Base Tuition Fee:</span>
+                                    <span>Base Tuition:</span>
                                     <span className="font-semibold text-slate-700">₱{student.base_tuition.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between text-slate-500 border-b pb-2">
+                                <div className="flex justify-between text-slate-500">
                                     <span>Miscellaneous Fees:</span>
                                     <span className="font-semibold text-slate-700">₱{student.miscellaneous_fees.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
 
-                                <div className="flex justify-between text-slate-500 pt-0.5">
-                                    <span>Gross Assessment:</span>
-                                    <span className="font-medium text-slate-600">₱{student.gross_tuition_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                </div>
-
                                 {student.total_discounts_deducted > 0 && (
-                                    <div className="bg-white/80 border border-indigo-100 p-2 rounded-lg flex flex-col gap-1 text-[11px] mt-1">
+                                    <div className="bg-white/80 border border-indigo-100 p-2 rounded-lg flex flex-col gap-1 text-[11px] my-1">
                                         <div className="text-[9px] font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-1">
                                             <Tag className="w-2.5 h-2.5 text-indigo-500" />
-                                            <span>Active Applied Concessions (Base Only)</span>
+                                            <span>Discounts Applied</span>
                                         </div>
                                         <p className="font-semibold text-slate-700 text-[10px] leading-relaxed">
                                             {student.discount_summary_text}
                                         </p>
                                         <div className="flex justify-between font-bold text-[10px] text-indigo-700 border-t border-indigo-50/50 pt-1 mt-0.5">
-                                            <span>Deduction Total:</span>
+                                            <span>Total Discount:</span>
                                             <span>-₱{student.total_discounts_deducted.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="flex justify-between text-slate-500 mt-1">
-                                    <span>Net Charged Assessment:</span>
-                                    <span className="font-semibold text-slate-700">₱{student.total_assessment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <div className="flex justify-between border-t pt-2 font-bold text-slate-800">
+                                    <span>Total Assessment:</span>
+                                    <span>₱{student.total_assessment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between text-slate-500 border-b pb-2">
-                                    <span>Liquidated Payments:</span>
+                            </div>
+
+                            {/* Section 2: Payments & Balance Due */}
+                            <div className="bg-emerald-50/20 p-3 rounded-xl border border-emerald-100/50 flex flex-col gap-2 text-xs">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Payments & Balance</span>
+                                
+                                <div className="flex justify-between text-slate-500">
+                                    <span>Total Tuition Paid:</span>
                                     <span className="font-semibold text-emerald-600">₱{student.total_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                
-                                <div className="flex justify-between font-bold pt-1 text-slate-900 text-sm">
-                                    <span>Tuition Running Due:</span>
+                                <div className="flex justify-between font-bold border-t border-emerald-100 pt-2 text-slate-900 text-xs">
+                                    <span>Tuition Balance Due:</span>
                                     <span className={student.tuition_balance === 0 ? "text-emerald-600" : "text-slate-900"}>
                                         ₱{student.tuition_balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Books Ledger Card Box */}
-                            <div className="bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 text-xs mt-1">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Books Ledger</span>
+                            {/* Section 3: Books Ledger */}
+                            <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100 flex flex-col gap-2 text-xs">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Books Account</span>
                                 <div className="flex justify-between text-slate-500">
-                                    <span>Gross Assessment:</span>
+                                    <span>Books Assessment:</span>
                                     <span className="font-semibold text-slate-700">₱{student.total_books_fee.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between text-slate-500 border-b pb-1.5">
-                                    <span>Liquidated Payments:</span>
-                                    <span className="font-semibold text-emerald-700">₱{student.total_books_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <div className="flex justify-between text-slate-500">
+                                    <span>Books Paid:</span>
+                                    <span className="font-semibold text-emerald-600">₱{student.total_books_paid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="flex justify-between font-bold pt-0.5 text-slate-800">
-                                    <span>Books Running Due:</span>
+                                <div className="flex justify-between font-bold border-t pt-2 text-slate-800">
+                                    <span>Books Balance Due:</span>
                                     <span className={student.books_balance === 0 ? "text-emerald-600" : "text-slate-900"}>
                                         ₱{student.books_balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </span>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Combined Total Aggregate */}
-                        <div className={`p-4 rounded-xl border border-dashed mt-4 flex flex-col gap-1 ${
-                            student.balance_remaining === 0 ? "bg-emerald-50/50 border-emerald-200 text-emerald-900" : "bg-rose-50/50 border-rose-200 text-rose-900"
-                        }`}>
-                            <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Total Combined Running Balance</span>
-                            <span className="text-2xl font-black tracking-tight">
-                                ₱{student.balance_remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
-                            <div className="flex items-center gap-1 text-[10px] opacity-80 font-medium mt-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{student.balance_remaining === 0 ? "Fully Settled" : "Outstanding Deficit Balance"}</span>
                             </div>
                         </div>
                     </CardContent>

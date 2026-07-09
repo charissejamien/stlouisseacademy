@@ -112,7 +112,7 @@ export default function OpsDashboard() {
                 <span className="text-sm font-bold text-slate-700">{summaryStats.financials.pendingReceivables}</span>
               </div>
               <div>
-                <span className="block text-slate-400 font-medium">Today's Transactions</span>
+                <span className="block text-slate-400 font-medium">Today&apos;s Transactions</span>
                 <span className="text-sm font-bold text-blue-600">+{summaryStats.financials.recentTransactions} logs</span>
               </div>
             </div>

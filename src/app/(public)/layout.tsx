@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {Toaster} from 'react-hot-toast';
 import QueryProvider from "@/providers/query-provider";
 
-import Header from '@/components/Header';
+import Header from "@/components/(public)/Header";
 import Footer from '@/components/Footer';
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -51,6 +51,7 @@ export default function RootLayout({
         <div className={montserrat.className}>
         </div>
         <Toaster position="top-center"/>
+        <Header/>
         <QueryProvider>
           {children}
         </QueryProvider>
