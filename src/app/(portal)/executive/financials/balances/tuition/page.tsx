@@ -216,7 +216,7 @@ export default function ExecutiveTuitionBalancesPage() {
                                 {filteredStudents.length === 0 ? (
                                     <tr>
                                         <td colSpan={isSearchingGlobally ? 6 : 5} className="text-center py-16 text-slate-400 italic bg-white">
-                                            No student records match "{searchQuery}".
+                                            No student records match.
                                         </td>
                                     </tr>
                                 ) : (

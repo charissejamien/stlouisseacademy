@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import QueryProvider from "@/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import Header from "@/components/(public)/Header";
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 // Configure the font
@@ -41,11 +42,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, montserrat.variable, ebGaramond.variable)}>
+    /* Add poppins.variable inside the cn() function here */
+    <html lang="en" className={cn("font-sans", inter.variable, poppins.variable, montserrat.variable, ebGaramond.variable)}>
       <body className={`${poppins.className} antialiased`}>
 
         <Toaster position="top-center"/>
         
+        <Header/>
         <QueryProvider>
           <TooltipProvider>
             {children}
