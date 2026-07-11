@@ -42,16 +42,27 @@ export default function Admissions() {
     return(
         <div className="bg-slate-50/50 min-h-screen pb-24">
             
-            {/* Hero Section */}
-            <section className="relative overflow-hidden text-white bg-slate-900">
-                <Image src={"/admissions-bg.svg"} alt="" width={30} height={30} className="object-cover h-[85vh] w-full lg:h-[90vh]"/>
-                <div className="absolute inset-0 z-20 flex flex-col justify-center items-center">
-                    <h1 className="drop-shadow-md tracking-wider">WELCOME TO ST. LOUISSE ACADEMY</h1>
-                    <div className="text-[48px] italic font-semibold lg:text-[72px] drop-shadow-lg">
-                    <p><span className="text-sla-gold">S</span>trive.</p>
-                    <p><span className="text-sla-gold">L</span>earn.</p>
-                    <p><span className="text-sla-gold">A</span>ccomplish.</p>
-                    </div>
+            {/* Hero */}
+            <section className="relative overflow-hidden text-white bg-slate-900 min-h-[65vh] sm:min-h-[75vh] lg:min-h-[85vh] flex items-center justify-center">
+                <Image 
+                    src="/admissions-bg.svg" 
+                    alt="Admissions Background" 
+                    fill
+                    priority
+                    className="object-cover z-0 opacity-40 lg:opacity-100"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/40 to-slate-950/50 z-10" />
+                
+                <div className="relative z-20 flex flex-col justify-center items-center text-center gap-4 md:gap-6 max-w-4xl mx-auto px-6 py-12">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight leading-tight">
+                        Join SLA. <br className="sm:hidden" />Be a <span className='text-sla-gold italic'>Louissian.</span> 
+                    </h1>
+                    <p className="text-base sm:text-lg md:text-xl text-slate-200 max-w-xl font-light">
+                        Your journey to academic excellence starts here.
+                    </p>
+                    <button className="bg-[#0961b8] hover:bg-[#08529c] transition-colors px-6 py-3 rounded-md font-medium text-base sm:text-lg shadow-lg shadow-blue-900/20 mt-2">
+                        Enroll Now
+                    </button>
                 </div>
             </section>
 

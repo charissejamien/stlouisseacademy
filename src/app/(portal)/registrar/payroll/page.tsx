@@ -229,7 +229,7 @@ export default function FacultyPayrollDashboard() {
                             <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-1">
                                     <label className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Target Calculation Month</label>
-                                    <Select value={payrollMonth} onValueChange={payrollMonth}>
+                                    {/* <Select value={payrollMonth} onValueChange={payrollMonth}>
                                         <SelectTrigger className="h-10 text-xs font-medium">
                                             <SelectValue />
                                         </SelectTrigger>
@@ -238,7 +238,7 @@ export default function FacultyPayrollDashboard() {
                                                 <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
                                             ))}
                                         </SelectContent>
-                                    </Select>
+                                    </Select> */}
                                 </div>
 
                                 <div className="flex flex-col gap-1">

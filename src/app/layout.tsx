@@ -48,7 +48,7 @@ export default function RootLayout({
 
         <Toaster position="top-center"/>
         
-        <Header/>
+        {/* <Header/> */}
         <QueryProvider>
           <TooltipProvider>
             {children}
