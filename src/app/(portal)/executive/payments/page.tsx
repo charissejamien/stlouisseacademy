@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, ArrowLeft, User, Check, ChevronsUpDown, Printer, CheckCircle2, Trash2 } from "lucide-react";
+import { Search, Plus, ArrowLeft, User, Check, ChevronsUpDown, Printer, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,7 +127,7 @@ export default function ExecutivePaymentsPage() {
                                             </td>
                                             <td className="py-3.5 px-4 font-medium text-slate-500">{log.mode_of_payment}</td>
                                             <td className="py-3.5 px-4 text-right font-black text-indigo-600">
-                                                ₱{Number(log.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                PHP {Number(log.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </td>
                                         </TableRow>
                                     ))
@@ -149,7 +149,7 @@ export default function ExecutivePaymentsPage() {
     return <AddPaymentTransactionScreen onBack={() => setView("dashboard")} />;
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
+/* -------------------------------------------------------------------------- */
 
 function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
     const paymentMethods = ["Cash", "G-Cash", "Bank Transfer", "Check"];
@@ -195,7 +195,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
         }
     });
 
-    // 🌟 REFACTORED: Appends multiple separate students cleanly to the allocation stack
+    // Appends multiple separate students cleanly to the allocation stack
     const handleSelectStudent = async (uuid: string) => {
         setStudentComboOpen(false);
         
@@ -235,7 +235,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
         }
     };
 
-    // 🌟 REFACTORED: Adds extra payment split line items for a specific student card block
+    // Adds extra payment split line items for a specific student card block
     const addExtraRowForStudent = (sample: AllocationRow) => {
         setAllocations((prev) => [
             ...prev,
@@ -286,7 +286,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
         const trackingValidation = allocations.some(a => !a.indicatorName || !a.amount || Number(a.amount) <= 0);
         if (trackingValidation) return toast.error("Please verify that every split milestone target contains a valid payment amount.");
 
-        // 🌟 SHARED CONTRACT HANDSHAKE: Every child slice loops and maps onto the SAME shared OR number string payload contract!
+        // SHARED CONTRACT HANDSHAKE: Every child slice loops and maps onto the SAME shared OR number string payload contract!
         const payload = allocations.map(a => ({
             student_id: a.studentId,
             or_number: orNumber,
@@ -315,7 +315,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                 <div className="xl:col-span-2 flex flex-col gap-6">
-                    
+            
                     {/* STEP 1: LOCATE STUDENT PROFILE WINDOW */}
                     <Card className="shadow-xs border-slate-200 bg-white">
                         <CardHeader><CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">1. Select Student Profile (Add Multiple for Siblings)</CardTitle></CardHeader>
@@ -380,7 +380,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                                             onClick={() => addExtraRowForStudent(baseline)}
                                             className="h-7 text-[11px] font-bold text-indigo-600 border-indigo-100 bg-white hover:bg-indigo-50"
                                         >
-                                            + Add Split Month Row
+                                            + Add Allocation
                                         </Button>
                                         <Button 
                                             type="button" 
@@ -390,27 +390,27 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                                             onClick={() => removeEntireStudentCluster(stId)}
                                             className="h-7 text-[11px] font-bold text-rose-600 hover:bg-rose-50"
                                         >
-                                            <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove Child
+                                            <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove Student
                                         </Button>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="flex flex-col gap-4 pt-4">
-                                    {/* 📊 Side-by-Side Dual Ledger Breakdown View */}
+                                    {/* Side-by-Side Dual Ledger Breakdown View */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="bg-white p-2.5 rounded-lg border text-[11px] flex flex-col gap-1">
-                                            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Tuition Fees Unliquidated Dues</span>
-                                            <span className="font-bold text-indigo-600 text-xs">₱{baseline.remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Tuition Balance</span>
+                                            <span className="font-bold text-indigo-600 text-xs">PHP {baseline.remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="bg-white p-2.5 rounded-lg border text-[11px] flex flex-col gap-1">
-                                            <span className="text-[9px] text-amber-600 uppercase font-bold tracking-wider">Learning Materials Unliquidated Dues</span>
-                                            <span className="font-bold text-amber-600 text-xs">₱{baseline.remainingBooksBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            <span className="text-[9px] text-amber-600 uppercase font-bold tracking-wider">Books Balance</span>
+                                            <span className="font-bold text-amber-600 text-xs">PHP {baseline.remainingBooksBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                         </div>
                                     </div>
 
                                     {studentRows.map((row) => (
                                         <div key={row.rowId} className="flex gap-4 items-end bg-slate-50/40 p-3 rounded-xl border border-dashed">
                                             <Field className="flex-1">
-                                                <FieldLabel className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Target Milestone Specifics</FieldLabel>
+                                                <FieldLabel className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment Allocation</FieldLabel>
                                                 <Select disabled={isPending} value={row.indicatorName} onValueChange={(val) => updateRowField(row.rowId, "indicatorName", val)}>
                                                     <SelectTrigger className="mt-1 bg-white border-slate-200 h-9 text-xs">
                                                         <SelectValue placeholder="Select destination parameter" />
@@ -419,13 +419,12 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                                                         {billingPeriods.map(p => (
                                                             <SelectItem key={p.id} value={p.period_name} className="text-xs">{p.period_name}</SelectItem>
                                                         ))}
-                                                        <SelectItem value="Books & Learning Materials Bundle" className="text-xs font-bold text-amber-700">📚 Books & Learning Materials Bundle</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </Field>
 
                                             <Field className="w-44">
-                                                <FieldLabel className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount Paid (₱)</FieldLabel>
+                                                <FieldLabel className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</FieldLabel>
                                                 <Input 
                                                     type="number" 
                                                     disabled={isPending}
@@ -452,11 +451,11 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                 {/* SIDEBAR BINDINGS PANEL */}
                 <div className="xl:col-span-1">
                     <Card className="shadow-md border-slate-200 bg-white sticky top-6">
-                        <CardHeader><CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">Receipt Parameters</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400">Transaction Details</CardTitle></CardHeader>
                         <CardContent className="flex flex-col gap-4">
                             
                             <Field>
-                                <FieldLabel className="text-xs font-bold text-slate-700">Transaction Date Override</FieldLabel>
+                                <FieldLabel className="text-xs font-bold text-slate-700">Transaction Date</FieldLabel>
                                 <Input 
                                     type="date"
                                     disabled={isPending}
@@ -468,7 +467,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                             </Field>
 
                             <Field>
-                                <FieldLabel className="text-xs font-bold text-slate-700">Official Receipt (OR) Number</FieldLabel>
+                                <FieldLabel className="text-xs font-bold text-slate-700">OR Number</FieldLabel>
                                 <Input disabled={isPending} value={orNumber} onChange={(e) => setOrNumber(e.target.value)} placeholder="e.g., OR-100293" className="mt-1.5 h-10 font-bold text-indigo-600 tracking-wide border-slate-200" />
                             </Field>
 
@@ -489,9 +488,9 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                             <Separator className="my-2" />
 
                             <div className="flex justify-between items-center py-2 text-xs">
-                                <span className="font-bold text-slate-400 uppercase tracking-wider">Combined Receipt Total:</span>
+                                <span className="font-bold text-slate-400 uppercase tracking-wider">Total Amount</span>
                                 <span className="text-xl font-black text-indigo-600">
-                                    ₱{allocations.reduce((sum, r) => sum + Number(r.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    PHP {allocations.reduce((sum, r) => sum + Number(r.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
 
@@ -500,32 +499,175 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                                 disabled={allocations.length === 0 || isPending} 
                                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-12 mt-2 flex items-center justify-center gap-2 shadow-xs"
                             >
-                                {isPending ? "Committing Ledger Matrix..." : "Commit Composite Entry"}
+                                {isPending ? "Posting..." : "Post Transaction"}
                             </Button>
                         </CardContent>
                     </Card>
                 </div>
             </div>
 
-            {/* 🖨️ STATEMENT SLATE PRINT DRAWER MODAL */}
+            {/* STATEMENT SLATE PRINT DRAWER MODAL */}
             <Dialog open={isReceiptModalOpen} onOpenChange={handleCloseReceiptModal}>
-                <DialogContent className="max-w-md p-6 bg-white rounded-xl border shadow-2xl">
-                    <DialogHeader className="flex flex-col items-center text-center border-b pb-4">
-                        <CheckCircle2 className="w-12 h-12 text-emerald-500 shrink-0" />
-                        <DialogTitle className="text-lg font-black text-slate-900 mt-2">Transactions Saved Successfully</DialogTitle>
-                        <p className="text-xs text-muted-foreground mt-0.5">Composite collection row matrix verified safely.</p>
-                    </DialogHeader>
-
-                    <div id="printable-receipt-area" className="flex flex-col pt-2 font-mono text-xs text-slate-800">
-                        <div className="text-center flex flex-col gap-0.5 pb-4 border-b border-dashed border-slate-300">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900">St. Louisse Academy</h2>
-                            <p className="text-[10px] text-slate-500">Official Student Account Collection Summary</p>
-                            <p className="text-[10px] text-slate-500">
-                                {new Date(transactionDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                <DialogContent className="min-w-2xl uppercase p-6 bg-white rounded-xl border shadow-2xl">
+                    <DialogHeader>
+                        <div className="flex justify-between pr-10">
+                            <div>
+                                <h2 className="text-xl font-semibold">St. Louisse Academy Inc.</h2>
+                                <p className="text-xs">P. Burgos St., Poblacion, Daanbantayan, Cebu</p>
+                                <p className="text-xs font-medium">Vat Reg Tin: </p>
+                            </div>
+                            <div>
+                                <p className="text-xl text-blue-700 font-semibold">Service Invoice</p>
+                                <p className="text-lg font-medium">NO 00{orNumber}</p>
+                            </div>
+                        </div>
+                        <div className="flex mt-2 text-right">
+                            <p className="text-xs">
+                                Date: {new Date(transactionDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                             </p>
                         </div>
+                    </DialogHeader>
 
-                        <div className="py-4 flex flex-col gap-1.5 border-b border-dashed border-slate-300">
+                    <div className="flex gap-5">
+                        
+                        <div className="w-3/4">
+                            {/* Customer Information */}
+                            <div className="flex">
+                                <div className="text-sm">
+                                    <p>Sold to:</p>
+                                    <p>Address:</p>
+                                </div>
+                                <div className="text-sm">
+                                    <p>TIN:</p>
+                                    <p>Business Style:</p>
+                                </div>
+                            </div>
+
+                            {/* Payments Table */}
+                            <div className="py-4 flex flex-col gap-3 border-b border-dashed border-slate-300">
+                                {allocations.map((row, idx) => {
+                                    return (
+                                        <div key={idx} className="flex flex-col gap-0.5 bg-slate-50 p-2 rounded border border-slate-150">
+                                            <div className="flex justify-between font-bold text-slate-900 text-[11px]">
+                                                <span className="truncate max-w-[150px]">{row.studentName}</span>
+                                                <span className="text-slate-500 font-normal">[{row.indicatorName.slice(0, 10)}]</span>
+                                                <span>PHP {Number(row.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Printer Company Information */}
+                            <div className="mt-5">
+                                <div className="flex justify-between">
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Proprietor Name</p>
+                                        <p className="text-[10px] font-medium">Cebu Godspeed Printers</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Printer's Name</p>
+                                        <p className="text-[10px] font-medium">Katharine C. Lerias</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Printer's Contact Number</p>
+                                        <p className="text-[10px] font-medium">272-1031 / 516-1653</p>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between">
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">TIN</p>
+                                        <p className="text-[10px] font-medium">243-222-565-000000 VAT REG.</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Address</p>
+                                        <p className="text-[10px] font-medium">Little Baguio, Cogon, Pardo</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Printer's Accreditation No</p>
+                                        <p className="text-[10px] font-medium">082MP20190000000003</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Date Issued</p>
+                                        <p className="text-[10px] font-medium">Jan. 08, 2019</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Expiry Date</p>
+                                        <p className="text-[10px] font-medium">Jan. 08, 2024</p>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between">
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">PTU No.</p>
+                                        <p className="text-[10px] font-medium">Bound</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">No. of Books/Pads</p>
+                                        <p className="text-[10px] font-medium">300</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Sets Per BKLT:</p>
+                                        <p className="text-[10px] font-medium">50</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Copies Per Set:</p>
+                                        <p className="text-[10px] font-medium">2</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Serial No.</p>
+                                        <p className="text-[10px] font-medium">7,501-22,500</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">BIR ATP No.</p>
+                                        <p className="text-[10px] font-medium">OCN2AU0002596843</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Date Issued:</p>
+                                        <p className="text-[10px] font-medium">01/19/21</p>
+                                    </div>
+                                    <div className="flex flex-col text-center">
+                                        <p className="text-[8px] bg-gray-200/50 p-2">Valid Until:</p>
+                                        <p className="text-[10px] font-medium">01/19/6</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="w-1/4">
+                            <div>
+                                <p>Osca/PWD No.</p>
+                                <p>Signature</p>
+                            </div>
+
+                            {/* BIR Stipulation */}
+                            <div className="text-[10px] font-medium border border-black/80">
+                                <p className="border-b-1 border-black p-1">Total Sales</p>
+                                <p className="border-b-1 border-black p-1">Less: <br /> SC/PWD Disc.</p>
+                                <p className="border-b-1 border-black p-1">Total Due</p>
+                                <p className="border-b-1 border-black p-1">Less: <br /> Withholding</p>
+                                <p className="border-b-1 border-black p-1">Total Amount Due</p>
+                                <p className="border-b-1 border-black p-1">Sales Subj to <br /> percentage tax <br /> exempt sales</p>
+                            </div>
+                            
+                            <p>[] Cash [] Check [] Credit</p>
+
+                            <div className="mt-5 px-6 flex flex-col items-center">
+                                <p className="text-xs border-t-1 border-black w-fit text-center">Cashier/Authorized Signature</p>
+                                <p className="text-[10px] text-center w-50">"This document is not valid for claim of input tax"</p>
+                            </div>
+                        </div>
+
+
+
+                        
+
+                        {/* <div className="pt-4 flex justify-between items-center text-sm font-bold">
+                            <span className="text-slate-900">TOTAL REMITTED:</span>
+                            <span className="text-lg font-black text-indigo-600 border-b-2 border-double border-slate-900 px-1">
+                                PHP {allocations.reduce((sum, r) => sum + Number(r.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                        </div> */}
+                                                {/* <div className="py-4 flex flex-col gap-1.5 border-b border-dashed border-slate-300">
                             <div className="flex justify-between">
                                 <span className="text-slate-400">OFFICIAL RECEIPT:</span>
                                 <span className="font-bold text-slate-900">{orNumber}</span>
@@ -534,29 +676,7 @@ function AddPaymentTransactionScreen({ onBack }: AddPaymentProps) {
                                 <span className="text-slate-400">CHANNEL:</span>
                                 <span className="font-bold text-slate-900">{paymentMethod}</span>
                             </div>
-                        </div>
-
-                        <div className="py-4 flex flex-col gap-3 border-b border-dashed border-slate-300">
-                            {allocations.map((row, idx) => {
-                                const runningBalance = row.allocationType === "books" ? row.remainingBooksBalance : row.remainingBalance;
-                                return (
-                                    <div key={idx} className="flex flex-col gap-0.5 bg-slate-50 p-2 rounded border border-slate-150">
-                                        <div className="flex justify-between font-bold text-slate-900 text-[11px]">
-                                            <span className="truncate max-w-[150px]">{row.studentName}</span>
-                                            <span className="text-slate-500 font-normal">[{row.indicatorName.slice(0, 10)}]</span>
-                                            <span>₱{Number(row.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="pt-4 flex justify-between items-center text-sm font-bold">
-                            <span className="text-slate-900">TOTAL REMITTED:</span>
-                            <span className="text-lg font-black text-indigo-600 border-b-2 border-double border-slate-900 px-1">
-                                ₱{allocations.reduce((sum, r) => sum + Number(r.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </span>
-                        </div>
+                        </div> */}
                     </div>
 
                     <DialogFooter className="print:hidden flex gap-2 border-t pt-4 mt-4 w-full">
