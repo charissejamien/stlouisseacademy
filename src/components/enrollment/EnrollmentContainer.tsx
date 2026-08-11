@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react"; // Imported step backtrack indicator icon
 import { Button } from "@/components/ui/button";
-import ParentCreation from "./ParentCreation";
+import ParentCreation from "../registrar/enrollment/ParentCreation";
 import EnrollmentForm from "./EnrollmentForm";
 import FeeSettlement from "./FeeSettlement";
 

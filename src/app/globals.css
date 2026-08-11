@@ -141,3 +141,74 @@
   }
 }
 
+
+@page {
+    size: 8.5in 5.5in;
+    margin: 0;
+}
+
+@media print {
+    html,
+    body {
+        width: 8.5in;
+        height: 5.5in;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        overflow: hidden !important;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    .receipt-print,
+    .receipt-print * {
+        visibility: visible !important;
+    }
+
+    .receipt-print {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+
+        width: 8.5in !important;
+        height: 5.5in !important;
+
+        margin: 0 !important;
+        padding: 0.25in !important;
+
+        background: white !important;
+        color: black !important;
+
+        overflow: hidden !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .print\:hidden {
+        display: none !important;
+    }
+
+    /* Prevent the Dialog itself from affecting the print layout */
+    [data-radix-dialog-overlay] {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        overflow: visible !important;
+    }
+
+    [data-radix-dialog-content] {
+        position: static !important;
+        transform: none !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+}
