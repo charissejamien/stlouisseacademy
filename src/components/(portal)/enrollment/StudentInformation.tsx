@@ -26,9 +26,10 @@ import { getSchoolYears, getGradeLevels } from "@/app/(portal)/enrollment/action
 type StudentInformationProps = {
     students: Student[];
     setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
+    errors: Record<number, Record<string, string>>;
 };
 
-export default function StudentInformation({students, setStudents} : StudentInformationProps) {
+export default function StudentInformation({students, setStudents, errors} : StudentInformationProps) {
 
     const gender = ["Male", "Female"];
     const studentType = ["New", "Returning"];
@@ -101,6 +102,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+                                    {errors[index]?.schoolYear && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].schoolYear}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -120,6 +126,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+                                    {errors[index]?.gradeLevel && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].gradeLevel}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -139,6 +150,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+                                    {errors[index]?.studentType && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].studentType}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -156,6 +172,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                         value={student.firstName} 
                                         onChange={(e) => updateStudent(index, "firstName", e.target.value)}
                                     />
+                                    {errors[index]?.firstName && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].firstName}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -172,6 +193,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                         value={student.lastName} 
                                         onChange={(e) => updateStudent(index, "lastName", e.target.value)}
                                     />
+                                    {errors[index]?.lastName && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].lastName}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -199,6 +225,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                         value={student.address} 
                                         onChange={(e) => updateStudent(index, "address", e.target.value)}
                                     />
+                                    {errors[index]?.address && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].address}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -222,6 +253,11 @@ export default function StudentInformation({students, setStudents} : StudentInfo
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
+                                    {errors[index]?.gender && (
+                                        <p className="text-sm text-red-500">
+                                            {errors[index].gender}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

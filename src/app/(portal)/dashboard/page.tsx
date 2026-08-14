@@ -16,7 +16,7 @@ export default function Dashboard() {
     const { data: user} = useQuery({queryKey: ["user"], queryFn: getUser});
 
     return(
-        <div className="w-[80%] mx-auto mt-10">
+        <div className="w-[95%] mx-auto mt-10">
             
             <div className="text-white bg-gradient-to-r from-[#3153DE] to-[#6CB3F8] p-10 rounded-md w-full">
                 <p className="text-sm text-gray-200">{date}</p>
