@@ -37,7 +37,7 @@ export default function StudentInformation({students, setStudents, errors} : Stu
 
     const addStudentCard = () => {
         setStudents((prev) => [
-            ...prev, {
+            ...prev, { 
                 firstName: "",
                 middleName: "",
                 lastName: "",
