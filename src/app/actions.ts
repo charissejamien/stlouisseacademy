@@ -138,7 +138,8 @@ export async function getActiveSchoolYear() {
     const { data, error } = await supabase
         .from('school_years')
         .select('*')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .single();
 
     if (error) {
         throw new Error(error.message);

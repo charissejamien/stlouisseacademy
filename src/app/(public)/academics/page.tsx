@@ -17,7 +17,7 @@ export default function Academics() {
                 {/* Backdrop Overlay for Text Legibility */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/30 to-slate-950/40 z-10" />
                 
-                <div className="relative z-20 flex flex-col justify-center items-center text-center max-w-4xl mx-auto px-6 py-16">
+                <div className="relative z-20 flex flex-col justify-center items-center text-center max-w-7xl mx-auto px-6 py-16">
                     <h2 className='text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-tight mb-2 md:mb-4'>
                         A Legacy of 
                         <span className='text-sla-gold italic'> Excellence.</span>
@@ -26,7 +26,7 @@ export default function Academics() {
                         A Future of  
                         <span className='text-sla-gold italic'> Infinite Possibilities.</span>
                     </h2>
-                    <p className='text-sm sm:text-base md:text-lg lg:text-xl font-light text-slate-200 max-w-3xl leading-relaxed'>
+                    <p className='text-sm sm:text-base md:text-lg lg:text-xl font-light text-slate-200 max-w-6xl leading-relaxed'>
                         To provide a transformative education that balances academic rigor with character formation. We are dedicated 
                         to nurturing well-rounded individuals who are prepared to lead with integrity, serve the community of Daanbantayan with compassion, and excel in a globalized world.
                     </p>

@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google";
-import { Montserrat, EB_Garamond } from "next/font/google";
+import { Poppins, Inter, Montserrat, EB_Garamond } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
-import {Toaster} from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 import QueryProvider from "@/providers/query-provider";
-
 import Header from "@/components/(public)/Header";
-import Footer from '@/components/Footer';
+import Footer from '@/components/(public)/Footer';
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-sans' 
+});
 
-
-// Configure the font
 const poppins = Poppins({ 
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -22,19 +21,17 @@ const poppins = Poppins({
 const montserrat = Montserrat({
   subsets: ["latin"],
   display: "swap",
-  // Montserrat has many weights, pick only what you need to keep the site fast
   weight: ["400", "500", "600", "700"], 
-  variable: "--font-montserrat", // This creates a CSS variable
+  variable: "--font-montserrat",
 });
 
 const ebGaramond = EB_Garamond({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"], // 400 is normal, 700 is bold
+  weight: ["400", "500", "600", "700"], 
   variable: "--font-garamond",
   display: "swap",
 });
 
-// This metadata handles SEO and the text shown in the browser tab
 export const metadata: Metadata = {
   title: "St. Louisse Academy | Portal",
   description: "Official Student and Parent Portal for St. Louisse Academy",
@@ -46,18 +43,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, montserrat.variable, ebGaramond.variable)}>
+    <html 
+      lang="en" 
+      className={cn(
+        inter.variable, 
+        poppins.variable,
+        montserrat.variable, 
+        ebGaramond.variable
+      )}
+    >
       <body className={`${poppins.className} antialiased`}>
-        <div className={montserrat.className}>
-        </div>
         <Toaster position="top-center"/>
-        <Header/>
+        <Header />
         <QueryProvider>
           {children}
         </QueryProvider>
-        <div className={montserrat.className}>
-          <Footer />
-        </div>
+        <Footer />
       </body>
     </html>
   );

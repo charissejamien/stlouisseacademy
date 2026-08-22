@@ -27,13 +27,12 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Desktop Navigation Link Menu (Hidden on Mobile) */}
       <nav className="hidden lg:flex gap-10">
         {nav.map((n) => (
           <Link 
             key={n.nav} 
             href={n.link}
-            className="hover:text-sla-gold transition-colors duration-200"
+            className="font-medium hover:text-sla-gold hover:underline transition-colors duration-200"
           >
             {n.nav}
           </Link>
@@ -74,9 +73,8 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Small motto copy placement inside mobile layout */}
-        <div className="text-center text-[10px] tracking-widest opacity-60 mt-8 normal-case">
-          <p>Once a Louissian, Always a Louissian</p>
+        <div className="text-center text-[12px] tracking-widest opacity-80 mt-8 normal-case">
+          <p> <span className="text-sla-gold">Once</span> a Louissian, <span className="text-sla-gold">Always</span> a Louissian</p>
         </div>
       </div>
 

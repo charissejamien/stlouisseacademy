@@ -5,7 +5,6 @@ import {
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -19,23 +18,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { getAllStudents } from "./actions";
-import { getGradeLevels } from "../enrollment/actions";
+import { getAllStudents, getStudentsCount } from "./actions";
+import { getGradeLevels } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
 export default function Students() {
 
-    const [gradeLevel, setGradeLevel] = useState("");
+    const router = useRouter();
 
-    const { data: students } = useQuery({
+    const [gradeLevel, setGradeLevel] = useState("Nursery");
+
+    const { data: students, isLoading } = useQuery({
         queryKey: ["students", gradeLevel],
         queryFn: () => getAllStudents(gradeLevel || undefined),
     });
 
     const { data: gradeLevels } = useQuery({queryKey: ["gradeLevels"], queryFn: getGradeLevels})
-    
+    const { data: studentsCount } = useQuery({queryKey: ["studentsCount"], queryFn: getStudentsCount})
+
     const maleStudents = students?.filter(
         (student) => student.gender === "Male"
     );
@@ -45,8 +56,21 @@ export default function Students() {
     );
 
     return(
-        <div className="w-[90%] mx-auto mt-20">
+        <div className="w-full h-full min-h-0 flex flex-col gap-10 mx-auto overflow-hidden">
             <div>
+                <h3 className="text-3xl font-semibold">Student Master List</h3>
+                <p className="text-sm text-gray-700/70">Central directory management for profile authentication, classroom assignments, and enrollment timeline tracking.</p>
+            </div>
+            <div className="flex gap-15">
+                <Card className="w-full max-w-xs space-y-2 shadow-md">
+                    <CardHeader>
+                        <CardTitle className="uppercase text-sm text-gray-700/50">Total Students</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-4xl font-semibold">{studentsCount?.length}</p>
+                    </CardContent>
+                </Card>
+                <Input></Input>
                 <Select value={gradeLevel} onValueChange={(value) => setGradeLevel(value)}>
                     <SelectTrigger className="w-full max-w-48">
                         <SelectValue />
@@ -55,7 +79,7 @@ export default function Students() {
                         <SelectGroup>
                         <SelectLabel>Grade Levels</SelectLabel>
                         {gradeLevels?.map((g) => (
-                            <SelectItem key={g.id} value={g.grade_level}>
+                            <SelectItem key={g.id} value={g.grade_level} >
                         {g.grade_level}
                             </SelectItem>
                         ))}
@@ -63,62 +87,89 @@ export default function Students() {
                     </SelectContent>
                 </Select>
             </div>
-            <Table>
-                <TableCaption>A list of your recent invoices.</TableCaption>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead className="w-[100px]">Invoice</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {/* MALE */}
-                    <TableRow>
-                        <TableCell
-                            colSpan={4}
-                            className="font-bold bg-blue-50"
-                        >
-                            Male
-                        </TableCell>
-                    </TableRow>
-
-                    {maleStudents?.map((s) => (
-                        <TableRow key={s.id}>
-                            <TableCell>
-                                {s.first_name} {s.last_name}
-                            </TableCell>
-                            <TableCell>{s.gender}</TableCell>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+                <Table>
+                    <TableCaption>Showing {students?.length} student records.</TableCaption>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[200px]">Student ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Gender</TableHead>
+                            <TableHead className="text-right">Enrollment Date</TableHead>
                         </TableRow>
-                    ))}
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            <TableRow className="w-full">
+                                <TableCell>
+                                <Skeleton className="h-4 w-full" />
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            <>
+                                {/* MALE */}
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={4}
+                                        className="font-bold"
+                                    >
+                                        Male
+                                    </TableCell>
+                                </TableRow>
 
-                    {/* FEMALE */}
-                    <TableRow>
-                        <TableCell
-                            colSpan={4}
-                            className="font-bold bg-pink-50"
-                        >
-                            Female
-                        </TableCell>
-                    </TableRow>
+                                {maleStudents?.map((s) => (
+                                    <TableRow
+                                        key={s.id}
+                                        onClick={() => router.push(`/students/${s.id}`)}
+                                        className="cursor-pointer"
+                                    >
+                                        <TableCell className="w-[200px]">{s.student_id}</TableCell>
+                                        <TableCell>
+                                            {s.last_name}, {s.first_name}
+                                        </TableCell>
+                                        <TableCell>{s.gender}</TableCell>
+                                        <TableCell>
+                                            {new Date(s.created_at).toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "2-digit",
+                                                year: "numeric",
+                                            })}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
 
-                    {femaleStudents?.map((s) => (
-                        <TableRow key={s.id}>
-                            <TableCell>
-                                {s.first_name} {s.last_name}
-                            </TableCell>
-                            <TableCell>{s.gender}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                    <TableCell colSpan={3}>Total</TableCell>
-                    <TableCell className="text-right">$2,500.00</TableCell>
-                    </TableRow>
-                </TableFooter>
-            </Table>
+                                {/* FEMALE */}
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={4}
+                                        className="font-bold"
+                                    >
+                                        Female
+                                    </TableCell>
+                                </TableRow>
+
+                                {femaleStudents?.map((s) => (
+                                    <TableRow key={s.id}>
+                                        <TableCell>{s.student_id}</TableCell>
+                                        <TableCell>
+                                            {s.last_name}, {s.first_name}
+                                        </TableCell>
+                                        <TableCell>{s.gender}</TableCell>
+                                        <TableCell>
+                                            {new Date(s.created_at).toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "2-digit",
+                                                year: "numeric",
+                                            })}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            
         </div>
     );
 }

@@ -1,16 +1,16 @@
 import React from "react";
+import RegistrarSidebar from "@/components/(portal)/sidebar/RegistrarSidebar";
 
 export default function PortalGroupRootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen flex flex-col bg-background">
+        <div className="h-screen gap-10 p-7 flex bg-background">
             
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="w-[14%] h-full">
+                <RegistrarSidebar/>
+            </div>
+            <div className="w-[85%] h-full w-full">
                 {children}
             </div>
-
-            <footer className="mt-auto w-full border-t border-input/30 bg-white/50 py-4 text-center text-[11px] text-muted-foreground/60 tracking-wide pb-24 md:pb-4">
-                St. Louisse Academy 2026. All rights reserved.
-            </footer>
             
         </div>
     );

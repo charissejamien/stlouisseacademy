@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server"
 
+import { getActiveSchoolYear } from "@/app/actions";
+
 export async function getAllStudents(gradeLevel? : string) {
 
     const supabase = await createClient();
@@ -34,4 +36,23 @@ export async function getAllStudents(gradeLevel? : string) {
     }
 
     return data ?? [];
+}
+
+export async function getStudentsCount() {
+
+    const supabase = await createClient();
+
+    const activeSchoolYear = await getActiveSchoolYear();
+
+    const{ data , error } = await supabase
+    .from("enrollments")
+    .select("*")
+    .eq("school_year_id", activeSchoolYear);
+
+    if (error) {
+        throw new Error(error.message)
+    }
+
+    return data;
+
 }

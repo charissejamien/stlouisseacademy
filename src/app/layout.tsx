@@ -42,19 +42,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    /* Add poppins.variable inside the cn() function here */
-    <html lang="en" className={cn("font-sans", inter.variable, poppins.variable, montserrat.variable, ebGaramond.variable)}>
+    <html 
+      lang="en" 
+      className={cn(
+        inter.variable, 
+        poppins.variable, 
+        montserrat.variable, 
+        ebGaramond.variable
+      )}
+    >
       <body className={`${poppins.className} antialiased`}>
-
         <Toaster position="top-center"/>
-        
-        {/* <Header/> */}
         <QueryProvider>
           <TooltipProvider>
             {children}
           </TooltipProvider>
         </QueryProvider>
-        
       </body>
     </html>
   );
