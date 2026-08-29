@@ -1,38 +1,69 @@
 import Link from "next/link";
 import {
-    User,
+    LayoutDashboard,
     Users,
-    Wallet,
-    ListSortAscending,
-    FileSliders,
-    LogOut,
+    UserRoundCog,
+    BookOpen,
+    Layers3,
+    GraduationCap,
+    WalletCards,
     Settings,
-    CreditCard,
-    FolderCog,
-    FolderOpenDot,
-    FilePlusCorner,
+    LogOut,
 } from "lucide-react";
 
 import { logout } from "@/app/(authentication)/login/actions";
 
-export default function RegistrarSidebar() {
-    const management = [
-        { icon: User, title: "Students", link: "/students" },
-        { icon: Users, title: "Employees", link: "/employees" },
-        { icon: ListSortAscending, title: "Parents", link: "/" },
-        { icon: ListSortAscending, title: "Classes", link: "/classes" },
+export default function ExecutiveSidebar() {
+    const overview = [
+        {
+            icon: LayoutDashboard,
+            title: "Dashboard",
+            link: "/dashboard",
+        },
     ];
 
-    const financials = [
-        { icon: FilePlusCorner, title: "Enrollment", link: "/" },
-        { icon: Wallet, title: "Payments", link: "/payments" },
-        { icon: CreditCard, title: "DCPR", link: "/" },
-        { icon: FolderOpenDot, title: "Expenses", link: "/" },
-        { icon: FileSliders, title: "Payroll", link: "/" },
+    const management = [
+        {
+            icon: Users,
+            title: "Students",
+            link: "/students",
+        },
+        {
+            icon: UserRoundCog,
+            title: "Employees",
+            link: "/employees",
+        },
+        {
+            icon: BookOpen,
+            title: "Classes",
+            link: "/classes",
+        },
+        {
+            icon: Layers3,
+            title: "Sections",
+            link: "/sections",
+        },
+    ];
+
+    const reports = [
+        {
+            icon: GraduationCap,
+            title: "Academic Reports",
+            link: "/reports/academic",
+        },
+        {
+            icon: WalletCards,
+            title: "Financial Reports",
+            link: "/reports/financial",
+        },
     ];
 
     const account = [
-        { icon: Settings, title: "Settings", link: "/" },
+        {
+            icon: Settings,
+            title: "Settings",
+            link: "/settings",
+        },
     ];
 
     return (
@@ -51,6 +82,30 @@ export default function RegistrarSidebar() {
 
             {/* Navigation */}
             <nav className="flex flex-1 flex-col gap-7">
+
+                {/* Overview */}
+                <div>
+                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
+                        Overview
+                    </p>
+
+                    <div className="space-y-1">
+                        {overview.map((item) => {
+                            const Icon = item.icon;
+
+                            return (
+                                <Link
+                                    key={item.title}
+                                    href={item.link}
+                                    className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
+                                >
+                                    <Icon size={18} strokeWidth={1.8} />
+                                    <span>{item.title}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
 
                 {/* Management */}
                 <div>
@@ -76,14 +131,14 @@ export default function RegistrarSidebar() {
                     </div>
                 </div>
 
-                {/* Financials */}
+                {/* Reports */}
                 <div>
                     <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Financials
+                        Reports
                     </p>
 
                     <div className="space-y-1">
-                        {financials.map((item) => {
+                        {reports.map((item) => {
                             const Icon = item.icon;
 
                             return (
@@ -98,21 +153,6 @@ export default function RegistrarSidebar() {
                             );
                         })}
                     </div>
-                </div>
-
-                {/* Configuration */}
-                <div>
-                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Configuration
-                    </p>
-
-                    <Link
-                        href="/"
-                        className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                        <FolderCog size={18} strokeWidth={1.8} />
-                        <span>Academics</span>
-                    </Link>
                 </div>
 
                 {/* Account */}
@@ -157,4 +197,3 @@ export default function RegistrarSidebar() {
         </aside>
     );
 }
-

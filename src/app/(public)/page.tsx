@@ -174,16 +174,46 @@ export default function Home() {
       {/* 5. FOOTER GATEWAYS */}
       <section className="flex flex-col w-full text-center gap-4 py-20 bg-slate-50 border-t border-slate-100">
         <div>
-          <h2 className="text-[32px] text-slate-500">Experience the world of SLA</h2>
-          <h2 className="text-[22px] font-semibold text-[#004C97] mt-1">Begin your journey with us <span className="italic">today.</span></h2>
+          <h2 className="text-[26px] text-slate-500">Experience the world of SLA</h2>
+          <h2 className="text-[32px] font-semibold text-[#004C97] mt-1">
+            Begin your journey with us <span className="italic">today.</span>
+          </h2>
         </div>
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6 px-5">
-            <div className="bg-white border border-slate-200 py-40 px-60 rounded-xl shadow-sm sm:w-64 cursor-pointer hover:border-[#004C97] transition-colors flex justify-center">
-              <h2 className="font-bold text-[#004C97] text-lg ">Admissions</h2>
-            </div>
-            <div className="bg-white border border-slate-200 py-40 px-60 rounded-xl shadow-sm sm:w-64 cursor-pointer hover:border-[#004C97] transition-colors flex justify-center">
-              <h2 className="font-bold text-[#004C97] text-lg">Careers</h2>
-            </div>
+
+        <div className="flex flex-col sm:flex-row justify-center gap-6 mt-6 px-5">
+          {/* Admissions */}
+          <div className="relative w-full sm:w-[500px] h-72 sm:h-96 shadow-xl cursor-pointer overflow-hidden group">
+            <Image
+              src="/admissions.jpg"
+              alt="Admissions"
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+
+            {/* Bottom Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-colors" />
+
+            <h2 className="absolute inset-0 flex items-end pb-10 justify-center text-center text-white text-3xl sm:text-4xl drop-shadow-lg">
+              Admissions
+            </h2>
+          </div>
+
+          {/* Careers */}
+          <div className="relative w-full sm:w-[500px] h-72 sm:h-96 shadow-xl cursor-pointer overflow-hidden group">
+            <Image
+              src="/careers.jpg"
+              alt="Careers"
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105 brightness-115"
+            />
+
+            {/* Bottom Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-colors" />
+
+            <h2 className="absolute inset-0 flex items-end pb-10 justify-center text-center text-white text-3xl sm:text-4xl drop-shadow-lg">
+              Careers
+            </h2>
+          </div>
         </div>
       </section>
 

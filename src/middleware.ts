@@ -1,24 +1,60 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr"
+import { NextResponse, type NextRequest } from "next/server"
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request,
+  })
 
-  // const sessionCookie = request.cookies.get("sb-access-token")?.value;
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
 
-  // const {pathname} = request.nextUrl;
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value)
+          })
 
-  // const isProtectedRoute = pathname.startsWith("/parents") || pathname.startsWith("/registrar") || pathname.startsWith("/executive") || pathname.startsWith("/admin") || pathname.startsWith("/ops");
+          response = NextResponse.next({
+            request,
+          })
 
-  // if (isProtectedRoute && !sessionCookie) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
 
-  //   const loginUrl = new URL ("/login", request.url);
-  //   return NextResponse.redirect(loginUrl);
-  // }
+  const { data: { user } } = await supabase.auth.getUser()
 
-  // return NextResponse.next();
+  const { pathname } = request.nextUrl
 
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/students") ||
+    pathname.startsWith("/classes") ||
+    pathname.startsWith("/payments") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/ops")
+
+  if (isProtectedRoute && !user) {
+    const loginUrl = new URL("/login", request.url)
+
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return response
 }
 
-  export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
-  };
+export const config = {
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
+}
