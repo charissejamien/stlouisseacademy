@@ -31,7 +31,7 @@ export default function About() {
                     priority
                     className="object-cover z-0 opacity-40 lg:opacity-100"
                 />
-                {/* Backdrop Overlay for Text Legibility */}
+                
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/30 to-slate-950/40 z-10" />
                 
                 <div className="relative z-20 flex flex-col justify-center items-center text-center max-w-7xl mx-auto px-6 py-16">
@@ -50,18 +50,27 @@ export default function About() {
                 </div>
             </section>
 
-            <div className="w-[80%] mx-auto mt-20 space-y-20">
-                <section className="space-y-10">
+            <div className="w-[90%] sm:w-[85%] lg:w-[65%] mx-auto mt-16 sm:mt-20 space-y-20 sm:space-y-28">
+
+                {/* HISTORY */}
+                <section className="space-y-8 sm:space-y-10">
                     <div className="space-y-3">
                         <p className="text-sm uppercase">Our Journey</p>
-                        <h2 className="text-4xl leading-12 font-serif">A History of Growth, <br /> <span className="text-sla-blue">Reslience & Purpose</span> </h2>
-                        <p className="w-[700px] leading-7">From a small learning center in 1995 to a growing community instituition, our story is one of perseverance, transformation, and a continued commitment to education.</p>
+                        <h2 className="text-4xl leading-12 font-serif">
+                            A History of Growth, <br /> 
+                            <span className="text-sla-blue">Reslience & Purpose</span>
+                        </h2>
+                        <p className="w-full max-w-[700px] leading-7">
+                            From a small learning center in 1995 to a growing community instituition, our story is one of perseverance, transformation, and a continued commitment to education.
+                        </p>
                     </div>
-                    <div className="space-y-10">
+
+                    <div className="space-y-8 sm:space-y-10">
                         {history.map((h,index) => (
-                            <div key={index} className="flex gap-15">
-                                <h3 className="text-lg font-bold">{h.year}</h3>
-                                <div className="border border-sla-blue rounded-md p-7 space-y-2">
+                            <div key={index} className="flex flex-col sm:flex-row gap-3 sm:gap-8 lg:gap-15">
+                                <h3 className="text-lg font-bold sm:min-w-16 sm:pt-7">{h.year}</h3>
+
+                                <div className="border border-sla-blue rounded-md p-5 sm:p-7 space-y-2 flex-1">
                                     <h4 className="text-sm uppercase">{h.title}</h4>
                                     <h2 className="text-lg">{h.heading}</h2>
                                     <p className="leading-7">
@@ -70,16 +79,20 @@ export default function About() {
                                 </div>
                             </div>
                         ))}
-
                     </div>
                 </section>
 
+
+                {/* CONTINUING STORY */}
                 <section className="text-center">
-                    <div className="flex flex-col justify-center align-center">
+                    <div className="flex flex-col justify-center align-center space-y-1">
                         <p className="text-sm uppercase">Our Continuing Story</p>
                         <h2 className="text-4xl font-serif">Educating Minds.</h2>
-                        <h2 className="text-4xl text-sla-blue font-serif">Touching hearts. Transforming lives.</h2>
+                        <h2 className="text-4xl text-sla-blue font-serif">
+                            Touching hearts. Transforming lives.
+                        </h2>
                     </div>
+
                     <div className="mt-8 space-y-5 leading-8 sm:leading-9">
                         <p>
                             St. Louisse Academy, Inc. remains dedicated to its
@@ -105,18 +118,24 @@ export default function About() {
                             body.
                         </p>
                     </div>
-                    <div className="font-serif mt-10 text-3xl italic text-sla-blue font-medium flex justify-center">
-                        <p className="border-t border-sla-blue/30 w-fit pt-7 px-5">Educating minds, touching hearts, and transforming lives to build a better tomorrow.</p>
+
+                    <div className="font-serif mt-8 sm:mt-10 text-2xl sm:text-3xl italic text-sla-blue font-medium flex justify-center">
+                        <p className="border-t border-sla-blue/30 w-fit pt-6 sm:pt-7 px-5">
+                            Educating minds, touching hearts, and transforming lives to build a better tomorrow.
+                        </p>
                     </div>
                 </section>
 
-                <section className="space-y-7">
+
+                {/* VISION */}
+                <section className="space-y-6 sm:space-y-7">
                     <div>
                         <p className="text-sm uppercase">Looking Ahead</p>
                         <h2 className="text-4xl font-serif">Our Vision</h2>
                     </div>
+
                     <div>
-                        <p className="border-l-2 border-sla-blue/80 pl-5">
+                        <p className="border-l-2 border-sla-blue/80 pl-5 leading-7">
                             St. Louisse Academy, Inc. envisions itself as an agent for the production of learners
                             with multidisciplinary knowledge and skills that are aligned with the K-12 Curriculum to
                             make them 21st century learners.
@@ -124,24 +143,29 @@ export default function About() {
                     </div>
                 </section>
 
-                <section className="space-y-5">
+
+                {/* MISSION */}
+                <section className="space-y-6 sm:space-y-7">
                     <div>
                         <p className="text-sm uppercase">What Guides Us</p>
                         <h2 className="text-4xl font-serif">Our Mission</h2>
                     </div>
-                    <div className="flex justify-between gap-10">
-                        <div className="border rounded-md border-sla-blue p-7">
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-10">
+                        <div className="border rounded-md border-sla-blue p-6 sm:p-7">
                             <p>
                                 Produce 21st century learners, patriotic and God-loving citizens
                             </p>
                         </div>
-                        <div className="border rounded-md border-sla-blue p-7">
+
+                        <div className="border rounded-md border-sla-blue p-6 sm:p-7">
                             <p>
                                 Create learners who are equipped with multidisciplinary knowledge and skills that are
                                 aligned with K-12 Curriculum, virtues and strong sense of nationalism
                             </p>
                         </div>
-                        <div className="border rounded-md border-sla-blue p-7">
+
+                        <div className="border rounded-md border-sla-blue p-6 sm:p-7">
                             <p>
                                 develop the learners holistically with the knowledge and skills to prepare themfor the real world of work
                             </p>
@@ -149,13 +173,16 @@ export default function About() {
                     </div>
                 </section>
 
-                <section className="space-y-7">
+
+                {/* GOAL */}
+                <section className="space-y-6 sm:space-y-7">
                     <div>
                         <p className="text-sm uppercase">Our Direction</p>
                         <h2 className="text-4xl font-serif">Our Goal</h2>
                     </div>
+
                     <div>
-                        <p className="border-l-2 border-sla-blue/80 pl-5">
+                        <p className="border-l-2 border-sla-blue/80 pl-5 leading-7">
                             St. Louisse Academy, Inc. hopes to produce and to develop learners holistically who
                             are equipped with 21st century skills and knowledge through the teachers as designers,
                             facilitators and assessors to guide the learners to become God-loving, globally
@@ -164,25 +191,36 @@ export default function About() {
                     </div>
                 </section>
 
-                <section className="space-y-5">
+
+                {/* OBJECTIVES */}
+                <section className="space-y-6 sm:space-y-7">
                     <div>
                         <p className="text-sm uppercase">What We Develop</p>
                         <h2 className="text-4xl font-serif">Our Objectives</h2>
                     </div>
-                    <div className="flex justify-between gap-10">
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 sm:gap-6">
                         {objectives.map((o,index) => (
-                            <div key={index} className="bg-sla-blue text-white p-10 rounded-md">
+                            <div 
+                                key={index} 
+                                className="bg-sla-blue text-white p-7 sm:p-10 rounded-md"
+                            >
                                 {o.title}
                             </div>
                         ))}
                     </div>
                 </section>
 
-                <section className="space-y-7">
+
+                {/* FUTURE */}
+                <section className="space-y-6 sm:space-y-7">
                     <div>
                         <p className="text-sm uppercase">Looking Forward</p>
-                        <h2 className="text-4xl font-serif">Building the Future Together</h2>
+                        <h2 className="text-4xl font-serif">
+                            Building the Future Together
+                        </h2>
                     </div>
+
                     <div className="space-y-6 text-base leading-8 border-l-2 border-sla-blue/80 pl-5">
                         <p>
                             At St. Louise Academy, Inc., our vision for the
@@ -216,18 +254,16 @@ export default function About() {
                             it remains a place where every Louissian can
                             thrive.
                         </p>
-
                     </div>
-                        <p className="font-serif leading-8 text-sla-blue text-center text-3xl py-20">
-                            Together, we continue to inspire, innovate, and
-                            empower; shaping a brighter future for every
-                            Louissian.
-                        </p>
+
+                    <p className="font-serif leading-8 text-sla-blue text-center text-2xl sm:text-3xl py-12 sm:py-20">
+                        Together, we continue to inspire, innovate, and
+                        empower; shaping a brighter future for every
+                        Louissian.
+                    </p>
                 </section>
 
             </div>
-
-            
         </div>
     );
 }

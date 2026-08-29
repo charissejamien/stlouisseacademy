@@ -1,38 +1,28 @@
 import Link from "next/link";
 import {
-    User,
     Users,
-    Wallet,
-    ListSortAscending,
-    FileSliders,
-    LogOut,
-    Settings,
+    GraduationCap,
     CreditCard,
-    FolderCog,
-    FolderOpenDot,
-    FilePlusCorner,
+    BookOpen,
+    Settings,
+    LogOut,
 } from "lucide-react";
 
 import { logout } from "@/app/(authentication)/login/actions";
 
-export default function RegistrarSidebar() {
-    const management = [
-        { icon: User, title: "Students", link: "/students" },
-        { icon: Users, title: "Employees", link: "/employees" },
-        { icon: ListSortAscending, title: "Parents", link: "/" },
-        { icon: ListSortAscending, title: "Classes", link: "/classes" },
+export default function ParentSidebar() {
+    const children = [
+        { icon: Users, title: "Students", link: "/students" },
+        { icon: GraduationCap, title: "Grades", link: "/grades" },
     ];
 
-    const financials = [
-        { icon: FilePlusCorner, title: "Enrollment", link: "/" },
-        { icon: Wallet, title: "Payments", link: "/payments" },
-        { icon: CreditCard, title: "DCPR", link: "/" },
-        { icon: FolderOpenDot, title: "Expenses", link: "/" },
-        { icon: FileSliders, title: "Payroll", link: "/" },
+    const school = [
+        { icon: CreditCard, title: "Payments", link: "/payments" },
+        { icon: BookOpen, title: "Handbook", link: "/handbook" },
     ];
 
     const account = [
-        { icon: Settings, title: "Settings", link: "/" },
+        { icon: Settings, title: "Settings", link: "/settings" },
     ];
 
     return (
@@ -52,14 +42,14 @@ export default function RegistrarSidebar() {
             {/* Navigation */}
             <nav className="flex flex-1 flex-col gap-7">
 
-                {/* Management */}
+                {/* My Children */}
                 <div>
                     <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Management
+                        My Children
                     </p>
 
                     <div className="space-y-1">
-                        {management.map((item) => {
+                        {children.map((item) => {
                             const Icon = item.icon;
 
                             return (
@@ -76,14 +66,14 @@ export default function RegistrarSidebar() {
                     </div>
                 </div>
 
-                {/* Financials */}
+                {/* School */}
                 <div>
                     <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Financials
+                        School
                     </p>
 
                     <div className="space-y-1">
-                        {financials.map((item) => {
+                        {school.map((item) => {
                             const Icon = item.icon;
 
                             return (
@@ -98,21 +88,6 @@ export default function RegistrarSidebar() {
                             );
                         })}
                     </div>
-                </div>
-
-                {/* Configuration */}
-                <div>
-                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Configuration
-                    </p>
-
-                    <Link
-                        href="/"
-                        className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                        <FolderCog size={18} strokeWidth={1.8} />
-                        <span>Academics</span>
-                    </Link>
                 </div>
 
                 {/* Account */}
@@ -157,4 +132,3 @@ export default function RegistrarSidebar() {
         </aside>
     );
 }
-

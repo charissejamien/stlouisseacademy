@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Table,
   TableBody,
@@ -15,12 +17,22 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation"
+
 
 export default function Payments() {
+
+    const router = useRouter()
+
+
     return(
         <div className="w-[90%] mx-auto mt-20 space-y-10">
             <div className="flex justify-end">
-                <Button>Record Payment</Button>
+                <Button
+                    onClick={() => router.push("/payments/new")}
+                >
+                    Add Payment
+                </Button>
             </div>
 
             <div className="flex gap-10">

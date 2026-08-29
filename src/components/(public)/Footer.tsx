@@ -30,7 +30,7 @@ export default function Footer() {
     return(
         <div className="bg-sla-blue pt-20 pb-5 flex flex-col text-gray-100/85 mt-10 gap-10">
             
-            <div className="flex justify-between px-5 xl:px-80">
+            <div className="flex flex-col md:flex-row justify-between gap-10 px-5 xl:px-80">
                 <div>
                     <h1 className="text-lg text-white font-semibold tracking-wide">ST. LOUISSE ACADEMY, INC.</h1>
                     <p className="text-sm font-thin">Teaching Minds, Touching Hearts, and Transforming Lives.</p>
@@ -54,7 +54,7 @@ export default function Footer() {
                     {contactUs.map((c , i) => (
                         <div key={i} className="flex items-start gap-3 text-sm">
                             <div className="pt-1"><c.icon size={16}/></div>
-                            <p className="w-90">{c.text}</p>
+                            <p className="w-full md:w-90">{c.text}</p>
                         </div>
                     ))}
                 </div>
@@ -62,7 +62,7 @@ export default function Footer() {
 
             <Separator className="w-"/>
 
-            <div className="flex justify-between px-5 xl:px-60 text-sm">
+            <div className="flex flex-col md:flex-row justify-between gap-5 px-5 xl:px-60 text-sm">
                 <p>2026 St. Louisse Academy, Inc. All rights reserved.</p>
                 <div className="flex gap-5">
                     {documents.map((d , i) => (
