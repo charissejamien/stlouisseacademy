@@ -6,6 +6,7 @@ experimental: {
       bodySizeLimit: "10mb", // Set this to 10MB to accommodate multiple photos
     },
   },
+  allowedDevOrigins: ['trenton-extrapolative-laraine.ngrok-free.dev', 'https://repeal-mutiny-take.ngrok-free.dev'],
 images: {
     remotePatterns: [
       {
