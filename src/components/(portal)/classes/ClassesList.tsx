@@ -28,8 +28,11 @@ import {
   GetClasses,
 } from "@/app/(portal)/classes/actions"
 
+import { useRouter } from "next/navigation";
 
 export default function ClassesList() {
+
+  const router = useRouter();
 
   const {
     data: classes,
@@ -282,7 +285,10 @@ export default function ClassesList() {
                     key={gradeLevel}
                     gradeLevel={gradeLevel}
                     classes={sections}
-                  />
+                    onClassClick={(classId) => {
+                      router.push(`/classes/${classId}`);
+                    }}
+                />
                 )
               )}
 
@@ -306,11 +312,11 @@ export default function ClassesList() {
 function GradeGroup({
   gradeLevel,
   classes,
+  onClassClick,
 }: {
   gradeLevel: string
-  classes: Awaited<
-    ReturnType<typeof GetClasses>
-  >
+  classes: Awaited<ReturnType<typeof GetClasses>>
+  onClassClick: (classId: string) => void
 }) {
 
   return (
@@ -338,6 +344,7 @@ function GradeGroup({
 
         <tr
           key={classItem.id}
+          onClick={() => onClassClick(classItem.id)}
           className="
             group
             cursor-pointer
