@@ -24,3 +24,38 @@ export async function getUser() {
 
     return userInfo;
 }
+
+export async function getMyStudents() {
+
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+        throw new Error("Unauthorized");
+    }
+
+    const { data: parent, error: parentError } = await supabase
+        .from("parents")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+    if (parentError) {
+        throw new Error(parentError.message);
+    }
+
+    const { data: students, error: studentsError } = await supabase
+        .from("students")
+        .select("id, first_name, middle_name, last_name")
+        .eq("parent", parent.id)
+        .order("last_name", { ascending: true });
+
+    if (studentsError) {
+        throw new Error(studentsError.message);
+    }
+
+    return students;
+}

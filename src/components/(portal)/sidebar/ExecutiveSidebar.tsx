@@ -67,7 +67,7 @@ export default function ExecutiveSidebar() {
     ];
 
     return (
-        <aside className="flex h-full flex-col rounded-xl bg-[#2f6ed6] p-5 text-white/80">
+        <aside className="flex h-full flex-col rounded-xl bg-[#2f6ed6]bg-gradient-to-t from-[#3153DE] to-[#4580FF] p-5 text-white/80">
 
             {/* School */}
             <header className="mb-8">

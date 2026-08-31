@@ -3,56 +3,83 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function inviteUserByEmail(data: {
-  firstName: string
-  middleName?: string
-  lastName: string
-  suffix?: string
-  email: string
-  role: string
+    firstName: string
+    middleName?: string
+    lastName: string
+    suffix?: string
+    email: string
+    role: string
+    contactNumber?: string
 }) {
-  const {
-    firstName,
-    middleName,
-    lastName,
-    suffix,
-    email,
-    role,
-  } = data
-
-  const { data: authData, error: authError } =
-    await supabaseAdmin.auth.admin.inviteUserByEmail(
-      email,
-      {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirm`,
-      }
-    )
-
-  if (authError) {
-    throw new Error(authError.message)
-  }
-
-  if (!authData.user) {
-    throw new Error(
-      "Unable to create the invited user."
-    )
-  }
-
-  const { error: profileError } =
-    await supabaseAdmin
-      .from("users")
-      .insert({
-        id: authData.user.id,
-        first_name: firstName,
-        middle_name: middleName || null,
-        last_name: lastName,
-        suffix: suffix || null,
+    const {
+        firstName,
+        middleName,
+        lastName,
+        suffix,
+        email,
         role,
-      })
+        contactNumber,
+    } = data
 
-  if (profileError) {
-    throw new Error(profileError.message)
-  }
+    const { data: authData, error: authError } =
+        await supabaseAdmin.auth.admin.inviteUserByEmail(
+            email,
+            {
+                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirm`,
+            }
+        )
+
+    if (authError) {
+        throw new Error(authError.message)
+    }
+
+    if (!authData.user) {
+        throw new Error("Unable to create the invited user.")
+    }
+
+    const userId = authData.user.id
+
+    // Create the base user record
+    const { error: userError } = await supabaseAdmin
+        .from("users")
+        .insert({
+            id: userId,
+            first_name: firstName,
+            middle_name: middleName || null,
+            last_name: lastName,
+            suffix: suffix || null,
+            email,
+            role,
+        })
+
+    if (userError) {
+        throw new Error(userError.message)
+    }
+
+    // Create parent profile when role is parent
+    if (role === "parent") {
+        const { error: parentError } = await supabaseAdmin
+            .from("parents")
+            .insert({
+                user_id: userId,
+                first_name: firstName,
+                middle_name: middleName || null,
+                last_name: lastName,
+                email,
+                contact_number: contactNumber || null,
+            })
+
+        if (parentError) {
+            throw new Error(parentError.message)
+        }
+    }
+
+    return {
+        success: true,
+        userId,
+    }
 }
+
 
 export async function listUsers() {
 
