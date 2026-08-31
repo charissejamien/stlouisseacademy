@@ -7,6 +7,7 @@ import RegistrarSidebar from "@/components/(portal)/sidebar/RegistrarSidebar";
 import TeacherSidebar from "@/components/(portal)/sidebar/TeachersSidebar";
 import ExecutiveSidebar from "@/components/(portal)/sidebar/ExecutiveSidebar";
 import ParentSidebar from "@/components/(portal)/sidebar/ParentsSidebar";
+import ParentsMobileNav from "@/components/(portal)/sidebar/ParentsMobileNav";
 import SuperAdminSidebar from "@/components/(portal)/sidebar/SuperAdminSidebar";
 
 type UserRole =
@@ -25,7 +26,7 @@ const sidebars: Partial<Record<UserRole, React.ReactNode>> = {
     registrar: <RegistrarSidebar />,
     executive: <ExecutiveSidebar />,
     superadmin: <SuperAdminSidebar />,
-//     staff: <StaffSidebar />,
+    // staff: <StaffSidebar />,
 };
 
 function isUserRole(role: unknown): role is UserRole {
@@ -45,40 +46,67 @@ export default async function PortalGroupRootLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const supabase = await createClient();
+    // const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    // const {
+    //     data: { user },
+    // } = await supabase.auth.getUser();
 
-    if (!user) {
-        redirect("/login");
-    }
+    // if (!user) {
+    //     redirect("/login");
+    // }
 
-    
-    const { data: profile, error } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+    // const { data: profile, error } = await supabase
+    //     .from("users")
+    //     .select("role")
+    //     .eq("id", user.id)
+    //     .single();
 
-    if (error || !profile) {
-        redirect("/login");
-    }
+    // if (error || !profile) {
+    //     redirect("/login");
+    // }
 
-    if (!isUserRole(profile.role)) {
-        redirect("/login");
-    }
+    // if (!isUserRole(profile.role)) {
+    //     redirect("/login");
+    // }
+
+    // const isParent = profile.role === "parent";
 
     return (
-        <div className="flex h-screen gap-10 bg-background p-7">
+        <div className="min-h-screen bg-background">
 
-            <div className="h-full w-[14%]">
-                {sidebars[profile.role]}
+            {/* Desktop Layout */}
+            <div className="hidden h-screen gap-10 p-7 md:flex">
+
+                {/* Sidebar */}
+                <aside className="h-full w-[14%]">
+                    {sidebars[profile.role]}
+                </aside>
+
+                {/* Main Content */}
+                <main className="h-full min-w-0 flex-1">
+                    {children}
+                </main>
             </div>
 
-            <div className="h-full w-[86%]">
-                {children}
-            </div>
+            {/* Mobile Layout */}
+            <div className="min-h-screen md:hidden">
 
+                {/* Main Content */}
+                <main
+                    className={[
+                        "min-h-screen",
+                        isParent
+                            ? "pb-20"
+                            : "pb-20",
+                    ].join(" ")}
+                >
+                    {children}
+                </main>
+
+                {/* Parent Mobile Navigation */}
+                {isParent && <ParentsMobileNav />}
+            </div>
         </div>
     );
 }
