@@ -1,107 +1,348 @@
-"use client"
+"use client";
+
+import { useState } from "react";
+import { Controller, UseFormReturn } from "react-hook-form";
+import { searchParents } from "@/app/(portal)/enrollment/actions";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
+
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { EnrollmentFormValues } from "./EnrollmentForm";
 
-export default function ParentInformation() {
-    return(
-        <div>
-           <Card className="w-full min-w-3xl mt-10 py-10 pb-20 px-5">
-                <CardHeader className="pb-6">
-                    <CardTitle>Parent Information</CardTitle>
-                </CardHeader>
+const suffixes = ["Jr.", "II", "III", "IV", "V"] as const;
+const genders = ["Male", "Female"] as const;
 
-                <CardContent className="space-y-8">
+type ParentRecord = {
+  id: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  suffix?: "Jr." | "II" | "III" | "IV" | "V" | null;
+  gender?: "Male" | "Female" | null;
+  address: string | null;
+  contact_number: string | null;
+  email: string | null;
+};
 
-                    <div className="space-y-4">
+type ParentInformationProps = {
+  form: UseFormReturn<EnrollmentFormValues>;
+  isPending: boolean;
+  onPrevious: () => void;
+  onContinue: () => void;
+};
 
-                        <div className="flex gap-x-5 gap-y-5">
+export default function ParentInformation({
+  form,
+  isPending,
+  onPrevious,
+  onContinue,
+}: ParentInformationProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<ParentRecord[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-                            <div className="space-y-2">
-                                <Label>First Name <span aria-hidden="true">*</span></Label>
-                                <Input/>
-                            </div>
+  async function handleSearch(query: string) {
+    setSearchQuery(query);
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
-                            <div className="space-y-2">
-                                <Label>Middle Name</Label>
-                                <Input />
-                            </div>
+    setIsSearching(true);
+    const results = await searchParents(query);
+    setSearchResults(results as ParentRecord[]);
+    setIsSearching(false);
+  }
 
-                            <div className="space-y-2">
-                                <Label>Last Name <span aria-hidden="true">*</span></Label>
-                                <Input />
-                            </div>
+  function handleSelectParent(parent: ParentRecord) {
+    form.setValue("parent_id", parent.id, { shouldDirty: true });
+    form.setValue("parent_first_name", parent.first_name || "", {
+      shouldDirty: true,
+    });
+    form.setValue("parent_middle_name", parent.middle_name || "", {
+      shouldDirty: true,
+    });
+    form.setValue("parent_last_name", parent.last_name || "", {
+      shouldDirty: true,
+    });
+    form.setValue("parent_suffix", parent.suffix || undefined, {
+      shouldDirty: true,
+    });
+    form.setValue("parent_gender", parent.gender || undefined, {
+      shouldDirty: true,
+    });
+    form.setValue("parent_address", parent.address || "", {
+      shouldDirty: true,
+    });
+    form.setValue("parent_contact_number", parent.contact_number || "", {
+      shouldDirty: true,
+    });
+    form.setValue("parent_email", parent.email || "", { shouldDirty: true });
 
-                            <div className="space-y-2">
-                                <Label>Suffix</Label>
-                                <Select>
-                                    <SelectTrigger className="w-full max-w-48">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                        <SelectLabel>Suffix</SelectLabel>
-                                        
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+    setSearchResults([]);
+    setSearchQuery(`${parent.first_name} ${parent.last_name}`);
+  }
 
-                        <div className="w-full flex">
-                            <div className="space-y-2 w-[30%]">
-                                <Label>Gender <span aria-hidden="true">*</span></Label>
-                                <Select>
-                                    <SelectTrigger className="w-full max-w-48">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                        <SelectLabel>Gender</SelectLabel>
-                                       
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+  return (
+    <div className="bg-card rounded-lg p-5 space-y-6">
+      <div className="border-b pb-4 relative">
+        <FieldTitle className="text-muted-foreground mb-2">
+          Lookup Existing Parent
+        </FieldTitle>
+        <p className="text-xs text-muted-foreground mb-3">
+          If this parent already has a student enrolled, search by name or
+          contact number to auto-fill.
+        </p>
+        <Input
+          placeholder="Search parent name or contact number..."
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          disabled={isPending}
+        />
 
-                            <div className="col-span-2 space-y-2 w-[70%]">
-                                <Label>Address <span aria-hidden="true">*</span></Label>
-                                <Input />
-                            </div>
-                        </div>
+        {searchResults.length > 0 && (
+          <div className="absolute z-10 w-full bg-background border rounded-md shadow-md mt-1 max-h-48 overflow-y-auto">
+            {searchResults.map((parent) => (
+              <div
+                key={parent.id}
+                className="p-3 hover:bg-muted cursor-pointer text-sm border-b last:border-none flex justify-between items-center"
+                onClick={() => handleSelectParent(parent)}
+              >
+                <div>
+                  <p className="font-medium">
+                    {parent.first_name} {parent.middle_name || ""}{" "}
+                    {parent.last_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Contact: {parent.contact_number || "N/A"} | Email:{" "}
+                    {parent.email || "N/A"}
+                  </p>
+                </div>
+                <Button size="sm" type="button" variant="outline">
+                  Select
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-                        <div className="flex gap-5">
-                            <div className="space-y-2 flex-1">
-                                <Label>Email</Label>
-                                <Input />
-                            </div>
+      <FieldSet className="gap-4">
+        <FieldTitle className="text-muted-foreground">
+          Parent Information
+        </FieldTitle>
 
-                            <div className="space-y-2 flex-1">
-                                <Label>Phone Number</Label>
-                                <Input />
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
+        <FieldGroup className="flex-row gap-3">
+          <Controller
+            name="parent_first_name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>First Name</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  disabled={isPending}
+                  placeholder="John"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="parent_middle_name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Middle Name</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  disabled={isPending}
+                  placeholder="Joseph"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="parent_last_name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  disabled={isPending}
+                  placeholder="Doe"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="parent_suffix"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Suffix</FieldLabel>
+                <Select
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger id={field.name} disabled={isPending}>
+                    <SelectValue placeholder="Select Suffix" />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    {suffixes.map((suffix) => (
+                      <SelectItem key={suffix} value={suffix}>
+                        {suffix}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </FieldGroup>
+
+        <FieldGroup className="flex-row gap-3">
+          <Controller
+            name="parent_gender"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Gender</FieldLabel>
+                <Select
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger id={field.name} disabled={isPending}>
+                    <SelectValue placeholder="Select Gender" />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    {genders.map((gender) => (
+                      <SelectItem key={gender} value={gender}>
+                        {gender}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="parent_address"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Home Address</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  disabled={isPending}
+                  placeholder="123 Rizal Street"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </FieldGroup>
+
+        <FieldGroup className="flex-row gap-3">
+          <Controller
+            name="parent_contact_number"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Contact Number</FieldLabel>
+                <Input
+                  {...field}
+                  type="text"
+                  id={field.name}
+                  disabled={isPending}
+                  placeholder="09XXXXXXXXX"
+                  maxLength={11}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="parent_email"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                <Input
+                  {...field}
+                  type="email"
+                  id={field.name}
+                  disabled={isPending}
+                  placeholder="name@email.com"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+        </FieldGroup>
+      </FieldSet>
+
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={onPrevious}
+        >
+          Previous
+        </Button>
+        <Button type="button" disabled={isPending} onClick={onContinue}>
+          Continue to Fee Settlement
+        </Button>
+      </div>
+    </div>
+  );
 }

@@ -4,17 +4,13 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getPaymentStudents,
-  getBillingPeriods,
   createPayments,
   PaymentStudent,
-} from "@/app/(portal)/payments/actions";
+} from "@/app/(portal)/payments/new/actions";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { getBillingPeriods } from "@/app/(portal)/actions";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -42,12 +38,12 @@ type SelectedStudent = PaymentStudent & {
 
 export default function AddPayment() {
   const [search, setSearch] = useState("");
-  const [selectedStudents, setSelectedStudents] = useState<
-    SelectedStudent[]
-  >([]);
+  const [selectedStudents, setSelectedStudents] = useState<SelectedStudent[]>(
+    [],
+  );
 
   const [date, setDate] = useState(
-    new Intl.DateTimeFormat("en-CA").format(new Date())
+    new Intl.DateTimeFormat("en-CA").format(new Date()),
   );
 
   const [orNumber, setOrNumber] = useState("");
@@ -55,19 +51,17 @@ export default function AddPayment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load the student directory ONCE.
-  const {
-    data: students = [],
-    isLoading: isStudentsLoading,
-  } = useQuery<PaymentStudent[]>({
+  const { data: students = [], isLoading: isStudentsLoading } = useQuery<
+    PaymentStudent[]
+  >({
     queryKey: ["paymentStudents"],
     queryFn: getPaymentStudents,
   });
 
-  const { data: billingPeriods = [] } =
-    useQuery<BillingPeriod[]>({
-      queryKey: ["billing-periods"],
-      queryFn: getBillingPeriods,
-    });
+  const { data: billingPeriods = [] } = useQuery<BillingPeriod[]>({
+    queryKey: ["billing-periods"],
+    queryFn: getBillingPeriods,
+  });
 
   // Local/in-memory student search.
   const searchResults = useMemo(() => {
@@ -90,10 +84,7 @@ export default function AddPayment() {
 
         const studentId = student.student_id?.toLowerCase() ?? "";
 
-        return (
-          fullName.includes(term) ||
-          studentId.includes(term)
-        );
+        return fullName.includes(term) || studentId.includes(term);
       })
       .slice(0, 10);
   }, [students, search]);
@@ -121,7 +112,7 @@ export default function AddPayment() {
 
   const removeStudent = (id: string) => {
     setSelectedStudents((current) =>
-      current.filter((student) => student.id !== id)
+      current.filter((student) => student.id !== id),
     );
   };
 
@@ -139,26 +130,23 @@ export default function AddPayment() {
                 },
               ],
             }
-          : student
-      )
+          : student,
+      ),
     );
   };
 
-  const removePayment = (
-    studentId: string,
-    paymentIndex: number
-  ) => {
+  const removePayment = (studentId: string, paymentIndex: number) => {
     setSelectedStudents((current) =>
       current.map((student) =>
         student.id === studentId
           ? {
               ...student,
               payments: student.payments.filter(
-                (_, index) => index !== paymentIndex
+                (_, index) => index !== paymentIndex,
               ),
             }
-          : student
-      )
+          : student,
+      ),
     );
   };
 
@@ -166,38 +154,34 @@ export default function AddPayment() {
     studentId: string,
     paymentIndex: number,
     field: keyof StudentPayment,
-    value: string
+    value: string,
   ) => {
     setSelectedStudents((current) =>
       current.map((student) =>
         student.id === studentId
           ? {
               ...student,
-              payments: student.payments.map(
-                (payment, index) =>
-                  index === paymentIndex
-                    ? {
-                        ...payment,
-                        [field]: value,
-                      }
-                    : payment
+              payments: student.payments.map((payment, index) =>
+                index === paymentIndex
+                  ? {
+                      ...payment,
+                      [field]: value,
+                    }
+                  : payment,
               ),
             }
-          : student
-      )
+          : student,
+      ),
     );
   };
 
-  const totalPayment = selectedStudents.reduce(
-    (total, student) => {
-      for (const payment of student.payments) {
-        total += Number(payment.amount) || 0;
-      }
+  const totalPayment = selectedStudents.reduce((total, student) => {
+    for (const payment of student.payments) {
+      total += Number(payment.amount) || 0;
+    }
 
-      return total;
-    },
-    0
-  );
+    return total;
+  }, 0);
 
   const handleSubmit = async () => {
     if (!orNumber) {
@@ -207,9 +191,7 @@ export default function AddPayment() {
     const payments = selectedStudents.flatMap((student) =>
       student.payments
         .filter(
-          (payment) =>
-            payment.billing_period &&
-            Number(payment.amount) > 0
+          (payment) => payment.billing_period && Number(payment.amount) > 0,
         )
         .map((payment) => ({
           or_number: orNumber,
@@ -217,7 +199,7 @@ export default function AddPayment() {
           mode_of_payment: modeOfPayment,
           student_id: student.id,
           payment_specifics: payment.billing_period,
-        }))
+        })),
     );
 
     if (payments.length === 0) {
@@ -266,9 +248,7 @@ export default function AddPayment() {
                   >
                     <span className="font-medium">
                       {student.first_name}{" "}
-                      {student.middle_name
-                        ? `${student.middle_name} `
-                        : ""}
+                      {student.middle_name ? `${student.middle_name} ` : ""}
                       {student.last_name}
                     </span>
 
@@ -294,13 +274,10 @@ export default function AddPayment() {
           <div className="space-y-4">
             {selectedStudents.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold">
-                  Students
-                </h2>
+                <h2 className="text-lg font-semibold">Students</h2>
 
                 <p className="text-sm text-muted-foreground">
-                  Add the billing periods and payments for each
-                  student.
+                  Add the billing periods and payments for each student.
                 </p>
               </div>
             )}
@@ -317,9 +294,7 @@ export default function AddPayment() {
 
                       <p className="mt-1 text-lg font-semibold">
                         {student.first_name}{" "}
-                        {student.middle_name
-                          ? `${student.middle_name} `
-                          : ""}
+                        {student.middle_name ? `${student.middle_name} ` : ""}
                         {student.last_name}
                       </p>
 
@@ -332,9 +307,7 @@ export default function AddPayment() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() =>
-                        removeStudent(student.id)
-                      }
+                      onClick={() => removeStudent(student.id)}
                     >
                       Remove Student
                     </Button>
@@ -342,89 +315,74 @@ export default function AddPayment() {
 
                   {/* Payments */}
                   <div className="space-y-3">
-                    {student.payments.map(
-                      (payment, index) => (
-                        <div
-                          key={index}
-                          className="grid gap-4 rounded-lg border bg-muted/20 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end"
-                        >
-                          {/* Billing Period */}
-                          <div className="grid min-w-0 gap-2">
-                            <Label>
-                              Billing Period
-                            </Label>
+                    {student.payments.map((payment, index) => (
+                      <div
+                        key={index}
+                        className="grid gap-4 rounded-lg border bg-muted/20 p-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end"
+                      >
+                        {/* Billing Period */}
+                        <div className="grid min-w-0 gap-2">
+                          <Label>Billing Period</Label>
 
-                            <Select
-                              value={
-                                payment.billing_period
-                              }
-                              onValueChange={(value) =>
-                                updatePayment(
-                                  student.id,
-                                  index,
-                                  "billing_period",
-                                  value
-                                )
-                              }
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select billing period" />
-                              </SelectTrigger>
-
-                              <SelectContent>
-                                {billingPeriods.map(
-                                  (period) => (
-                                    <SelectItem
-                                      key={period.id}
-                                      value={period.period_name}
-                                    >
-                                      {period.period_name}
-                                    </SelectItem>
-                                  )
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Payment */}
-                          <div className="grid gap-2">
-                            <Label>Payment</Label>
-
-                            <Input
-                              type="number"
-                              min="0"
-                              placeholder="0.00"
-                              value={payment.amount}
-                              onChange={(e) =>
-                                updatePayment(
-                                  student.id,
-                                  index,
-                                  "amount",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </div>
-
-                          {/* Remove */}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() =>
-                              removePayment(
+                          <Select
+                            value={payment.billing_period}
+                            onValueChange={(value) =>
+                              updatePayment(
                                 student.id,
-                                index
+                                index,
+                                "billing_period",
+                                value,
                               )
                             }
-                            disabled={
-                              student.payments.length === 1
-                            }
                           >
-                            Remove
-                          </Button>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select billing period" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              {billingPeriods.map((period) => (
+                                <SelectItem
+                                  key={period.id}
+                                  value={period.period_name}
+                                >
+                                  {period.period_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      )
-                    )}
+
+                        {/* Payment */}
+                        <div className="grid gap-2">
+                          <Label>Payment</Label>
+
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder="0.00"
+                            value={payment.amount}
+                            onChange={(e) =>
+                              updatePayment(
+                                student.id,
+                                index,
+                                "amount",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+
+                        {/* Remove */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => removePayment(student.id, index)}
+                          disabled={student.payments.length === 1}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Add Billing Period */}
@@ -432,9 +390,7 @@ export default function AddPayment() {
                     type="button"
                     variant="outline"
                     className="mt-4 w-full"
-                    onClick={() =>
-                      addPayment(student.id)
-                    }
+                    onClick={() => addPayment(student.id)}
                   >
                     + Add Billing Period
                   </Button>
@@ -463,9 +419,7 @@ export default function AddPayment() {
                 <Input
                   type="date"
                   value={date}
-                  onChange={(e) =>
-                    setDate(e.target.value)
-                  }
+                  onChange={(e) => setDate(e.target.value)}
                 />
               </div>
 
@@ -476,9 +430,7 @@ export default function AddPayment() {
                 <Input
                   placeholder="Enter OR number"
                   value={orNumber}
-                  onChange={(e) =>
-                    setOrNumber(e.target.value)
-                  }
+                  onChange={(e) => setOrNumber(e.target.value)}
                 />
               </div>
 
@@ -486,35 +438,24 @@ export default function AddPayment() {
               <div className="grid gap-2">
                 <Label>Mode of Payment</Label>
 
-                <Select
-                  value={modeOfPayment}
-                  onValueChange={setModeOfPayment}
-                >
+                <Select value={modeOfPayment} onValueChange={setModeOfPayment}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="cash">
-                      Cash
-                    </SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
 
-                    <SelectItem value="gcash">
-                      GCash
-                    </SelectItem>
+                    <SelectItem value="gcash">GCash</SelectItem>
 
-                    <SelectItem value="bank">
-                      Bank Transfer
-                    </SelectItem>
+                    <SelectItem value="bank">Bank Transfer</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Total */}
               <div className="rounded-lg border bg-muted/40 p-4">
-                <p className="text-sm text-muted-foreground">
-                  Total Payment
-                </p>
+                <p className="text-sm text-muted-foreground">Total Payment</p>
 
                 <p className="mt-1 text-3xl font-bold">
                   ₱
@@ -528,15 +469,9 @@ export default function AddPayment() {
               <Button
                 className="w-full"
                 onClick={handleSubmit}
-                disabled={
-                  isSubmitting ||
-                  !orNumber ||
-                  totalPayment <= 0
-                }
+                disabled={isSubmitting || !orNumber || totalPayment <= 0}
               >
-                {isSubmitting
-                  ? "Adding Payment..."
-                  : "Add Payment"}
+                {isSubmitting ? "Adding Payment..." : "Add Payment"}
               </Button>
             </CardContent>
           </Card>

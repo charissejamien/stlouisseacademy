@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +18,6 @@ export default function Header() {
 
   return (
     <header className="absolute top-0 left-0 w-full z-50 uppercase bg-transparent text-white tracking-wider py-4 px-6 md:px-10 flex justify-between items-center text-sm md:text-base font-light">
-      
       {/* Brand Logo & Name */}
       <div className="flex gap-3 items-center z-50">
         <Image src="/logo.svg" alt="Logo" width={24} height={24} />
@@ -29,8 +29,8 @@ export default function Header() {
 
       <nav className="hidden lg:flex gap-10">
         {nav.map((n) => (
-          <Link 
-            key={n.nav} 
+          <Link
+            key={n.nav}
             href={n.link}
             className="font-medium hover:text-sla-gold hover:underline transition-colors duration-200"
           >
@@ -39,15 +39,27 @@ export default function Header() {
         ))}
       </nav>
 
-      {/* School Motto Slogan (Hidden on Mobile/Tablet to save breathing room) */}
-      <div className="hidden xl:block text-right text-xs leading-tight">
-        <p><span className="text-sla-gold">Once</span> a Louissian</p>
-        <p className="leading-none">Always a <span className="text-sla-gold">Louissian</span></p>
+      {/* School Motto Slogan & Login Button (Hidden on Mobile/Tablet) */}
+      <div className="hidden xl:flex items-center gap-6">
+        <div className="text-right text-xs leading-tight">
+          <p>
+            <span className="text-sla-gold">Once</span> a Louissian
+          </p>
+          <p className="leading-none">
+            Always a <span className="text-sla-gold">Louissian</span>
+          </p>
+        </div>
+        <Button
+          asChild
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 h-9 rounded-lg shadow-sm normal-case tracking-normal text-sm"
+        >
+          <Link href="/login">Login</Link>
+        </Button>
       </div>
 
       {/* Mobile Hamburger Toggle Button (Hidden on Desktop) */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         className="lg:hidden p-2 z-50 focus:outline-none"
         aria-label="Toggle Menu"
       >
@@ -55,16 +67,18 @@ export default function Header() {
       </button>
 
       {/* Fullscreen Mobile Drawer Overlay */}
-      <div 
+      <div
         className={`fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col justify-center items-center gap-8 transition-all duration-300 ease-in-out lg:hidden z-40 ${
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         <nav className="flex flex-col gap-6 text-center text-xl tracking-widest">
           {nav.map((n) => (
-            <Link 
-              key={n.nav} 
-              href={n.link} 
+            <Link
+              key={n.nav}
+              href={n.link}
               onClick={() => setIsOpen(false)}
               className="hover:text-sla-gold active:text-sla-gold transition-colors py-2"
             >
@@ -73,11 +87,24 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="text-center text-[12px] tracking-widest opacity-80 mt-8 normal-case">
-          <p> <span className="text-sla-gold">Once</span> a Louissian, <span className="text-sla-gold">Always</span> a Louissian</p>
+        <div className="text-center text-[12px] tracking-widest opacity-80 mt-4 normal-case space-y-4">
+          <p>
+            {" "}
+            <span className="text-sla-gold">Once</span> a Louissian,{" "}
+            <span className="text-sla-gold">Always</span> a Louissian
+          </p>
+
+          <div>
+            <Button
+              asChild
+              onClick={() => setIsOpen(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 h-10 rounded-xl shadow-sm normal-case tracking-normal text-base w-48"
+            >
+              <Link href="/login">Login</Link>
+            </Button>
+          </div>
         </div>
       </div>
-
     </header>
   );
 }

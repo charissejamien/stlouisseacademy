@@ -31,7 +31,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="flex h-screen">
+        <div className="flex min-h-screen px-4 pt-4 md:px-0 md:pt-0">
             <div className="mx-auto w-full">
                 <div className="w-full rounded-xl bg-gradient-to-r from-[#3153DE] to-[#6CB3F8] p-10 text-white">
                     <p className="text-sm text-gray-200">
@@ -42,9 +42,6 @@ export default function Dashboard() {
                         Welcome back, {user.first_name}!
                     </h2>
 
-                    <p className="pt-1 text-sm">
-                        Always stay updated in your school system
-                    </p>
                 </div>
 
                 {user.role === "registrar" && (

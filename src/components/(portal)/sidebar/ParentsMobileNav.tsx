@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
     LayoutDashboard,
     Users,
@@ -37,6 +38,11 @@ const navItems: NavItem[] = [
         title: "Payments",
         link: "/payments",
     },
+    {
+        icon: Settings,
+        title: "Settings",
+        link: "/settings",
+    },
 ];
 
 function isActivePath(pathname: string, link: string) {
@@ -54,74 +60,43 @@ export default function ParentsMobileNav() {
     const pathname = usePathname();
 
     return (
-        <>
-            {/* Account Settings */}
-            <div className="fixed right-4 top-4 z-40 md:hidden">
-                <Link
-                    href="/settings"
-                    aria-label="Account settings"
-                    className={[
-                        "flex h-10 w-10 items-center justify-center",
-                        "rounded-full border border-slate-200",
-                        "bg-white shadow-sm",
-                        "transition-colors",
-                        pathname === "/settings"
-                            ? "text-[#2f6ed6]"
-                            : "text-slate-500",
-                    ].join(" ")}
-                >
-                    <Settings
-                        size={20}
-                        strokeWidth={
-                            pathname === "/settings"
-                                ? 2.2
-                                : 1.8
-                        }
-                    />
-                </Link>
+        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white md:hidden">
+            <div className="mx-auto flex h-16 w-full max-w-lg items-stretch">
+                {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActivePath(
+                        pathname,
+                        item.link
+                    );
+
+                    return (
+                        <Link
+                            key={item.link}
+                            href={item.link}
+                            className={[
+                                "flex min-w-0 flex-1",
+                                "touch-manipulation",
+                                "flex-col items-center justify-center",
+                                "gap-1",
+                                "text-[10px] font-medium",
+                                "transition-colors",
+                                active
+                                    ? "text-[#2f6ed6]"
+                                    : "text-slate-400",
+                            ].join(" ")}
+                        >
+                            <Icon
+                                size={21}
+                                strokeWidth={active ? 2.2 : 1.8}
+                            />
+
+                            <span className="truncate">
+                                {item.title}
+                            </span>
+                        </Link>
+                    );
+                })}
             </div>
-
-            {/* Bottom Navigation */}
-            <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white md:hidden">
-                <div className="mx-auto flex h-16 w-full max-w-lg items-stretch">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const active = isActivePath(
-                            pathname,
-                            item.link
-                        );
-
-                        return (
-                            <Link
-                                key={item.link}
-                                href={item.link}
-                                className={[
-                                    "flex min-w-0 flex-1",
-                                    "touch-manipulation",
-                                    "flex-col items-center justify-center",
-                                    "gap-1",
-                                    "text-[10px] font-medium",
-                                    "transition-colors",
-                                    active
-                                        ? "text-[#2f6ed6]"
-                                        : "text-slate-400",
-                                ].join(" ")}
-                            >
-                                <Icon
-                                    size={21}
-                                    strokeWidth={
-                                        active ? 2.2 : 1.8
-                                    }
-                                />
-
-                                <span className="truncate">
-                                    {item.title}
-                                </span>
-                            </Link>
-                        );
-                    })}
-                </div>
-            </nav>
-        </>
+        </nav>
     );
 }

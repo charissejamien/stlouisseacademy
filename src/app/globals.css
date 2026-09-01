@@ -13,12 +13,12 @@
   --font-montserrat: var(--font-montserrat), sans-serif;
   --font-serif: var(--font-garamond), Georgia, serif;
   --font-heading: var(--font-poppins), sans-serif;
-  --color-white: #FFFFFF;
-  --color-sla-blue: #004C97;
-  --color-sla-gold: #FDB714;
+  --color-white: #ffffff;
+  --color-sla-blue: #004c97;
+  --color-sla-gold: #fdb714;
   --color-gray-muted: #808080;
   --color-sla-gray: #777777;
-  --color-sla-skyblue: #A9C7FF;
+  --color-sla-skyblue: #a9c7ff;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -65,7 +65,7 @@
 }
 
 :root {
-  --background: #F6F9FB;
+  --background: #f6f9fb;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -137,87 +137,86 @@
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   html {
     font-family: var(--font-poppins), sans-serif;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-poppins), sans-serif;
   }
 }
 
-
 @page {
-    size: 8.5in 5.5in;
-    margin: 0;
+  size: 8.5in 5.5in;
+  margin: 0;
 }
 
 @media print {
-    html,
-    body {
-        width: 8.5in;
-        height: 5.5in;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        overflow: hidden !important;
-    }
+  html,
+  body {
+    width: 8.5in;
+    height: 5.5in;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: hidden !important;
+  }
 
-    body * {
-        visibility: hidden !important;
-    }
+  body * {
+    visibility: hidden !important;
+  }
 
-    .receipt-print,
-    .receipt-print * {
-        visibility: visible !important;
-    }
+  .receipt-print,
+  .receipt-print * {
+    visibility: visible !important;
+  }
 
-    .receipt-print {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
+  .receipt-print {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
 
-        width: 8.5in !important;
-        height: 5.5in !important;
+    width: 8.5in !important;
+    height: 5.5in !important;
 
-        margin: 0 !important;
-        padding: 0.25in !important;
+    margin: 0 !important;
+    padding: 0.25in !important;
 
-        background: white !important;
-        color: black !important;
+    background: white !important;
+    color: black !important;
 
-        overflow: hidden !important;
+    overflow: hidden !important;
 
-        box-sizing: border-box !important;
-    }
+    box-sizing: border-box !important;
+  }
 
-    .print\:hidden {
-        display: none !important;
-    }
+  .print\:hidden {
+    display: none !important;
+  }
 
-    /* Prevent the Dialog itself from affecting the print layout */
-    [data-radix-dialog-overlay] {
-        position: static !important;
-        display: block !important;
-        background: transparent !important;
-        overflow: visible !important;
-    }
+  /* Prevent the Dialog itself from affecting the print layout */
+  [data-radix-dialog-overlay] {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
 
-    [data-radix-dialog-content] {
-        position: static !important;
-        transform: none !important;
-        width: auto !important;
-        max-width: none !important;
-        min-width: 0 !important;
-        max-height: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-    }
+  [data-radix-dialog-content] {
+    position: static !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
 }
 
 @layer utilities {
