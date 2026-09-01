@@ -36,19 +36,11 @@ export default function Login() {
     try {
       setLoading(true);
 
-      console.log("LOGIN BUTTON CLICKED");
-
       await signInWithPassword(email.trim(), password);
-
-      console.log("LOGIN SUCCESSFUL");
-
-      toast.success("Successfully logged in!");
 
       router.replace("/dashboard");
       router.refresh();
     } catch (error) {
-      console.error("LOGIN ERROR:", error);
-
       toast.error(error instanceof Error ? error.message : "Login failed.");
 
       setLoading(false);
@@ -67,22 +59,19 @@ export default function Login() {
           className="w-16 h-16 md:w-20 md:h-20 object-contain"
           priority
         />
-
         <div>
           <h1 className="text-sla-blue font-extrabold text-2xl md:text-[32px] tracking-[4px] leading-tight">
             ST LOUISSE ACADEMY
           </h1>
-
           <h2 className="text-sla-gold font-medium text-base md:text-[20px] tracking-[6px] md:tracking-[10px] uppercase mt-0.5">
             DAANBANTAYAN
           </h2>
         </div>
       </div>
 
-      {/* Login Card */}
-      <div className="bg-white p-6 md:p-10 md:pr-0 rounded-md flex flex-col md:flex-row gap-6 md:gap-10 w-full max-w-[450px] md:max-w-[850px] shadow-sm border border-slate-100 overflow-hidden">
-        {/* Image Section (Appears above form on mobile, side-by-side on desktop) */}
-        <div className="relative w-full md:w-[50%] min-h-[220px] md:min-h-[380px] rounded-md overflow-hidden bg-slate-100">
+      <div className="bg-white p-6 md:p-10 rounded-md flex flex-col md:flex-row gap-6 md:gap-10 w-full max-w-[450px] md:max-w-[850px] shadow-sm border border-slate-100">
+        {/* Image Section */}
+        <div className="relative w-full md:w-1/2 h-[200px] md:h-[380px] rounded-md overflow-hidden bg-slate-100 flex-shrink-0">
           <Image
             src="/login-bg.svg"
             alt="Login illustration"
@@ -93,11 +82,10 @@ export default function Login() {
         </div>
 
         {/* Login Form */}
-        <div className="w-full md:w-[40%] md:px-5 flex flex-col gap-5 justify-center">
+        <div className="w-full md:w-1/2 flex flex-col gap-5 justify-center">
           {/* Email */}
           <div className="space-y-3">
             <Label htmlFor="email">Email</Label>
-
             <Input
               id="email"
               type="email"
@@ -113,7 +101,6 @@ export default function Login() {
           {/* Password */}
           <div className="space-y-3">
             <Label htmlFor="password">Password</Label>
-
             <div className="relative">
               <Input
                 id="password"
@@ -125,7 +112,6 @@ export default function Login() {
                 disabled={loading}
                 className="pr-12"
               />
-
               <button
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
@@ -133,9 +119,9 @@ export default function Login() {
                 className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
                   <Eye className="h-4 w-4" />
+                ) : (
+                  <EyeOff className="h-4 w-4" />
                 )}
               </button>
             </div>
@@ -146,7 +132,7 @@ export default function Login() {
             type="button"
             disabled={loading}
             onClick={handleLogin}
-            className="w-full bg-sla-blue hover:bg-sla-blue/85 text-white"
+            className="w-full bg-sla-blue hover:bg-sla-blue/85 text-white cursor-pointer"
           >
             {loading ? "Logging in..." : "Log In"}
           </Button>

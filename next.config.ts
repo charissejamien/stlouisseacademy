@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb", // Set this to 10MB to accommodate multiple photos
     },
   },
-  allowedDevOrigins: ["https://repeal-mutiny-take.ngrok-free.dev"],
+  allowedDevOrigins: ["repeal-mutiny-take.ngrok-free.dev"],
   images: {
     remotePatterns: [
       {

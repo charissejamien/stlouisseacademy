@@ -103,70 +103,69 @@ export async function getStudentById(
 ): Promise<CompleteStudentProfile> {
   const supabase = await createClient();
 
-  // Single unified query — no extra table lookups needed!
   const { data, error } = await supabase
     .from("students")
     .select(
       `
-            id,
-            student_id,
-            first_name,
-            middle_name,
-            last_name,
-            gender,
-            created_at,
+        id,
+        student_id,
+        first_name,
+        middle_name,
+        last_name,
+        gender,
+        created_at,
 
-            enrollments (
-                grade_level,
-                student_type,
-                isESC,
-                school_years (
-                    is_active
-                )
-            ),
-
-            student_account_card (
-                id,
-                base_tuition,
-                miscellaneous,
-                adjusted_base_tuition,
-                adjusted_miscellaneous,
-                adjusted_total_tuition_fee,
-                total_books_fee,
-                school_years (
-                    is_active
-                ),
-                student_account_discounts (
-                    id,
-                    snapshot_name,
-                    snapshot_rate
-                )
-            ),
-
-            payments (
-                id,
-                or_number,
-                amount,
-                mode_of_payment,
-                created_at,
-                payment_specifics
+        enrollments (
+            grade_level,
+            student_type,
+            isESC,
+            school_years (
+                is_active
             )
-        `,
+        ),
+
+        student_account_card (
+            id,
+            base_tuition,
+            miscellaneous,
+            adjusted_base_tuition,
+            adjusted_miscellaneous,
+            adjusted_total_tuition_fee,
+            total_books_fee,
+            school_years (
+                is_active
+            ),
+            student_account_discounts (
+                id,
+                snapshot_name,
+                snapshot_rate
+            )
+        ),
+
+        payments (
+            id,
+            or_number,
+            amount,
+            mode_of_payment,
+            created_at,
+            payment_specifics
+        )
+      `,
     )
-    .eq("id", studentUUID)
-    .single();
+    .eq("id", studentUUID);
 
   if (error) {
     throw new Error(`Failed to fetch student: ${error.message}`);
   }
 
-  if (!data) {
+  const studentRow = data?.[0];
+
+  if (!studentRow) {
     throw new Error("Student not found.");
   }
 
-  const student = data as unknown as SupabaseStudentProfileQueryResult;
+  const student = studentRow as unknown as SupabaseStudentProfileQueryResult;
 
-  // Isolate active school year records
   const activeEnrollment =
     student.enrollments?.find((e) => e.school_years?.is_active === true) ??
     student.enrollments?.[0];
@@ -178,7 +177,6 @@ export async function getStudentById(
 
   const currentGradeLevel = activeEnrollment?.grade_level ?? "Unassigned";
 
-  // Extract Snapshotted Financial Data
   const baseTuition = Number(activeAssessment?.base_tuition ?? 0);
   const miscellaneousFees = Number(activeAssessment?.miscellaneous ?? 0);
   const grossTuitionTotal = baseTuition + miscellaneousFees;
@@ -199,7 +197,6 @@ export async function getStudentById(
   );
   const totalBooksAssessment = Number(activeAssessment?.total_books_fee ?? 0);
 
-  // Process Discounts Text Summary
   const activeDiscounts = activeAssessment?.student_account_discounts ?? [];
   const discountDescriptions: string[] = [];
 
@@ -217,7 +214,6 @@ export async function getStudentById(
 
   const appliedDiscountIds = activeDiscounts.map((d) => d.discount_id);
 
-  // Process Payments & Balances
   const payments = student.payments ?? [];
   const tuitionPayments = payments.filter(
     (p) => !p.payment_specifics?.toLowerCase().includes("book"),
@@ -239,7 +235,6 @@ export async function getStudentById(
   const booksBalance = Math.max(0, totalBooksAssessment - totalBooksPaid);
   const balanceRemaining = tuitionBalance + booksBalance;
 
-  // Format Transactions
   const transactions: TransactionRow[] = payments.map((payment) => ({
     id: payment.or_number ?? `OR-${payment.id.slice(0, 4).toUpperCase()}`,
     context: payment.payment_specifics ?? "Enrollment Fee",
@@ -268,6 +263,7 @@ export async function getStudentById(
       month: "long",
       day: "numeric",
     }),
+
     classification: activeEnrollment?.student_type ?? "Regular",
 
     base_tuition: baseTuition,
