@@ -1,19 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-experimental: {
+  experimental: {
     serverActions: {
       bodySizeLimit: "10mb", // Set this to 10MB to accommodate multiple photos
     },
   },
-  allowedDevOrigins: ['trenton-extrapolative-laraine.ngrok-free.dev', 'https://repeal-mutiny-take.ngrok-free.dev'],
-images: {
+  allowedDevOrigins: ["https://repeal-mutiny-take.ngrok-free.dev"],
+  images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'rqapzgnczwrzszbmevsg.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
+        protocol: "https",
+        hostname: "rqapzgnczwrzszbmevsg.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
       },
     ],
   },

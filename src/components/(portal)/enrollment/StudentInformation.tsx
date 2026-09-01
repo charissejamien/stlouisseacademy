@@ -1,269 +1,535 @@
-"use client"
+"use client";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  Controller,
+  UseFormReturn,
+  useFieldArray,
+  ControllerRenderProps,
+  ControllerFieldState,
+} from "react-hook-form";
+
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
+
+import {
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+  SelectContent,
+  SelectItem,
+  Select,
+} from "@/components/ui/select";
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { useQuery } from "@tanstack/react-query"
-import type { Student } from "@/app/(portal)/enrollment/types"
-import { getSchoolYears, getGradeLevels } from "@/app/(portal)/enrollment/actions"
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Asterisk from "@/components/shared/Asterisk";
+import { EnrollmentFormValues } from "./EnrollmentForm";
+
+const suffixes = ["Jr.", "II", "III", "IV", "V"] as const;
+
+type StudentFieldName =
+  | "school_year"
+  | "grade_level"
+  | "student_type"
+  | "lrn"
+  | "first_name"
+  | "middle_name"
+  | "last_name"
+  | "suffix"
+  | "address"
+  | "date_of_birth"
+  | "gender";
 
 type StudentInformationProps = {
-    students: Student[];
-    setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
-    errors: Record<number, Record<string, string>>;
+  form: UseFormReturn<EnrollmentFormValues>;
+  schoolYears: {
+    start_year: string;
+    end_year: string;
+  }[];
+  gradeLevels: {
+    grade_level: string;
+  }[];
+  tuitionFees: {
+    grade_level: string;
+    base_tuition: number;
+    miscellaneous: number;
+    total_tuition: number;
+  }[];
+  books: {
+    id: string;
+    grade_level: string;
+    amount: number;
+  }[];
+  isPending: boolean;
+  isValid: boolean;
+  onContinue: () => void;
 };
 
-export default function StudentInformation({students, setStudents, errors} : StudentInformationProps) {
+type SelectFieldProps = {
+  field: ControllerRenderProps<
+    EnrollmentFormValues,
+    `students.${number}.${StudentFieldName}`
+  >;
+  fieldState: ControllerFieldState;
+  label: string;
+  options: readonly string[];
+  isPending: boolean;
+  required?: boolean;
+};
 
-    const gender = ["Male", "Female"];
-    const studentType = ["New", "Returning"];
-    const suffix = ["Jr.", "II", "III", "IV", "V", ""];
+export default function StudentInformation({
+  form,
+  schoolYears,
+  gradeLevels,
+  tuitionFees,
+  books,
+  isPending,
+  isValid,
+  onContinue,
+}: StudentInformationProps) {
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "students",
+  });
 
-    const addStudentCard = () => {
-        setStudents((prev) => [
-            ...prev, { 
-                firstName: "",
-                middleName: "",
-                lastName: "",
-                suffix: "",
-                address: "",
-                dateOfBirth: "",
-                gender: "",
-                schoolYear: "",
-                gradeLevel: "",
-                studentType: ""
-            }
-        ])
-    };
+  return (
+    <div className="space-y-6">
+      {fields.map((field, index) => {
+        const gradeLevel = form.watch(`students.${index}.grade_level`);
 
-    const updateStudent = (index: number, field: string, value: string) => {
-        setStudents((prev) => prev.map((student, i) => 
-            i === index ? {...student, [field]: value} : student
-        ))
-    };
+        const tuitionFee = tuitionFees?.find(
+          (fee) => fee.grade_level === gradeLevel,
+        );
 
-    const deleteStudentCard = (index: number) => {
-        setStudents((prev) => prev.filter((student, i) => i !== index))
-    }
+        const totalBooksFee = books
+          .filter((book) => book.grade_level === gradeLevel)
+          .reduce((sum, book) => sum + (Number(book.amount) || 0), 0);
 
-    const { data: schoolYears } = useQuery({queryKey: ["schoolYears"], queryFn: getSchoolYears})
-    const { data: gradeLevels } = useQuery({queryKey: ["gradeLevels"], queryFn: getGradeLevels})
+        return (
+          <div
+            key={field.id}
+            className="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(220px,1fr)] gap-5 items-start"
+          >
+            <div className="bg-card rounded-lg border p-4 sm:p-5">
+              <FieldSet className="gap-4">
+                <FieldTitle className="text-muted-foreground">
+                  Student {index + 1} — Academic Information
+                </FieldTitle>
 
-    return(
-        <div>
-            <Button onClick={addStudentCard}>Add Student</Button>
+                <FieldGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <Controller
+                    name={`students.${index}.school_year`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <SelectField
+                        field={field}
+                        fieldState={fieldState}
+                        label="School Year"
+                        options={schoolYears.map(
+                          (year) => `${year.start_year} - ${year.end_year}`,
+                        )}
+                        isPending={isPending}
+                      />
+                    )}
+                  />
 
-            {students.map((student, index) => (
-                <Card className="w-full min-w-3xl mt-5" key={index}>
-                    <CardHeader className="pb-6">
-                        <Button onClick={() => deleteStudentCard(index)}>Delete Student</Button>
-                    </CardHeader>
-                    <CardHeader className="pb-6">
-                        <CardTitle>Student Information</CardTitle>
-                    </CardHeader>
+                  <Controller
+                    name={`students.${index}.grade_level`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <SelectField
+                        field={field}
+                        fieldState={fieldState}
+                        label="Grade Level"
+                        options={gradeLevels.map((grade) => grade.grade_level)}
+                        isPending={isPending}
+                      />
+                    )}
+                  />
 
-                    <CardContent className="space-y-8">
-                        <div className="space-y-4">
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Academic Information
-                            </p>
+                  <Controller
+                    name={`students.${index}.student_type`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <SelectField
+                        field={field}
+                        fieldState={fieldState}
+                        label="Student Type"
+                        options={["New", "Returning"]}
+                        isPending={isPending}
+                      />
+                    )}
+                  />
+                </FieldGroup>
 
-                            <div className="grid grid-cols-3 gap-5">
-                                <div className="space-y-2">
-                                    <Label>School Year</Label>
-                                    <Select value={student.schoolYear} onValueChange={(value) => updateStudent(index, "schoolYear", value)}>
-                                        <SelectTrigger className="w-full max-w-48">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                            <SelectLabel>School Years</SelectLabel>
-                                            {schoolYears?.map((s) => (
-                                                <SelectItem key={s.id} value={s.id}>
-                                                {s.start_year} - {s.end_year}
-                                                </SelectItem>
-                                            ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors[index]?.schoolYear && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].schoolYear}
-                                        </p>
-                                    )}
-                                </div>
+                <FieldGroup>
+                  <Controller
+                    name={`students.${index}.lrn`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Learner Reference Number (LRN)
+                        </FieldLabel>
 
-                                <div className="space-y-2">
-                                    <Label>Grade Level</Label>
-                                    <Select value={student.gradeLevel} onValueChange={(value) => updateStudent(index, "gradeLevel", value)}>
-                                        <SelectTrigger className="w-full max-w-48">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                            <SelectLabel>Grade Levels</SelectLabel>
-                                            {gradeLevels?.map((g) => (
-                                                <SelectItem key={g.id} value={g.id}>
-                                            {g.grade_level}
-                                                </SelectItem>
-                                            ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors[index]?.gradeLevel && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].gradeLevel}
-                                        </p>
-                                    )}
-                                </div>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          disabled={isPending}
+                          placeholder="Enter your 12-digit LRN"
+                          minLength={12}
+                          maxLength={12}
+                          aria-invalid={fieldState.invalid}
+                        />
 
-                                <div className="space-y-2">
-                                    <Label>Student Type</Label>
-                                    <Select value={student.studentType} onValueChange={(value) => updateStudent(index, "studentType", value)}>
-                                        <SelectTrigger className="w-full max-w-48">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                            <SelectLabel>Student Type</SelectLabel>
-                                            {studentType.map((s) => (
-                                                <SelectItem key={s} value={s}>
-                                                {s}
-                                                </SelectItem>
-                                            ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors[index]?.studentType && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].studentType}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
 
-                        <div className="space-y-4">
-                            <p className="text-sm font-medium text-muted-foreground">
-                                Personal Information
-                            </p>
+                <div className="border-t" />
 
-                            <div className="grid grid-cols-2 gap-x-5 gap-y-5">
+                <FieldTitle className="text-muted-foreground">
+                  Personal Information
+                </FieldTitle>
 
-                                <div className="space-y-2">
-                                    <Label>First Name <span aria-hidden="true">*</span></Label>
-                                    <Input 
-                                        value={student.firstName} 
-                                        onChange={(e) => updateStudent(index, "firstName", e.target.value)}
-                                    />
-                                    {errors[index]?.firstName && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].firstName}
-                                        </p>
-                                    )}
-                                </div>
+                <FieldGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_90px] gap-3">
+                  <Controller
+                    name={`students.${index}.first_name`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          First Name <Asterisk />
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          disabled={isPending}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="John"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name={`students.${index}.middle_name`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Middle Name
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          disabled={isPending}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="Joseph"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name={`students.${index}.last_name`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Last Name <Asterisk />
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          disabled={isPending}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="Doe"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name={`students.${index}.suffix`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <SelectField
+                        field={field}
+                        fieldState={fieldState}
+                        label="Suffix"
+                        options={suffixes}
+                        isPending={isPending}
+                        required={false}
+                      />
+                    )}
+                  />
+                </FieldGroup>
 
-                                <div className="space-y-2">
-                                    <Label>Middle Name</Label>
-                                    <Input 
-                                        value={student.middleName} 
-                                        onChange={(e) => updateStudent(index, "middleName", e.target.value)}
-                                    />
-                                </div>
+                <FieldGroup>
+                  <Controller
+                    name={`students.${index}.address`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Home Address <Asterisk />
+                        </FieldLabel>
 
-                                <div className="space-y-2">
-                                    <Label>Last Name <span aria-hidden="true">*</span></Label>
-                                    <Input 
-                                        value={student.lastName} 
-                                        onChange={(e) => updateStudent(index, "lastName", e.target.value)}
-                                    />
-                                    {errors[index]?.lastName && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].lastName}
-                                        </p>
-                                    )}
-                                </div>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          disabled={isPending}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="123 Rizal Street, Barangay Poblacion, Daanbantayan, Cebu"
+                        />
 
-                                <div className="space-y-2">
-                                    <Label>Suffix</Label>
-                                    <Select value={student.suffix} onValueChange={(value) => updateStudent(index, "suffix", value)}>
-                                        <SelectTrigger className="w-full max-w-48">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                            <SelectLabel>Suffix</SelectLabel>
-                                            {suffix.map((s) => (
-                                                <SelectItem key={s} value={s}> 
-                                                {s}
-                                                </SelectItem>
-                                            ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
 
-                                <div className="col-span-2 space-y-2">
-                                    <Label>Address <span aria-hidden="true">*</span></Label>
-                                    <Input 
-                                        value={student.address} 
-                                        onChange={(e) => updateStudent(index, "address", e.target.value)}
-                                    />
-                                    {errors[index]?.address && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].address}
-                                        </p>
-                                    )}
-                                </div>
+                <FieldGroup className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Controller
+                    name={`students.${index}.date_of_birth`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Date of Birth
+                        </FieldLabel>
 
-                                <div className="space-y-2">
-                                    <Label>Date of Birth <span aria-hidden="true">*</span></Label>
-                                </div>
+                        <Input
+                          type="date"
+                          {...field}
+                          id={field.name}
+                          disabled={isPending}
+                          aria-invalid={fieldState.invalid}
+                          max={new Date().toISOString().split("T")[0]}
+                        />
 
-                                <div className="space-y-2">
-                                    <Label>Gender <span aria-hidden="true">*</span></Label>
-                                    <Select value={student.gender} onValueChange={(value) => updateStudent(index, "gender", value)}>
-                                        <SelectTrigger className="w-full max-w-48">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                            <SelectLabel>Gender</SelectLabel>
-                                            {gender.map((g) => (
-                                                <SelectItem key={g} value={g}>
-                                                {g}
-                                                </SelectItem>
-                                            ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors[index]?.gender && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[index].gender}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name={`students.${index}.gender`}
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <SelectField
+                        field={field}
+                        fieldState={fieldState}
+                        label="Gender"
+                        options={["Male", "Female"]}
+                        isPending={isPending}
+                      />
+                    )}
+                  />
+                </FieldGroup>
+
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={fields.length === 1 || isPending}
+                    onClick={() => remove(index)}
+                  >
+                    Remove Student
+                  </Button>
+                </div>
+              </FieldSet>
+            </div>
+
+            {/* ================================================== */}
+            {/* ACADEMIC FEES — SEPARATE CARD */}
+            {/* ================================================== */}
+
+            <div className="bg-card rounded-lg border p-4 sm:p-5">
+              <div className="space-y-1 mb-5">
+                <h2 className="font-semibold">Academic Fees</h2>
+                <p className="text-sm text-muted-foreground">
+                  Based on the selected grade level.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Base Tuition</label>
+                  <Input
+                    value={
+                      tuitionFee
+                        ? `₱${tuitionFee.base_tuition.toLocaleString("en-PH", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : ""
+                    }
+                    placeholder="Select grade level"
+                    readOnly
+                    disabled={isPending}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Miscellaneous</label>
+                  <Input
+                    value={
+                      tuitionFee
+                        ? `₱${tuitionFee.miscellaneous.toLocaleString("en-PH", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : ""
+                    }
+                    placeholder="Select grade level"
+                    readOnly
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* Restored Total Tuition Row */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Total Tuition</label>
+                  <Input
+                    value={
+                      tuitionFee
+                        ? `₱${tuitionFee.total_tuition.toLocaleString("en-PH", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : ""
+                    }
+                    placeholder="Select grade level"
+                    readOnly
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* Books Fee Input (Separate) */}
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Books Fee</label>
+                  <Input
+                    value={
+                      totalBooksFee > 0
+                        ? `₱${totalBooksFee.toLocaleString("en-PH", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}`
+                        : "₱0.00"
+                    }
+                    readOnly
+                    disabled={isPending}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={() =>
+            append({
+              school_year: "",
+              grade_level: "",
+              student_type: "",
+              lrn: "",
+              first_name: "",
+              middle_name: "",
+              last_name: "",
+              suffix: undefined,
+              address: "",
+              date_of_birth: "",
+              gender: "Male",
+              payments: [
+                {
+                  billing_period: "",
+                  amount: "",
+                },
+              ],
+              discounts: [],
+            })
+          }
+          className="w-full sm:w-auto"
+        >
+          Add Student
+        </Button>
+
+        <Button
+          type="button"
+          disabled={isPending || !isValid}
+          onClick={onContinue}
+          className="w-full sm:w-auto"
+        >
+          Continue to Parent Information
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SelectField({
+  field,
+  fieldState,
+  label,
+  options,
+  isPending,
+  required = true,
+}: SelectFieldProps) {
+  return (
+    <Field data-invalid={fieldState.invalid}>
+      <FieldLabel htmlFor={field.name}>
+        {label} {required && <Asterisk />}
+      </FieldLabel>
+
+      <Select
+        name={field.name}
+        value={field.value ?? ""}
+        onValueChange={field.onChange}
+      >
+        <SelectTrigger
+          id={field.name}
+          disabled={isPending}
+          aria-invalid={fieldState.invalid}
+        >
+          <SelectValue placeholder={`Select ${label}`} />
+        </SelectTrigger>
+
+        <SelectContent position="popper">
+          {options.map((option) => (
+            <SelectItem key={option} value={option}>
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+    </Field>
+  );
 }

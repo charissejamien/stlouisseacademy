@@ -46,34 +46,34 @@ export default async function PortalGroupRootLayout({
 }: {
     children: React.ReactNode;
 }) {
-    // const supabase = await createClient();
+    const supabase = await createClient();
 
-    // const {
-    //     data: { user },
-    // } = await supabase.auth.getUser();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
-    // if (!user) {
-    //     redirect("/login");
-    // }
+    if (!user) {
+        redirect("/login");
+    }
 
-    // const { data: profile, error } = await supabase
-    //     .from("users")
-    //     .select("role")
-    //     .eq("id", user.id)
-    //     .single();
+    const { data: profile, error } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-    // if (error || !profile) {
-    //     redirect("/login");
-    // }
+    if (error || !profile) {
+        redirect("/login");
+    }
 
-    // if (!isUserRole(profile.role)) {
-    //     redirect("/login");
-    // }
+    if (!isUserRole(profile.role)) {
+        redirect("/login");
+    }
 
-    // const isParent = profile.role === "parent";
+    const isParent = profile.role === "parent";
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="h-screen bg-background">
 
             {/* Desktop Layout */}
             <div className="hidden h-screen gap-10 p-7 md:flex">
