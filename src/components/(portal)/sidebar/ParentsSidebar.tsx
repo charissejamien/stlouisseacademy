@@ -84,7 +84,7 @@ export default function ParentSidebar() {
         {
             icon: Settings,
             title: "Settings",
-            link: "/settings",
+            link: "/account-settings",
         },
     ];
 

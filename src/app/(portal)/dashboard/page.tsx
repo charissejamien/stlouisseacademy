@@ -25,7 +25,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh] text-muted-foreground">
+      <div className="flex justify-center items-center h-full text-muted-foreground">
         Loading dashboard...
       </div>
     );
@@ -33,30 +33,30 @@ export default function Dashboard() {
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh] text-muted-foreground">
+      <div className="flex justify-center items-center h-full text-muted-foreground">
         Unable to load user profile.
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen px-4 pt-4 md:px-0 md:pt-0">
-      <div className="mx-auto w-full">
-        <div className="w-full rounded-xl bg-gradient-to-r from-[#3153DE] to-[#3F95E8] p-7 md:p-10 text-white shadow-sm">
-          <p className="text-md text-gray-100 font-medium">{date}</p>
+    <div className="flex flex-col h-full space-y-6 pb-6">
+      {/* Welcome Banner */}
+      <div className="w-full rounded-xl bg-gradient-to-r from-[#3153DE] to-[#3F95E8] p-7 md:p-10 text-white shadow-sm shrink-0">
+        <p className="text-md text-gray-100 font-medium">{date}</p>
 
-          <h2 className="pt-3 text-2xl md:text-3xl font-semibold tracking-tight">
-            Welcome back, {user.first_name}!
-          </h2>
-        </div>
+        <h2 className="pt-3 text-2xl md:text-3xl font-semibold tracking-tight">
+          Welcome back, {user.first_name}!
+        </h2>
+      </div>
 
-        {/* Administrative roles can view the registrar/admin operational dashboard */}
+      {/* Dashboard Sub-components View */}
+      <div className="flex-1 min-h-0">
         {(user.role === "registrar" ||
           user.role === "admin" ||
           user.role === "superadmin" ||
           user.role === "executive") && <RegistrarDashboard />}
 
-        {/* Parent specific view */}
         {user.role === "parent" && <ParentDashboard />}
       </div>
     </div>

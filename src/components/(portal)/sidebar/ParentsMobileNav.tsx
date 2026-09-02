@@ -27,15 +27,15 @@ const navItems: NavItem[] = [
     title: "Grades",
     link: "/grades",
   },
-  {
-    icon: CreditCard,
-    title: "Payments",
-    link: "/payments",
-  },
+  // {
+  //   icon: CreditCard,
+  //   title: "Payments",
+  //   link: "/payments",
+  // },
   {
     icon: Settings,
     title: "Settings",
-    link: "/settings",
+    link: "/account-settings",
   },
 ];
 

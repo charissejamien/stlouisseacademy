@@ -38,8 +38,8 @@ export default function StudentsClient() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: students, isLoading } = useQuery({
-    queryKey: ["students", gradeLevel],
-    queryFn: () => getAllStudents(gradeLevel || undefined),
+    queryKey: ["students-all"],
+    queryFn: () => getAllStudents(),
   });
 
   const { data: gradeLevels } = useQuery({
@@ -51,12 +51,18 @@ export default function StudentsClient() {
     queryFn: getStudentsCount,
   });
 
-  // Filter students based on search query (Name or Student ID)
   const filteredStudents = students?.filter((student) => {
     const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
     const studentId = student.student_id?.toLowerCase() || "";
-    const query = searchQuery.toLowerCase();
-    return fullName.includes(query) || studentId.includes(query);
+    const query = searchQuery.trim().toLowerCase();
+
+    const studentGrade = student.enrollments?.[0]?.grade_level;
+
+    if (query) {
+      return fullName.includes(query) || studentId.includes(query);
+    }
+
+    return gradeLevel ? studentGrade === gradeLevel : true;
   });
 
   const maleStudents = filteredStudents?.filter(
@@ -91,9 +97,8 @@ export default function StudentsClient() {
           </CardContent>
         </Card>
 
-        {/* Search Input wired up */}
         <Input
-          placeholder="Search by name or ID..."
+          placeholder="Search by name or ID across all students..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
@@ -101,7 +106,10 @@ export default function StudentsClient() {
 
         <Select
           value={gradeLevel}
-          onValueChange={(value) => setGradeLevel(value)}
+          onValueChange={(value) => {
+            setGradeLevel(value);
+            setSearchQuery("");
+          }}
         >
           <SelectTrigger className="w-full max-w-48">
             <SelectValue placeholder="Select grade level" />
@@ -126,8 +134,9 @@ export default function StudentsClient() {
           </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Student ID</TableHead>
+              <TableHead className="w-[180px]">Student ID</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Grade Level</TableHead>
               <TableHead>Gender</TableHead>
               <TableHead className="text-right">Enrollment Date</TableHead>
             </TableRow>
@@ -135,7 +144,7 @@ export default function StudentsClient() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   <Skeleton className="h-8 w-full" />
                 </TableCell>
               </TableRow>
@@ -143,7 +152,7 @@ export default function StudentsClient() {
               <>
                 {/* MALE SECTION */}
                 <TableRow>
-                  <TableCell colSpan={4} className="font-bold bg-muted/50">
+                  <TableCell colSpan={5} className="font-bold bg-muted/50">
                     Male ({maleStudents?.length ?? 0})
                   </TableCell>
                 </TableRow>
@@ -151,40 +160,48 @@ export default function StudentsClient() {
                 {maleStudents?.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={5}
                       className="text-center text-muted-foreground py-4"
                     >
                       No male students found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  maleStudents?.map((s) => (
-                    <TableRow
-                      key={s.id}
-                      onClick={() => router.push(`/students/${s.id}`)}
-                      className="cursor-pointer hover:bg-muted/50"
-                    >
-                      <TableCell className="w-[200px]">
-                        {s.student_id}
-                      </TableCell>
-                      <TableCell>
-                        {s.last_name}, {s.first_name}
-                      </TableCell>
-                      <TableCell>{s.gender}</TableCell>
-                      <TableCell className="text-right">
-                        {new Date(s.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "2-digit",
-                          year: "numeric",
-                        })}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  maleStudents?.map((s) => {
+                    const studentGrade = s.enrollments?.[0]?.grade_level;
+                    return (
+                      <TableRow
+                        key={s.id}
+                        onClick={() => router.push(`/students/${s.id}`)}
+                        className="cursor-pointer hover:bg-muted/50"
+                      >
+                        <TableCell className="w-[180px]">
+                          {s.student_id}
+                        </TableCell>
+                        <TableCell>
+                          {s.last_name}, {s.first_name}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
+                            {studentGrade || "Unassigned"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{s.gender}</TableCell>
+                        <TableCell className="text-right">
+                          {new Date(s.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "2-digit",
+                            year: "numeric",
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
 
                 {/* FEMALE SECTION */}
                 <TableRow>
-                  <TableCell colSpan={4} className="font-bold bg-muted/50">
+                  <TableCell colSpan={5} className="font-bold bg-muted/50">
                     Female ({femaleStudents?.length ?? 0})
                   </TableCell>
                 </TableRow>
@@ -192,35 +209,43 @@ export default function StudentsClient() {
                 {femaleStudents?.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={5}
                       className="text-center text-muted-foreground py-4"
                     >
                       No female students found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  femaleStudents?.map((s) => (
-                    <TableRow
-                      key={s.id}
-                      onClick={() => router.push(`/students/${s.id}`)} // 👈 Fixed missing router push here!
-                      className="cursor-pointer hover:bg-muted/50"
-                    >
-                      <TableCell className="w-[200px]">
-                        {s.student_id}
-                      </TableCell>
-                      <TableCell>
-                        {s.last_name}, {s.first_name}
-                      </TableCell>
-                      <TableCell>{s.gender}</TableCell>
-                      <TableCell className="text-right">
-                        {new Date(s.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "2-digit",
-                          year: "numeric",
-                        })}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  femaleStudents?.map((s) => {
+                    const studentGrade = s.enrollments?.[0]?.grade_level;
+                    return (
+                      <TableRow
+                        key={s.id}
+                        onClick={() => router.push(`/students/${s.id}`)}
+                        className="cursor-pointer hover:bg-muted/50"
+                      >
+                        <TableCell className="w-[180px]">
+                          {s.student_id}
+                        </TableCell>
+                        <TableCell>
+                          {s.last_name}, {s.first_name}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
+                            {studentGrade || "Unassigned"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{s.gender}</TableCell>
+                        <TableCell className="text-right">
+                          {new Date(s.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "2-digit",
+                            year: "numeric",
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </>
             )}

@@ -17,7 +17,7 @@ export default function TeacherSidebar() {
     ];
 
     const account = [
-        { icon: Settings, title: "Settings", link: "/settings" },
+        { icon: Settings, title: "Settings", link: "/account-settings" },
     ];
 
     return (

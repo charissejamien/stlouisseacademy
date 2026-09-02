@@ -80,7 +80,7 @@ export default function SuperAdminSidebar() {
     {
       icon: Settings,
       title: "Settings",
-      link: "/settings",
+      link: "/account-settings",
     },
   ];
 

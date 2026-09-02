@@ -16,7 +16,11 @@ export interface CompleteStudentProfile {
   first_name: string;
   middle_name: string | null;
   last_name: string;
+  suffix: string | null;
   gender: string;
+  date_of_birth: string | null;
+  lrn: string | null;
+  address: string | null;
 
   grade_level: string;
   section_name: string;
@@ -59,11 +63,17 @@ interface SchoolYearJoin {
   is_active: boolean;
 }
 
+interface SectionJoin {
+  name: string;
+}
+
 interface EnrollmentJoin {
   grade_level: string;
   student_type: string;
   isESC: boolean | null;
+  created_at: string;
   school_years: SchoolYearJoin | null;
+  sections: SectionJoin | null;
 }
 
 interface AccountDiscountSnapshotJoin {
@@ -90,7 +100,11 @@ interface SupabaseStudentProfileQueryResult {
   first_name: string;
   middle_name: string | null;
   last_name: string;
+  suffix: string | null;
   gender: string | null;
+  date_of_birth: string | null;
+  lrn: string | null;
+  address: string | null;
   created_at: string;
 
   enrollments: EnrollmentJoin[] | null;
@@ -112,15 +126,23 @@ export async function getStudentById(
         first_name,
         middle_name,
         last_name,
+        suffix,
         gender,
+        date_of_birth,
+        lrn,
+        address,
         created_at,
 
         enrollments (
             grade_level,
             student_type,
             isESC,
+            created_at,
             school_years (
                 is_active
+            ),
+            sections (
+                section_name
             )
         ),
 
@@ -176,6 +198,8 @@ export async function getStudentById(
     ) ?? student.student_account_card?.[0];
 
   const currentGradeLevel = activeEnrollment?.grade_level ?? "Unassigned";
+  const sectionName = activeEnrollment?.sections?.name ?? "Unassigned Room";
+  const enrollmentDateSource = activeEnrollment?.created_at ?? student.created_at;
 
   const baseTuition = Number(activeAssessment?.base_tuition ?? 0);
   const miscellaneousFees = Number(activeAssessment?.miscellaneous ?? 0);
@@ -253,12 +277,22 @@ export async function getStudentById(
     first_name: student.first_name,
     middle_name: student.middle_name,
     last_name: student.last_name,
+    suffix: student.suffix,
     gender: student.gender ?? "Not Specified",
+    date_of_birth: student.date_of_birth
+      ? new Date(student.date_of_birth).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : null,
+    lrn: student.lrn,
+    address: student.address,
 
     grade_level: currentGradeLevel,
-    section_name: "Unassigned Room",
-    advisor_name: "No Advisor Linked",
-    date_enrolled: new Date(student.created_at).toLocaleDateString("en-US", {
+    section_name: sectionName,
+    advisor_name: "Not Assigned",
+    date_enrolled: new Date(enrollmentDateSource).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",

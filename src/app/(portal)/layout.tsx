@@ -22,11 +22,9 @@ type UserRole =
 const sidebars: Partial<Record<UserRole, React.ReactNode>> = {
     parent: <ParentSidebar />,
     teacher: <TeacherSidebar />,
-    // admin: <AdminSidebar />,
     registrar: <RegistrarSidebar />,
     executive: <ExecutiveSidebar />,
     superadmin: <SuperAdminSidebar />,
-    // staff: <StaffSidebar />,
 };
 
 function isUserRole(role: unknown): role is UserRole {
@@ -73,31 +71,31 @@ export default async function PortalGroupRootLayout({
     const isParent = profile.role === "parent";
 
     return (
-        <div className="h-screen bg-background">
+        <div className="h-screen w-screen overflow-hidden bg-background">
 
             {/* Desktop Layout */}
-            <div className="hidden h-screen gap-10 p-7 md:flex">
+            <div className="hidden h-full w-full gap-10 p-7 md:flex overflow-hidden">
 
                 {/* Sidebar */}
-                <aside className="h-full w-[14%]">
+                <aside className="h-full w-[16%] shrink-0">
                     {sidebars[profile.role]}
                 </aside>
 
                 {/* Main Content */}
-                <main className="h-full min-w-0 flex-1">
+                <main className="h-full min-w-0 flex-1 overflow-y-auto pr-2">
                     {children}
                 </main>
             </div>
 
             {/* Mobile Layout */}
-            <div className="min-h-screen md:hidden">
+            <div className="h-screen overflow-y-auto md:hidden">
 
-                {/* Main Content */}
+                {/* Main Content with Mobile Horizontal Padding */}
                 <main
                     className={[
-                        "min-h-screen",
+                        "min-h-full px-4 pt-4",
                         isParent
-                            ? "pb-20"
+                            ? "pb-24"
                             : "pb-20",
                     ].join(" ")}
                 >

@@ -80,14 +80,14 @@ export default function ExecutiveSidebar() {
     {
       icon: Settings,
       title: "Settings",
-      link: "/settings",
+      link: "/account-settings",
     },
   ];
 
   return (
-    <aside className="flex h-full flex-col rounded-xl bg-gradient-to-t from-[#3153DE] to-[#4580FF] p-5 text-white/80">
+    <aside className="flex h-full max-h-screen flex-col rounded-xl bg-gradient-to-t from-[#3153DE] to-[#4580FF] p-5 text-white/80 overflow-y-auto scrollbar-none">
       {/* School */}
-      <header className="mb-8">
+      <header className="mb-6 shrink-0">
         <h1 className="text-white font-bold tracking-wider">
           ST. LOUISSE ACADEMY
         </h1>
@@ -96,10 +96,10 @@ export default function ExecutiveSidebar() {
       </header>
 
       {/* Navigation */}
-      <nav className="flex flex-1 flex-col gap-7">
+      <nav className="flex flex-1 flex-col gap-6">
         {/* Overview */}
         <div>
-          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+          <p className="mb-2 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
             Overview
           </p>
 
@@ -123,7 +123,7 @@ export default function ExecutiveSidebar() {
 
         {/* Management */}
         <div>
-          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+          <p className="mb-2 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
             Management
           </p>
 
@@ -147,7 +147,7 @@ export default function ExecutiveSidebar() {
 
         {/* Reports & Finance */}
         <div>
-          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+          <p className="mb-2 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
             Reports & Finance
           </p>
 
@@ -170,8 +170,8 @@ export default function ExecutiveSidebar() {
         </div>
 
         {/* Account */}
-        <div className="mt-auto">
-          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+        <div className="mt-auto pt-4 border-t border-white/10">
+          <p className="mb-2 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
             Account
           </p>
 

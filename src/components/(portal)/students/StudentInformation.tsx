@@ -3,16 +3,14 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import {
-  GraduationCap,
-  VenusAndMars,
-  ShieldCheck,
-  UserCheck,
-  CalendarDays,
   Tag,
   Banknote,
   X,
+  User,
+  CalendarDays,
 } from "lucide-react";
 
 import { useQuery } from "@tanstack/react-query";
@@ -36,13 +34,61 @@ export default function StudentInformation({ id }: { id: string }) {
   });
 
   // ------------------------------------------
-  // Loading
+  // Loading (Shadcn Skeleton matching exact layout)
   // ------------------------------------------
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-10">
-        <p className="text-sm text-slate-500">Loading student information...</p>
+      <div className="space-y-6 pb-12">
+        <section>
+          <Card className="w-full border shadow-xs">
+            <CardContent className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 p-6 md:p-8">
+              <div className="flex flex-col items-center space-y-3 shrink-0">
+                <Skeleton className="h-28 w-28 md:h-32 md:w-32 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+
+              <div className="flex flex-1 flex-col justify-between gap-6 w-full">
+                <div className="space-y-3 text-center md:text-left">
+                  <Skeleton className="h-7 w-48 rounded-md" />
+                  <Skeleton className="h-4 w-32 rounded-md" />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100">
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-md" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-100">
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card className="border shadow-xs h-full">
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-32 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </CardContent>
+          </Card>
+          <Card className="border shadow-xs h-full">
+            <CardContent className="p-6 space-y-4">
+              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -86,6 +132,7 @@ export default function StudentInformation({ id }: { id: string }) {
     ", ",
     student.first_name,
     student.middle_name ? ` ${student.middle_name}` : "",
+    student.suffix ? ` ${student.suffix}` : "",
   ].join("");
 
   const filteredTransactions = student.transactions.filter((tx) => {
@@ -108,96 +155,112 @@ export default function StudentInformation({ id }: { id: string }) {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 pb-12">
       {/* ==========================================
           STUDENT PROFILE
       ========================================== */}
 
       <section>
-        <Card className="w-full py-5">
-          <CardContent className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 px-4 md:px-6">
-            {/* Student Avatar / ID */}
+        <Card className="w-full border shadow-xs">
+          <CardContent className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 p-6 md:p-8">
+            {/* Student Circular Avatar & ID */}
             <div className="flex flex-col items-center space-y-3 shrink-0">
-              <div className="flex h-28 w-28 md:h-35 md:w-35 items-center justify-center rounded-lg bg-blue-100/70">
-                <UserCheck className="h-10 w-10 md:h-12 md:w-12 text-blue-400" />
+              <div className="flex h-28 w-28 md:h-32 md:w-32 items-center justify-center rounded-full bg-blue-50 text-blue-600 shadow-inner border-4 border-slate-50">
+                <User size={52} strokeWidth={1.5} />
               </div>
 
-              <h3 className="font-bold text-slate-700 text-sm md:text-base">
-                ID: {student.student_id}
-              </h3>
+              <div className="text-center">
+                <span className="inline-block px-3 py-1 pb-0 font-semibold text-slate-700 text-xs">
+                  STUDENT ID: {student.student_id}
+                </span>
+              </div>
             </div>
 
-            {/* Student Details */}
-            <div className="flex flex-1 flex-col justify-between gap-6 md:gap-10 pt-2 md:pt-7 w-full">
-              <div className="text-center md:text-left">
-                <p className="text-sm text-slate-500">Student Profile</p>
-
-                <h2 className="text-xl md:text-2xl font-bold text-slate-800">
+            {/* Student Details & Structured Metadata Rows */}
+            <div className="flex flex-1 flex-col justify-between gap-6 w-full">
+              <div className="space-y-3 text-center md:text-left">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
                   {fullName}
                 </h2>
+
+                {student.lrn && (
+                  <p className="text-xs text-slate-500 font-medium">
+                    LRN: <span className="text-slate-700 font-semibold">{student.lrn}</span>
+                  </p>
+                )}
+
+                {/* Explicit Name Breakdown Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100 text-left">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">First Name</span>
+                    <span className="text-sm font-semibold text-slate-900">{student.first_name || " "}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Middle Name</span>
+                    <span className="text-sm font-semibold text-slate-900">{student.middle_name || " "}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Last Name</span>
+                    <span className="text-sm font-semibold text-slate-900">{student.last_name || " "}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Suffix</span>
+                    <span className="text-sm font-semibold text-slate-900">{student.suffix || " "}</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Student Metadata */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 border-t pt-4 md:border-0 md:pt-0">
-                {/* Grade */}
-                <div className="flex items-start gap-2.5">
-                  <GraduationCap className="mt-0.5 h-4 w-4 text-slate-400 shrink-0" />
+              {/* 4-Row Metadata Layout */}
+              <div className="flex flex-col gap-3 pt-4 border-t border-slate-100 text-left">
 
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-semibold uppercase text-slate-400">
-                      Grade
-                    </h4>
-
-                    <p className="truncate text-sm font-semibold text-slate-700">
-                      {student.grade_level}
+                {/* Row 1: Gender & Birth Date (Forced 2 columns on mobile) */}
+                <div className="grid grid-cols-2 gap-4 bg-slate-50/40 p-3 rounded-xl border border-slate-100/80">
+                  <div className="space-y-0.5">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gender</h4>
+                    <p className="text-sm font-semibold text-slate-800 capitalize">
+                      {student.gender || "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Birth Date</h4>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {student.date_of_birth || "N/A"}
                     </p>
                   </div>
                 </div>
 
-                {/* Gender */}
-                <div className="flex items-start gap-2.5">
-                  <VenusAndMars className="mt-0.5 h-4 w-4 text-slate-400 shrink-0" />
-
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-semibold uppercase text-slate-400">
-                      Gender
-                    </h4>
-
-                    <p className="truncate text-sm font-semibold text-slate-700">
-                      {student.gender}
+                {/* Row 2: Grade Level & Section (Forced 2 columns on mobile) */}
+                <div className="grid grid-cols-2 gap-4 bg-slate-50/40 p-3 rounded-xl border border-slate-100/80">
+                  <div className="space-y-0.5">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Grade Level</h4>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {student.grade_level || "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section</h4>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {student.section_name || "Unassigned"}
                     </p>
                   </div>
                 </div>
 
-                {/* Section */}
-                <div className="flex items-start gap-2.5">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 text-slate-400 shrink-0" />
-
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-semibold uppercase text-slate-400">
-                      Section
-                    </h4>
-
-                    <p className="truncate text-sm font-semibold text-slate-700">
-                      {student.section_name}
-                    </p>
-                  </div>
+                {/* Row 3: Advisor (Full Width) */}
+                <div className="bg-slate-50/40 p-3 rounded-xl border border-slate-100/80 space-y-0.5">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Advisor</h4>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {student.advisor_name || "N/A"}
+                  </p>
                 </div>
 
-                {/* Advisor */}
-                <div className="flex items-start gap-2.5">
-                  <UserCheck className="mt-0.5 h-4 w-4 text-slate-400 shrink-0" />
-
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-semibold uppercase text-slate-400">
-                      Advisor
-                    </h4>
-
-                    <p className="truncate text-sm font-semibold text-slate-700">
-                      {student.advisor_name}
-                    </p>
-                  </div>
+                {/* Row 4: Address (Full Width) */}
+                <div className="bg-slate-50/40 p-3 rounded-xl border border-slate-100/80 space-y-0.5">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Address</h4>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {student.address || "N/A"}
+                  </p>
                 </div>
+
               </div>
             </div>
           </CardContent>
@@ -208,29 +271,28 @@ export default function StudentInformation({ id }: { id: string }) {
           FINANCIAL INFORMATION
       ========================================== */}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* ========================================
             ASSESSMENT CARD
         ======================================== */}
 
         <section>
-          <Card>
-            <CardContent className="flex flex-col gap-5 pt-5 px-4 md:px-6">
+          <Card className="border shadow-xs h-full">
+            <CardContent className="flex flex-col gap-5 p-6">
               {/* Enrollment Date */}
-              <div className="flex items-center justify-between border-b pb-2 text-xs">
-                <span className="font-medium text-slate-400">
-                  Enrollment Date:
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-xs">
+                <span className="font-medium text-slate-400 uppercase tracking-wide text-[10px]">
+                  Enrollment Date
                 </span>
 
-                <span className="flex items-center gap-1 font-bold text-slate-800">
-                  <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-
+                <span className="flex items-center gap-1.5 font-bold text-slate-800 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                  <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
                   {student.date_enrolled}
                 </span>
               </div>
 
               {/* Tuition & Adjustments */}
-              <div className="flex flex-col gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 text-xs">
+              <div className="flex flex-col gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-xs">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
                   Tuition & Fee Breakdown
                 </span>
@@ -272,7 +334,7 @@ export default function StudentInformation({ id }: { id: string }) {
 
                 {/* Discounts */}
                 {student.total_discounts_deducted > 0 && (
-                  <div className="my-1 flex flex-col gap-1 rounded-lg border border-indigo-100 bg-white/90 p-2.5 text-[11px]">
+                  <div className="my-1 flex flex-col gap-1 rounded-lg border border-indigo-100 bg-white p-3 text-[11px] shadow-2xs">
                     <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-indigo-600">
                       <Tag className="h-2.5 w-2.5 text-indigo-500" />
                       <span>Discounts Applied</span>
@@ -296,7 +358,7 @@ export default function StudentInformation({ id }: { id: string }) {
                 )}
 
                 {/* Total Assessment */}
-                <div className="flex justify-between border-t pt-3 font-bold text-slate-900 text-sm">
+                <div className="flex justify-between border-t border-slate-200 pt-3 font-bold text-slate-900 text-sm">
                   <span>Total Assessment:</span>
                   <span className="text-indigo-600">
                     ₱
@@ -311,7 +373,7 @@ export default function StudentInformation({ id }: { id: string }) {
                   PAYMENTS & BALANCES
               ==================================== */}
 
-              <div className="flex flex-col gap-2 rounded-xl border border-emerald-100/60 bg-emerald-50/20 p-3.5 text-xs">
+              <div className="flex flex-col gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/20 p-4 text-xs">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                   Payments & Tuition Balance
                 </span>
@@ -349,7 +411,7 @@ export default function StudentInformation({ id }: { id: string }) {
                   BOOKS ACCOUNT
               ==================================== */}
 
-              <div className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 text-xs">
+              <div className="flex flex-col gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-xs">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
                   Books Account
                 </span>
@@ -377,7 +439,7 @@ export default function StudentInformation({ id }: { id: string }) {
                 </div>
 
                 {/* Books Balance */}
-                <div className="flex justify-between border-t pt-2 font-bold text-slate-800">
+                <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-800">
                   <span>Books Balance Due:</span>
                   <span
                     className={
@@ -402,27 +464,27 @@ export default function StudentInformation({ id }: { id: string }) {
         ======================================== */}
 
         <section>
-          <Card>
-            <CardContent className="pt-5 px-4 md:px-6">
+          <Card className="border shadow-xs h-full flex flex-col">
+            <CardContent className="p-6 flex-1 flex flex-col">
               <div className="mb-4">
-                <h3 className="font-semibold text-slate-800">
+                <h3 className="font-semibold text-slate-900">
                   Payment History
                 </h3>
 
-                <p className="text-xs text-slate-400 mt-1">
-                  Student payment transactions
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Official financial ledger transactions recorded for this student
                 </p>
 
                 {/* Filter Buttons */}
-                <div className="flex items-center gap-2 mt-3">
+                <div className="flex items-center gap-2 mt-4">
                   {(["All", "Tuition", "Books", "Others"] as const).map(
                     (cat) => (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                           selectedCategory === cat
-                            ? "bg-blue-600 text-white shadow-sm"
+                            ? "bg-blue-600 text-white shadow-xs"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         }`}
                       >
@@ -434,28 +496,28 @@ export default function StudentInformation({ id }: { id: string }) {
               </div>
 
               {filteredTransactions.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-slate-200 py-8 text-center">
+                <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center my-auto">
                   <p className="text-sm text-slate-400">
                     No payment transactions found.
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-1">
+                <div className="flex flex-col gap-3 max-h-[550px] overflow-y-auto pr-1">
                   {filteredTransactions.map((transaction) => (
                     <div
                       key={transaction.id}
                       onClick={() => setActiveTransaction(transaction)}
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-blue-200 hover:bg-blue-50/20 cursor-pointer transition-all gap-3"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 bg-white shadow-2xs hover:border-blue-200 hover:bg-blue-50/20 cursor-pointer transition-all gap-3"
                     >
-                      {/* Left: Icon & Details (OR Number top, Payment Specifics bottom) */}
+                      {/* Left: Icon & Details */}
                       <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                           <Banknote className="h-5 w-5" />
                         </div>
 
                         <div className="min-w-0 flex flex-col">
-                          <span className="text-xs font-bold text-slate-900 uppercase">
-                            OR : {transaction.id}
+                          <span className="text-[11px] font-bold text-slate-500 uppercase">
+                            OR: {transaction.id}
                           </span>
 
                           <span className="text-sm font-semibold text-indigo-600 truncate mt-0.5">
@@ -464,13 +526,13 @@ export default function StudentInformation({ id }: { id: string }) {
                         </div>
                       </div>
 
-                      {/* Right: Amount & Date (Date top, Amount bottom) */}
+                      {/* Right: Amount & Date */}
                       <div className="flex flex-col items-end shrink-0">
-                        <span className="text-xs font-medium text-slate-500">
+                        <span className="text-xs font-medium text-slate-400">
                           {transaction.date}
                         </span>
 
-                        <span className="text-base font-bold text-blue-950 mt-0.5">
+                        <span className="text-sm font-bold text-slate-900 mt-0.5">
                           ₱
                           {transaction.amount.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
@@ -487,7 +549,7 @@ export default function StudentInformation({ id }: { id: string }) {
       </div>
 
       {/* ==========================================
-          TRANSACTION DETAIL MODAL (Maya Style)
+          TRANSACTION DETAIL MODAL
       ========================================== */}
       {activeTransaction && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -499,7 +561,7 @@ export default function StudentInformation({ id }: { id: string }) {
               <X size={20} />
             </button>
 
-            <div className="text-center pb-4 border-b">
+            <div className="text-center pb-4 border-b border-slate-100">
               <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <Banknote size={24} />
               </div>
@@ -512,25 +574,25 @@ export default function StudentInformation({ id }: { id: string }) {
             </div>
 
             <div className="py-5 space-y-4 text-sm">
-              <div className="flex justify-between py-1 border-b border-dashed">
+              <div className="flex justify-between py-1 border-b border-dashed border-slate-100">
                 <span className="text-slate-500">OR Number</span>
                 <span className="font-bold text-slate-900">
                   {activeTransaction.id}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-dashed">
+              <div className="flex justify-between py-1 border-b border-dashed border-slate-100">
                 <span className="text-slate-500">Date</span>
                 <span className="font-semibold text-slate-900">
                   {activeTransaction.date}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-dashed">
+              <div className="flex justify-between py-1 border-b border-dashed border-slate-100">
                 <span className="text-slate-500">Particulars</span>
                 <span className="font-semibold text-indigo-600 text-right">
                   {activeTransaction.context}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-dashed">
+              <div className="flex justify-between py-1 border-b border-dashed border-slate-100">
                 <span className="text-slate-500">Mode of Payment</span>
                 <span className="inline-flex capitalize items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-700">
                   {activeTransaction.method}
@@ -551,7 +613,7 @@ export default function StudentInformation({ id }: { id: string }) {
 
             <Button
               onClick={() => setActiveTransaction(null)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11 rounded-xl shadow-sm"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11 rounded-xl shadow-xs"
             >
               Close
             </Button>

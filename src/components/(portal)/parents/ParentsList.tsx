@@ -139,15 +139,6 @@ export default function ParentsList() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-semibold">
-                        Parents
-                    </h2>
-
-                    <p className="text-sm text-muted-foreground">
-                        Manage parents registered in the school portal.
-                    </p>
-                </div>
 
                 <Button
                     variant={

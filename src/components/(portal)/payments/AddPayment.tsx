@@ -199,6 +199,7 @@ export default function AddPayment() {
           mode_of_payment: modeOfPayment,
           student_id: student.id,
           payment_specifics: payment.billing_period,
+          created_at: date, // Overrides created_at with the selected form date
         })),
     );
 
@@ -403,15 +404,11 @@ export default function AddPayment() {
         {/* Payment Details */}
         <div className="min-h-0">
           <Card>
-            <CardHeader>
+            <CardHeader className="mt-2">
               <CardTitle>Payment Details</CardTitle>
-
-              <p className="text-sm text-muted-foreground">
-                Enter the details for this payment.
-              </p>
             </CardHeader>
 
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-5 mt-3">
               {/* Date */}
               <div className="grid gap-2">
                 <Label>Date</Label>
