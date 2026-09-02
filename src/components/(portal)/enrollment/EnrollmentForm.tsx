@@ -67,7 +67,7 @@ const studentSchema = z.object({
 });
 
 const parentSchema = z.object({
-  parent_id: z.string().optional().or(z.literal("")), // Added parent_id tracker
+  parent_id: z.string().optional().or(z.literal("")),
   parent_first_name: z.string().optional().or(z.literal("")),
   parent_middle_name: z.string().optional().or(z.literal("")),
   parent_last_name: z.string().optional().or(z.literal("")),
@@ -80,9 +80,7 @@ const parentSchema = z.object({
 
 const paymentSchema = z.object({
   payment_date: z.string().min(1, "Payment date is required"),
-
   or_number: z.string().min(1, "OR number is required"),
-
   payment_mode: z.enum(paymentModes),
 });
 
@@ -153,7 +151,6 @@ export default function EnrollmentForm({
         },
       ],
 
-      /* Parent information */
       parent_first_name: "",
       parent_middle_name: "",
       parent_last_name: "",
@@ -163,11 +160,8 @@ export default function EnrollmentForm({
       parent_address: "",
       parent_gender: undefined,
 
-      /* Payment information */
       payment_date: new Date().toISOString().split("T")[0],
-
       or_number: "",
-
       payment_mode: undefined,
     },
 
@@ -182,58 +176,31 @@ export default function EnrollmentForm({
     students: z.array(
       z.object({
         school_year: z.string().min(1, "School year is required"),
-
         grade_level: z.string().min(1, "Grade level is required"),
-
         student_type: z.string().min(1, "Student type is required"),
-
         lrn: z
           .string()
           .regex(/^\d{12}$/, "LRN must be exactly 12 digits")
           .optional()
           .or(z.literal("")),
-
         first_name: z.string().min(2, "First name is required"),
-
         middle_name: z.string().optional().or(z.literal("")),
-
         last_name: z.string().min(2, "Last name is required"),
-
         suffix: z.enum(suffixes).optional(),
-
         address: z.string().min(10, "Home address is required"),
-
         date_of_birth: z.string().optional().or(z.literal("")),
-
         gender: z.enum(genders),
       }),
     ),
   });
 
   const isStudentStepValid = studentInformationSchema.safeParse(values).success;
-
-  /*
-   * Parent validation is intentionally disabled for now.
-   */
   const isParentStepValid = true;
-
-  /*
-   * Fee Settlement requires:
-   *
-   * - payment date
-   * - OR number
-   * - payment mode
-   * - entrance fee for every student
-   */
 
   const isFeeAssessmentStepValid =
     values.students?.every((student) =>
       tuitionFees.some((fee) => fee.grade_level === student.grade_level),
     ) ?? false;
-
-  const isFeeSettlementStepValid =
-    paymentSchema.safeParse(values).success &&
-    studentSchema.safeParse(values).success;
 
   const processEnrollmentMutation = useMutation({
     mutationFn: processEnrollment,
@@ -263,6 +230,20 @@ export default function EnrollmentForm({
         return {
           ...student,
           school_year_id: foundYear ? foundYear.id : null,
+          payments: student.payments.map((payment) => {
+            // Find matching billing period name using the selected ID
+            const foundPeriod = billingPeriods.find(
+              (bp) => bp.id === payment.billing_period,
+            );
+
+            return {
+              ...payment,
+              // Replace the ID with the period name (e.g. "June Installment")
+              billing_period: foundPeriod
+                ? foundPeriod.period_name
+                : payment.billing_period,
+            };
+          }),
         };
       }),
     };
@@ -294,7 +275,6 @@ export default function EnrollmentForm({
             className="data-active:bg-accent px-2"
           >
             <Badge className="size-5">{index + 1}</Badge>
-
             {step}
           </TabsTrigger>
         ))}
@@ -346,7 +326,7 @@ export default function EnrollmentForm({
             form={form}
             billingPeriods={billingPeriods}
             isPending={isPending}
-            isValid={isFeeSettlementStepValid}
+            isValid={true}
             onPrevious={() => setEnrollmentStep("Fee Assessment")}
           />
         )}

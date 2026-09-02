@@ -1,160 +1,210 @@
 import Link from "next/link";
 import {
-    User,
-    Users,
-    Wallet,
-    ListSortAscending,
-    FileSliders,
-    LogOut,
-    Settings,
-    CreditCard,
-    FolderCog,
-    FolderOpenDot,
-    FilePlusCorner,
+  LayoutDashboard,
+  Users,
+  UserRoundCog,
+  BookOpen,
+  Layers3,
+  WalletCards,
+  Settings,
+  LogOut,
+  UserCheck,
+  UserPlus,
+  Receipt,
+  ReceiptText,
 } from "lucide-react";
 
 import { logout } from "@/app/(authentication)/login/actions";
 
 export default function RegistrarSidebar() {
-    const management = [
-        { icon: User, title: "Students", link: "/students" },
-        { icon: Users, title: "Employees", link: "/employees" },
-        { icon: ListSortAscending, title: "Parents", link: "/" },
-        { icon: ListSortAscending, title: "Classes", link: "/classes" },
-    ];
+  const overview = [
+    {
+      icon: LayoutDashboard,
+      title: "Dashboard",
+      link: "/dashboard",
+    },
+  ];
 
-    const financials = [
-        { icon: FilePlusCorner, title: "Enrollment", link: "/" },
-        { icon: Wallet, title: "Payments", link: "/payments" },
-        { icon: CreditCard, title: "DCPR", link: "/" },
-        { icon: FolderOpenDot, title: "Expenses", link: "/" },
-        { icon: FileSliders, title: "Payroll", link: "/" },
-    ];
+  const management = [
+    {
+      icon: Users,
+      title: "Students",
+      link: "/students",
+    },
+    {
+      icon: UserCheck,
+      title: "Parents",
+      link: "/parents",
+    },
+    {
+      icon: UserRoundCog,
+      title: "Employees",
+      link: "/employees",
+    },
+    {
+      icon: UserPlus,
+      title: "Enrollment",
+      link: "/enrollment",
+    },
+    {
+      icon: BookOpen,
+      title: "Classes",
+      link: "/classes",
+    },
+    {
+      icon: Layers3,
+      title: "Sections",
+      link: "/sections",
+    },
+  ];
 
-    const account = [
-        { icon: Settings, title: "Settings", link: "/" },
-    ];
+  const reports = [
+    {
+      icon: WalletCards,
+      title: "Financial Reports",
+      link: "/reports/financial",
+    },
+    {
+      icon: Receipt,
+      title: "Payments",
+      link: "/payments",
+    },
+    {
+      icon: ReceiptText,
+      title: "Expenses",
+      link: "/expenses",
+    },
+  ];
 
-    return (
-        <aside className="flex h-full flex-col rounded-xl bg-[#2f6ed6] p-5 text-white/80">
+  const account = [
+    {
+      icon: Settings,
+      title: "Settings",
+      link: "/settings",
+    },
+  ];
 
-            {/* School */}
-            <header className="mb-8">
-                <h1 className="text-white">
-                    ST. LOUISSE ACADEMY
-                </h1>
+  return (
+    <aside className="flex h-full flex-col rounded-xl bg-gradient-to-t from-[#3153DE] to-[#4580FF] p-5 text-white/80">
+      {/* School */}
+      <header className="mb-8">
+        <h1 className="text-white font-bold tracking-wider">
+          ST. LOUISSE ACADEMY
+        </h1>
 
-                <p className="text-sm text-white/50">
-                    Daanbantayan
-                </p>
-            </header>
+        <p className="text-sm text-white/60">Daanbantayan</p>
+      </header>
 
-            {/* Navigation */}
-            <nav className="flex flex-1 flex-col gap-7">
+      {/* Navigation */}
+      <nav className="flex flex-1 flex-col gap-7">
+        {/* Overview */}
+        <div>
+          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+            Overview
+          </p>
 
-                {/* Management */}
-                <div>
-                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Management
-                    </p>
+          <div className="space-y-1">
+            {overview.map((item) => {
+              const Icon = item.icon;
 
-                    <div className="space-y-1">
-                        {management.map((item) => {
-                            const Icon = item.icon;
+              return (
+                <Link
+                  key={item.title}
+                  href={item.link}
+                  className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <Icon size={18} strokeWidth={1.8} />
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
-                            return (
-                                <Link
-                                    key={item.title}
-                                    href={item.link}
-                                    className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
-                                >
-                                    <Icon size={18} strokeWidth={1.8} />
-                                    <span>{item.title}</span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
+        {/* Management */}
+        <div>
+          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+            Management
+          </p>
 
-                {/* Financials */}
-                <div>
-                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Financials
-                    </p>
+          <div className="space-y-1">
+            {management.map((item) => {
+              const Icon = item.icon;
 
-                    <div className="space-y-1">
-                        {financials.map((item) => {
-                            const Icon = item.icon;
+              return (
+                <Link
+                  key={item.title}
+                  href={item.link}
+                  className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <Icon size={18} strokeWidth={1.8} />
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
-                            return (
-                                <Link
-                                    key={item.title}
-                                    href={item.link}
-                                    className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
-                                >
-                                    <Icon size={18} strokeWidth={1.8} />
-                                    <span>{item.title}</span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
+        {/* Reports & Finance */}
+        <div>
+          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+            Reports & Finance
+          </p>
 
-                {/* Configuration */}
-                <div>
-                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Configuration
-                    </p>
+          <div className="space-y-1">
+            {reports.map((item) => {
+              const Icon = item.icon;
 
-                    <Link
-                        href="/"
-                        className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                        <FolderCog size={18} strokeWidth={1.8} />
-                        <span>Academics</span>
-                    </Link>
-                </div>
+              return (
+                <Link
+                  key={item.title}
+                  href={item.link}
+                  className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <Icon size={18} strokeWidth={1.8} />
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
-                {/* Account */}
-                <div className="mt-auto">
-                    <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/50">
-                        Account
-                    </p>
+        {/* Account */}
+        <div className="mt-auto">
+          <p className="mb-2.5 px-2 text-xs uppercase tracking-wide text-white/60 font-semibold">
+            Account
+          </p>
 
-                    <div className="space-y-1">
+          <div className="space-y-1">
+            {/* Settings */}
+            {account.map((item) => {
+              const Icon = item.icon;
 
-                        {/* Settings */}
-                        {account.map((item) => {
-                            const Icon = item.icon;
+              return (
+                <Link
+                  key={item.title}
+                  href={item.link}
+                  className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <Icon size={18} strokeWidth={1.8} />
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
 
-                            return (
-                                <Link
-                                    key={item.title}
-                                    href={item.link}
-                                    className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-white/10 hover:text-white"
-                                >
-                                    <Icon size={18} strokeWidth={1.8} />
-                                    <span>{item.title}</span>
-                                </Link>
-                            );
-                        })}
-
-                        {/* Logout */}
-                        <form action={logout}>
-                            <button
-                                type="submit"
-                                className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/10 hover:text-white"
-                            >
-                                <LogOut size={18} strokeWidth={1.8} />
-                                <span>Log out</span>
-                            </button>
-                        </form>
-
-                    </div>
-                </div>
-
-            </nav>
-        </aside>
-    );
+            {/* Logout */}
+            <form action={logout}>
+              <button
+                type="submit"
+                className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <LogOut size={18} strokeWidth={1.8} />
+                <span>Log out</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </nav>
+    </aside>
+  );
 }
-
