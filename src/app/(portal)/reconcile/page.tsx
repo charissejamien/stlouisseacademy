@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { reconcileStudentAccounts } from "@/app/(portal)/reconcile/actions";
+import { reconcileStudentPaymentTotals } from "@/app/(portal)/reconcile/actions";
 import toast from "react-hot-toast";
 
 export default function ReconcileButton() {
@@ -11,13 +11,17 @@ export default function ReconcileButton() {
   const handleReconcile = async () => {
     try {
       setIsPending(true);
-      const res = await reconcileStudentAccounts();
+
+      const res = await reconcileStudentPaymentTotals();
+
       toast.success(
-        `Successfully reconciled ${res.updatedCount} student accounts!`,
+        `Successfully updated ${res.updatedCount} student account cards!`,
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Reconciliation failed.",
+        error instanceof Error
+          ? error.message
+          : "Payment reconciliation failed.",
       );
     } finally {
       setIsPending(false);
@@ -30,9 +34,7 @@ export default function ReconcileButton() {
       disabled={isPending}
       className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
     >
-      {isPending
-        ? "Reconciling Accounts..."
-        : "Reconcile Missing Student Finances"}
+      {isPending ? "Recalculating Finances..." : "Reconcile Student Payments"}
     </Button>
   );
 }
