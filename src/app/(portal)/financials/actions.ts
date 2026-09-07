@@ -19,8 +19,9 @@ export async function getFinancialsSummary() {
 
   // 2. Query student_account_card for the active school year
   const { data: accounts, error } = await supabase
-    .from("student_account_card") 
-    .select(`
+    .from("student_account_card")
+    .select(
+      `
       adjusted_total_tuition_fee,
       total_paid,
       tuition_balance,
@@ -28,7 +29,8 @@ export async function getFinancialsSummary() {
       school_years!inner (
         is_active
       )
-    `)
+    `,
+    )
     .eq("school_year_id", activeSchoolYearId);
 
   if (error) {

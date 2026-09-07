@@ -4,20 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Banknote, ReceiptText, WalletCards, ArrowUpRight } from "lucide-react";
-// Import your server action for financials summary data
-// import { getFinancialsSummary } from "@/app/(portal)/financials/actions";
+import { getFinancialsSummary } from "@/app/(portal)/financials/actions";
 
 export default function FinancialsClient() {
   // Placeholder query - connect this to your backend server action
   const { data: financials, isLoading } = useQuery({
     queryKey: ["financials-summary"],
-    queryFn: async () => {
-      return {
-        totalBilled: 0,
-        totalCollected: 0,
-        totalBalance: 0,
-      };
-    },
+    queryFn: getFinancialsSummary,
   });
 
   return (
@@ -27,7 +20,8 @@ export default function FinancialsClient() {
           Financial Dashboard
         </h3>
         <p className="text-sm text-slate-500 mt-1">
-          Overview of school collections, total tuition billings, and account receivables for the active school year.
+          Overview of school collections, total tuition billings, and account
+          receivables for the active school year.
         </p>
       </div>
 
@@ -52,7 +46,9 @@ export default function FinancialsClient() {
                 })}
               </p>
             )}
-            <p className="text-xs text-slate-400 mt-1">Total charges for active enrollments</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Total charges for active enrollments
+            </p>
           </CardContent>
         </Card>
 
@@ -75,7 +71,9 @@ export default function FinancialsClient() {
                 })}
               </p>
             )}
-            <p className="text-xs text-slate-400 mt-1">Total revenue collected to date</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Total revenue collected to date
+            </p>
           </CardContent>
         </Card>
 
@@ -98,15 +96,21 @@ export default function FinancialsClient() {
                 })}
               </p>
             )}
-            <p className="text-xs text-slate-400 mt-1">Total unpaid student receivables</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Total unpaid student receivables
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Next: Detailed Ledger / Breakdown Section can go here */}
       <div className="flex-1 min-h-0 rounded-2xl border border-slate-100 bg-white p-6 shadow-xs">
-        <h4 className="font-semibold text-slate-900 text-base mb-2">Recent Financial Activities</h4>
-        <p className="text-xs text-slate-400">Detailed collection timelines and ledger logs will appear here.</p>
+        <h4 className="font-semibold text-slate-900 text-base mb-2">
+          Recent Financial Activities
+        </h4>
+        <p className="text-xs text-slate-400">
+          Detailed collection timelines and ledger logs will appear here.
+        </p>
       </div>
     </div>
   );

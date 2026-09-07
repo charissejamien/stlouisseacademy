@@ -89,7 +89,16 @@ interface StudentAccountCardJoin {
   adjusted_base_tuition: number | null;
   adjusted_miscellaneous: number | null;
   adjusted_total_tuition_fee: number | null;
+
   total_books_fee: number | null;
+
+  // Newly stored reconciliation values
+  total_tuition_paid: number | null;
+  total_books_paid: number | null;
+  total_aircon_paid: number | null;
+  tuition_balance: number | null;
+  books_balance: number | null;
+
   school_years: SchoolYearJoin | null;
   student_account_discounts: AccountDiscountSnapshotJoin[] | null;
 }
@@ -154,6 +163,11 @@ export async function getStudentById(
             adjusted_miscellaneous,
             adjusted_total_tuition_fee,
             total_books_fee,
+            total_tuition_paid,
+            total_books_paid,
+            total_aircon_paid,
+            tuition_balance,
+            books_balance,
             school_years (
                 is_active
             ),
@@ -188,29 +202,52 @@ export async function getStudentById(
 
   const student = studentRow as unknown as SupabaseStudentProfileQueryResult;
 
+  // --------------------------------------------------
+  // ACTIVE ENROLLMENT
+  // --------------------------------------------------
+
   const activeEnrollment =
     student.enrollments?.find((e) => e.school_years?.is_active === true) ??
     student.enrollments?.[0];
+
+  // --------------------------------------------------
+  // ACTIVE ACCOUNT CARD
+  // --------------------------------------------------
 
   const activeAssessment =
     student.student_account_card?.find(
       (a) => a.school_years?.is_active === true,
     ) ?? student.student_account_card?.[0];
 
+  // --------------------------------------------------
+  // BASIC STUDENT / ENROLLMENT INFORMATION
+  // --------------------------------------------------
+
   const currentGradeLevel = activeEnrollment?.grade_level ?? "Unassigned";
+
   const sectionName = activeEnrollment?.sections?.name ?? "Unassigned Room";
-  const enrollmentDateSource = activeEnrollment?.created_at ?? student.created_at;
+
+  const enrollmentDateSource =
+    activeEnrollment?.created_at ?? student.created_at;
+
+  // --------------------------------------------------
+  // TUITION ASSESSMENT
+  // --------------------------------------------------
 
   const baseTuition = Number(activeAssessment?.base_tuition ?? 0);
+
   const miscellaneousFees = Number(activeAssessment?.miscellaneous ?? 0);
+
   const grossTuitionTotal = baseTuition + miscellaneousFees;
 
   const adjustedBase = Number(
     activeAssessment?.adjusted_base_tuition ?? baseTuition,
   );
+
   const adjustedMisc = Number(
     activeAssessment?.adjusted_miscellaneous ?? miscellaneousFees,
   );
+
   const finalTuitionAssessment = Number(
     activeAssessment?.adjusted_total_tuition_fee ?? adjustedBase + adjustedMisc,
   );
@@ -219,14 +256,25 @@ export async function getStudentById(
     0,
     grossTuitionTotal - finalTuitionAssessment,
   );
+
+  // --------------------------------------------------
+  // BOOKS ASSESSMENT
+  // --------------------------------------------------
+
   const totalBooksAssessment = Number(activeAssessment?.total_books_fee ?? 0);
 
+  // --------------------------------------------------
+  // DISCOUNTS
+  // --------------------------------------------------
+
   const activeDiscounts = activeAssessment?.student_account_discounts ?? [];
+
   const discountDescriptions: string[] = [];
 
   if (activeEnrollment?.isESC) {
     discountDescriptions.push("ESC Subsidy");
   }
+
   for (const d of activeDiscounts) {
     discountDescriptions.push(`${d.snapshot_name} (${d.snapshot_rate}%)`);
   }
@@ -238,47 +286,70 @@ export async function getStudentById(
 
   const appliedDiscountIds = activeDiscounts.map((d) => d.discount_id);
 
-  const payments = student.payments ?? [];
-  const tuitionPayments = payments.filter(
-    (p) => !p.payment_specifics?.toLowerCase().includes("book"),
-  );
-  const bookPayments = payments.filter((p) =>
-    p.payment_specifics?.toLowerCase().includes("book"),
-  );
+  // --------------------------------------------------
+  // PAYMENT TOTALS
+  //
+  // IMPORTANT:
+  // These are now READ directly from
+  // student_account_card.
+  //
+  // The reconciliation function is responsible
+  // for calculating and storing them.
+  // --------------------------------------------------
 
-  const totalPaid = tuitionPayments.reduce(
-    (sum, p) => sum + Number(p.amount ?? 0),
-    0,
-  );
-  const totalBooksPaid = bookPayments.reduce(
-    (sum, p) => sum + Number(p.amount ?? 0),
-    0,
-  );
+  const totalPaid = Number(activeAssessment?.total_tuition_paid ?? 0);
 
-  const tuitionBalance = Math.max(0, finalTuitionAssessment - totalPaid);
-  const booksBalance = Math.max(0, totalBooksAssessment - totalBooksPaid);
+  const totalBooksPaid = Number(activeAssessment?.total_books_paid ?? 0);
+
+  const tuitionBalance = Number(activeAssessment?.tuition_balance ?? 0);
+
+  const booksBalance = Number(activeAssessment?.books_balance ?? 0);
+
+  // Total remaining balance across tuition + books
   const balanceRemaining = tuitionBalance + booksBalance;
+
+  // --------------------------------------------------
+  // TRANSACTIONS
+  //
+  // We still get payments here because the UI needs
+  // the individual transaction history.
+  //
+  // We are NOT using them to calculate balances.
+  // --------------------------------------------------
+
+  const payments = student.payments ?? [];
 
   const transactions: TransactionRow[] = payments.map((payment) => ({
     id: payment.or_number ?? `OR-${payment.id.slice(0, 4).toUpperCase()}`,
+
     context: payment.payment_specifics ?? "Enrollment Fee",
+
     amount: Number(payment.amount ?? 0),
+
     date: new Date(payment.created_at).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     }),
+
     method: payment.mode_of_payment ?? "Cash",
   }));
+
+  // --------------------------------------------------
+  // RETURN COMPLETE PROFILE
+  // --------------------------------------------------
 
   return {
     id: student.id,
     student_id: student.student_id,
+
     first_name: student.first_name,
     middle_name: student.middle_name,
     last_name: student.last_name,
     suffix: student.suffix,
+
     gender: student.gender ?? "Not Specified",
+
     date_of_birth: student.date_of_birth
       ? new Date(student.date_of_birth).toLocaleDateString("en-US", {
           year: "numeric",
@@ -286,12 +357,14 @@ export async function getStudentById(
           day: "numeric",
         })
       : null,
+
     lrn: student.lrn,
     address: student.address,
 
     grade_level: currentGradeLevel,
     section_name: sectionName,
     advisor_name: "Not Assigned",
+
     date_enrolled: new Date(enrollmentDateSource).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -300,23 +373,32 @@ export async function getStudentById(
 
     classification: activeEnrollment?.student_type ?? "Regular",
 
+    // Tuition assessment
     base_tuition: baseTuition,
     miscellaneous_fees: miscellaneousFees,
     gross_tuition_total: grossTuitionTotal,
 
     total_discounts_deducted: totalDiscountsDeducted,
+
     discount_summary_text: discountSummaryText,
+
     applied_discount_ids: appliedDiscountIds,
 
     total_assessment: finalTuitionAssessment,
+
+    // Stored payment totals
     total_paid: totalPaid,
     tuition_balance: tuitionBalance,
 
+    // Books
     total_books_fee: totalBooksAssessment,
     total_books_paid: totalBooksPaid,
     books_balance: booksBalance,
+
+    // Overall remaining balance
     balance_remaining: balanceRemaining,
 
+    // Individual payment history
     transactions,
   };
 }
