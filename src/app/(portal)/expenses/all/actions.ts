@@ -20,7 +20,7 @@ export async function getAllExpensesGroupedByDate(monthFilter?: string) {
       `
       date_disbursed,
       amount,
-      expenses_category (
+      expenses_categories (
         name
       )
     `,
@@ -40,9 +40,9 @@ export async function getAllExpensesGroupedByDate(monthFilter?: string) {
 
   // Also dynamically include any category found in actual expenses just in case
   (data ?? []).forEach((item) => {
-    const cat = Array.isArray(item.expenses_category)
-      ? item.expenses_category[0]
-      : item.expenses_category;
+    const cat = Array.isArray(item.expenses_categories)
+      ? item.expenses_categories[0]
+      : item.expenses_categories;
     if (cat?.name) {
       categoryNamesSet.add(cat.name.trim().toLowerCase());
     }
@@ -58,9 +58,9 @@ export async function getAllExpensesGroupedByDate(monthFilter?: string) {
 
     if (monthFilter && !date.startsWith(monthFilter)) continue;
 
-    const cat = Array.isArray(item.expenses_category)
-      ? item.expenses_category[0]
-      : item.expenses_category;
+    const cat = Array.isArray(item.expenses_categories)
+      ? item.expenses_categories[0]
+      : item.expenses_categories;
     const catName = (cat?.name ?? "uncategorized").trim().toLowerCase();
     const amount = Number(item.amount ?? 0);
 

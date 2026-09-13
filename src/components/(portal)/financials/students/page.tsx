@@ -21,12 +21,15 @@ import {
 } from "@/components/ui/select";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+import { Button } from "@/components/ui/button";
+
 import { getAllStudentsFinancials } from "@/app/(portal)/financials/students/actions";
 import type { StudentFinancialRow } from "@/app/(portal)/financials/students/actions";
+import { getGradeLevels } from "@/app/actions";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-PH", {
@@ -36,8 +39,29 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+function sortStudentsAlphabetically(students: StudentFinancialRow[]) {
+  return [...students].sort((a, b) => {
+    const lastNameComparison = a.last_name.localeCompare(
+      b.last_name,
+      undefined,
+      {
+        sensitivity: "base",
+      },
+    );
+
+    if (lastNameComparison !== 0) {
+      return lastNameComparison;
+    }
+
+    return a.first_name.localeCompare(b.first_name, undefined, {
+      sensitivity: "base",
+    });
+  });
+}
+
 export default function StudentsFinancialsPage() {
   const [selectedGrade, setSelectedGrade] = useState("all");
+  const [groupByGender, setGroupByGender] = useState(false);
 
   const {
     data: students = [],
@@ -49,29 +73,139 @@ export default function StudentsFinancialsPage() {
     queryFn: getAllStudentsFinancials,
   });
 
-  const gradeLevels = useMemo(() => {
-    const grades = new Set<string>();
+  const { data: gradeLevels = [], isLoading: isLoadingGradeLevels } = useQuery({
+    queryKey: ["grade-levels"],
+    queryFn: getGradeLevels,
+  });
 
-    students.forEach((student) => {
-      if (student.grade_level) {
-        grades.add(student.grade_level);
-      }
+  const filteredStudents = useMemo(() => {
+    const filtered =
+      selectedGrade === "all"
+        ? students
+        : students.filter((student) => student.grade_level === selectedGrade);
+
+    return sortStudentsAlphabetically(filtered);
+  }, [students, selectedGrade]);
+
+  const genderGroups = useMemo(() => {
+    const male = filteredStudents.filter(
+      (student) => student.gender?.toLowerCase() === "male",
+    );
+
+    const female = filteredStudents.filter(
+      (student) => student.gender?.toLowerCase() === "female",
+    );
+
+    const other = filteredStudents.filter((student) => {
+      const gender = student.gender?.toLowerCase();
+
+      return gender !== "male" && gender !== "female";
     });
 
-    return Array.from(grades).sort((a, b) =>
-      a.localeCompare(b, undefined, {
-        numeric: true,
-        sensitivity: "base",
-      }),
-    );
-  }, [students]);
-  const filteredStudents = useMemo(() => {
-    if (selectedGrade === "all") {
-      return students;
-    }
+    return {
+      male: sortStudentsAlphabetically(male),
+      female: sortStudentsAlphabetically(female),
+      other: sortStudentsAlphabetically(other),
+    };
+  }, [filteredStudents]);
 
-    return students.filter((student) => student.grade_level === selectedGrade);
-  }, [students, selectedGrade]);
+  const financialSummary = useMemo(() => {
+    return filteredStudents.reduce(
+      (totals, student) => {
+        totals.assessment += student.adjusted_total_tuition_fee;
+        totals.paid += student.total_tuition_paid;
+        totals.balance += student.tuition_balance;
+
+        return totals;
+      },
+      {
+        assessment: 0,
+        paid: 0,
+        balance: 0,
+      },
+    );
+  }, [filteredStudents]);
+
+  /*
+   * ----------------------------------------
+   * STUDENT ROW
+   * ----------------------------------------
+   */
+
+  const renderStudentRow = (student: StudentFinancialRow) => (
+    <TableRow key={student.id}>
+      {/* Student Name */}
+      <TableCell className="font-medium">
+        {student.last_name}, {student.first_name}
+      </TableCell>
+
+      {/* Grade */}
+      <TableCell>{student.grade_level}</TableCell>
+
+      {/* Adjusted Tuition */}
+      <TableCell className="text-center">
+        {formatCurrency(student.adjusted_total_tuition_fee)}
+      </TableCell>
+
+      {/* Tuition Paid */}
+      <TableCell className="text-center">
+        {formatCurrency(student.total_tuition_paid)}
+      </TableCell>
+
+      {/* Tuition Balance */}
+      <TableCell
+        className={`text-center font-medium ${
+          student.tuition_balance > 0 ? "text-red-600" : "text-green-600"
+        }`}
+      >
+        {student.tuition_balance <= 0
+          ? "Paid"
+          : formatCurrency(student.tuition_balance)}
+      </TableCell>
+
+      {/* Books Fee */}
+      <TableCell className="text-center">
+        {formatCurrency(student.total_books_fee)}
+      </TableCell>
+
+      {/* Books Balance */}
+      <TableCell
+        className={`text-center font-medium ${
+          student.books_balance > 0 ? "text-red-600" : "text-green-600"
+        }`}
+      >
+        {student.books_balance <= 0
+          ? "Paid"
+          : formatCurrency(student.books_balance)}
+      </TableCell>
+    </TableRow>
+  );
+
+  /*
+   * ----------------------------------------
+   * TABLE HEADER
+   * ----------------------------------------
+   */
+
+  const renderTableHeader = () => (
+    <TableHeader>
+      <TableRow>
+        <TableHead>Student Name</TableHead>
+
+        <TableHead>Grade Level</TableHead>
+
+        <TableHead className="text-center">Tuition Assessment</TableHead>
+
+        <TableHead className="text-center">Tuition Paid</TableHead>
+
+        <TableHead className="text-center">Tuition Balance</TableHead>
+
+        <TableHead className="text-center">Books Fee</TableHead>
+
+        <TableHead className="text-center">Books Balance</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
 
   /*
    * ----------------------------------------
@@ -151,26 +285,116 @@ export default function StudentsFinancialsPage() {
         </div>
 
         {/* -------------------------------- */}
-        {/* GRADE FILTER */}
+        {/* FILTERS */}
         {/* -------------------------------- */}
 
-        <div className="w-full md:w-[220px]">
-          <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by grade" />
-            </SelectTrigger>
+        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          {/* Grade Filter */}
 
-            <SelectContent>
-              <SelectItem value="all">All Grade Levels</SelectItem>
+          <div className="w-full sm:w-[220px]">
+            <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by grade" />
+              </SelectTrigger>
 
-              {gradeLevels.map((grade) => (
-                <SelectItem key={grade} value={grade}>
-                  {grade}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectContent>
+                <SelectItem value="all">All Grade Levels</SelectItem>
+
+                {gradeLevels.map((grade) => (
+                  <SelectItem key={grade.grade_level} value={grade.grade_level}>
+                    {grade.grade_level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Gender Grouping */}
+
+          <Button
+            type="button"
+            variant={groupByGender ? "default" : "outline"}
+            onClick={() => setGroupByGender((current) => !current)}
+            className="w-full sm:w-auto"
+          >
+            {groupByGender ? "Grouped by Gender" : "Group by Gender"}
+          </Button>
         </div>
+      </div>
+
+      {/* ---------------------------------- */}
+      {/* FINANCIAL SUMMARY CARDS */}
+      {/* ---------------------------------- */}
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Total Assessment */}
+
+        <Card>
+          <CardHeader className="pb-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Total Assessment
+            </p>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(financialSummary.assessment)}
+            </div>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              Total tuition assessment
+              {selectedGrade !== "all" && ` for ${selectedGrade}`}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Total Paid */}
+
+        <Card>
+          <CardHeader className="pb-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Total Paid
+            </p>
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(financialSummary.paid)}
+            </div>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              Total tuition payments
+              {selectedGrade !== "all" && ` for ${selectedGrade}`}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Remaining Balance */}
+
+        <Card>
+          <CardHeader className="pb-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Remaining Balance
+            </p>
+          </CardHeader>
+
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${
+                financialSummary.balance > 0 ? "text-red-600" : "text-green-600"
+              }`}
+            >
+              {financialSummary.balance <= 0
+                ? "Paid"
+                : formatCurrency(financialSummary.balance)}
+            </div>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              Total outstanding tuition
+              {selectedGrade !== "all" && ` for ${selectedGrade}`}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* ---------------------------------- */}
@@ -190,6 +414,7 @@ export default function StudentsFinancialsPage() {
             <span className="font-medium text-foreground">{selectedGrade}</span>
           </>
         )}
+        {groupByGender && <> · Grouped by gender</>}
       </div>
 
       {/* ---------------------------------- */}
@@ -197,96 +422,90 @@ export default function StudentsFinancialsPage() {
       {/* ---------------------------------- */}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Student Financial Records</CardTitle>
-        </CardHeader>
-
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+          <Table>
+            {renderTableHeader()}
+
+            <TableBody>
+              {filteredStudents.length === 0 ? (
                 <TableRow>
-                  <TableHead>Student Name</TableHead>
-
-                  <TableHead>Grade Level</TableHead>
-
-                  <TableHead className="text-right">
-                    Tuition Assessment
-                  </TableHead>
-
-                  <TableHead className="text-right">Tuition Paid</TableHead>
-
-                  <TableHead className="text-right">Tuition Balance</TableHead>
-
-                  <TableHead className="text-right">Books Fee</TableHead>
-
-                  <TableHead className="text-right">Books Balance</TableHead>
+                  <TableCell
+                    colSpan={7}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    No students found for this grade level.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
+              ) : groupByGender ? (
+                <>
+                  {/* -------------------------------- */}
+                  {/* MALE */}
+                  {/* -------------------------------- */}
 
-              <TableBody>
-                {filteredStudents.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No students found for this grade level.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      {/* Student Name */}
-                      <TableCell className="font-medium">
-                        {student.last_name}, {student.first_name}
-                      </TableCell>
+                  {genderGroups.male.length > 0 && (
+                    <>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableCell colSpan={7} className="py-3 font-semibold">
+                          Male{" "}
+                          <span className="font-normal text-muted-foreground">
+                            ({genderGroups.male.length})
+                          </span>
+                        </TableCell>
+                      </TableRow>
 
-                      {/* Grade */}
-                      <TableCell>{student.grade_level}</TableCell>
+                      {genderGroups.male.map(renderStudentRow)}
+                    </>
+                  )}
 
-                      {/* Adjusted Tuition */}
-                      <TableCell className="text-right">
-                        {formatCurrency(student.adjusted_total_tuition_fee)}
-                      </TableCell>
+                  {/* -------------------------------- */}
+                  {/* FEMALE */}
+                  {/* -------------------------------- */}
 
-                      {/* Tuition Paid */}
-                      <TableCell className="text-right">
-                        {formatCurrency(student.total_tuition_paid)}
-                      </TableCell>
+                  {genderGroups.female.length > 0 && (
+                    <>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableCell colSpan={7} className="py-3 font-semibold">
+                          Female{" "}
+                          <span className="font-normal text-muted-foreground">
+                            ({genderGroups.female.length})
+                          </span>
+                        </TableCell>
+                      </TableRow>
 
-                      {/* Tuition Balance */}
-                      <TableCell
-                        className={`text-right font-medium ${
-                          student.tuition_balance > 0
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {formatCurrency(student.tuition_balance)}
-                      </TableCell>
+                      {genderGroups.female.map(renderStudentRow)}
+                    </>
+                  )}
 
-                      {/* Books Fee */}
-                      <TableCell className="text-right">
-                        {formatCurrency(student.total_books_fee)}
-                      </TableCell>
+                  {/* -------------------------------- */}
+                  {/* OTHER / UNSPECIFIED */}
+                  {/* -------------------------------- */}
 
-                      {/* Books Balance */}
-                      <TableCell
-                        className={`text-right font-medium ${
-                          student.books_balance > 0
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {formatCurrency(student.books_balance)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  {genderGroups.other.length > 0 && (
+                    <>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableCell colSpan={7} className="py-3 font-semibold">
+                          Other / Unspecified{" "}
+                          <span className="font-normal text-muted-foreground">
+                            ({genderGroups.other.length})
+                          </span>
+                        </TableCell>
+                      </TableRow>
+
+                      {genderGroups.other.map(renderStudentRow)}
+                    </>
+                  )}
+                </>
+              ) : (
+                /*
+                 * ----------------------------------------
+                 * NORMAL ALPHABETICAL LIST
+                 * ----------------------------------------
+                 */
+
+                filteredStudents.map(renderStudentRow)
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

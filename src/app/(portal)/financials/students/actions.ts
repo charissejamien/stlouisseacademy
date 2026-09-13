@@ -10,6 +10,7 @@ export interface StudentFinancialRow {
   middle_name: string | null;
   last_name: string;
   suffix: string | null;
+  gender: string | null;
 
   grade_level: string;
   section_name: string;
@@ -63,12 +64,10 @@ interface StudentAccountCardJoin {
 
   total_books_fee: number | null;
 
-  // Reconciled payment totals
   total_tuition_paid: number | null;
   total_books_paid: number | null;
   total_aircon_paid: number | null;
 
-  // Reconciled balances
   tuition_balance: number | null;
   books_balance: number | null;
 
@@ -83,6 +82,7 @@ interface SupabaseStudentFinancialQueryResult {
   middle_name: string | null;
   last_name: string;
   suffix: string | null;
+  gender: string | null;
 
   enrollments: EnrollmentJoin[] | null;
 
@@ -102,6 +102,7 @@ export async function getAllStudentsFinancials(): Promise<
         middle_name,
         last_name,
         suffix,
+        gender,
 
         enrollments (
           grade_level,
@@ -147,77 +148,41 @@ export async function getAllStudentsFinancials(): Promise<
   const students = (data ??
     []) as unknown as SupabaseStudentFinancialQueryResult[];
 
-  return students.map((student) => {
-    /*
-     * ----------------------------------------
-     * ACTIVE ENROLLMENT
-     * ----------------------------------------
-     */
-
+  const result = students.map((student) => {
     const activeEnrollment =
       student.enrollments?.find(
         (enrollment) => enrollment.school_years?.is_active === true,
       ) ?? student.enrollments?.[0];
-
-    /*
-     * ----------------------------------------
-     * ACTIVE ACCOUNT CARD
-     * ----------------------------------------
-     */
 
     const activeAssessment =
       student.student_account_card?.find(
         (account) => account.school_years?.is_active === true,
       ) ?? student.student_account_card?.[0];
 
-    /*
-     * ----------------------------------------
-     * BASIC STUDENT INFO
-     * ----------------------------------------
-     */
-
     const gradeLevel = activeEnrollment?.grade_level ?? "Unassigned";
 
     const sectionName =
       activeEnrollment?.sections?.section_name ?? "Unassigned";
 
-    /*
-     * ----------------------------------------
-     * ORIGINAL TUITION
-     * ----------------------------------------
-     */
-
     const baseTuition = Number(activeAssessment?.base_tuition ?? 0);
-
     const miscellaneous = Number(activeAssessment?.miscellaneous ?? 0);
-
     const totalTuitionFee = baseTuition + miscellaneous;
-
     const adjustedBaseTuition = Number(
       activeAssessment?.adjusted_base_tuition ?? baseTuition,
     );
-
     const adjustedMiscellaneous = Number(
       activeAssessment?.adjusted_miscellaneous ?? miscellaneous,
     );
-
     const adjustedTotalTuitionFee = Number(
       activeAssessment?.adjusted_total_tuition_fee ??
         adjustedBaseTuition + adjustedMiscellaneous,
     );
-
     const totalBooksFee = Number(activeAssessment?.total_books_fee ?? 0);
-
     const totalTuitionPaid = Number(activeAssessment?.total_tuition_paid ?? 0);
-
     const totalBooksPaid = Number(activeAssessment?.total_books_paid ?? 0);
-
     const totalAirconPaid = Number(activeAssessment?.total_aircon_paid ?? 0);
-
     const tuitionBalance = Number(activeAssessment?.tuition_balance ?? 0);
-
     const booksBalance = Number(activeAssessment?.books_balance ?? 0);
-
     const balanceRemaining = tuitionBalance + booksBalance;
 
     return {
@@ -228,33 +193,47 @@ export async function getAllStudentsFinancials(): Promise<
       middle_name: student.middle_name,
       last_name: student.last_name,
       suffix: student.suffix,
+      gender: student.gender,
 
       grade_level: gradeLevel,
       section_name: sectionName,
 
       base_tuition: baseTuition,
-      miscellaneous: miscellaneous,
+      miscellaneous,
       total_tuition_fee: totalTuitionFee,
 
       adjusted_base_tuition: adjustedBaseTuition,
-
       adjusted_miscellaneous: adjustedMiscellaneous,
-
       adjusted_total_tuition_fee: adjustedTotalTuitionFee,
 
       total_tuition_paid: totalTuitionPaid,
-
       tuition_balance: tuitionBalance,
 
       total_books_fee: totalBooksFee,
-
       total_books_paid: totalBooksPaid,
-
       books_balance: booksBalance,
 
       total_aircon_paid: totalAirconPaid,
 
       balance_remaining: balanceRemaining,
     };
+  });
+
+  return result.sort((a, b) => {
+    const lastNameComparison = a.last_name.localeCompare(
+      b.last_name,
+      undefined,
+      {
+        sensitivity: "base",
+      },
+    );
+
+    if (lastNameComparison !== 0) {
+      return lastNameComparison;
+    }
+
+    return a.first_name.localeCompare(b.first_name, undefined, {
+      sensitivity: "base",
+    });
   });
 }
