@@ -47,7 +47,7 @@ export default function DailyExpenseSummary({
 
   return (
     <Card className="shadow-sm border bg-white flex flex-col h-full overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-3 bg-muted/30 border-b shrink-0">
+      <CardHeader className="p-0  px-3 flex flex-row items-center justify-between pb-3 bg-muted/30 border-b shrink-0">
         <div>
           <CardTitle className="text-base font-semibold text-foreground">
             Daily Expense Summaries
@@ -62,7 +62,7 @@ export default function DailyExpenseSummary({
       </CardHeader>
       <CardContent className="p-0 flex-1 min-h-0 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <Table>
-          <TableHeader className="bg-muted/50 sticky top-0 z-10">
+          <TableHeader className="bg-gray-200/50 sticky top-0 z-10">
             <TableRow>
               <TableHead className="font-semibold text-foreground w-[150px]">
                 Disbursement Date

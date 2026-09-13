@@ -5,7 +5,20 @@ import { createClient } from "@/lib/supabase/server";
 export async function reconcileStudentPaymentTotals() {
   const supabase = await createClient();
 
-  // 1. Fetch all student account cards
+  // 1. Mark Grades 7, 8, 9, and 10 as ESC
+  const { data: escEnrollments, error: escError } = await supabase
+    .from("enrollments")
+    .update({
+      isESC: true,
+    })
+    .in("grade_level", ["7", "8", "9", "10"])
+    .select("id, student_id, grade_level");
+
+  if (escError) {
+    throw new Error(`Failed to update ESC enrollments: ${escError.message}`);
+  }
+
+  // 2. Fetch all student account cards
   const { data: accountCards, error: cardsError } = await supabase
     .from("student_account_card")
     .select("id, student_id, adjusted_total_tuition_fee, total_books_fee");
@@ -20,11 +33,12 @@ export async function reconcileStudentPaymentTotals() {
     return {
       success: true,
       updatedCount: 0,
+      escUpdatedCount: escEnrollments?.length ?? 0,
       message: "No student account cards found.",
     };
   }
 
-  // 2. Get unique student IDs
+  // 3. Get unique student IDs
   const studentIds = [
     ...new Set(
       accountCards
@@ -37,11 +51,19 @@ export async function reconcileStudentPaymentTotals() {
     return {
       success: true,
       updatedCount: 0,
+      escUpdatedCount: escEnrollments?.length ?? 0,
       message: "No students found on account cards.",
     };
   }
 
-  // 3. Fetch payments in batches
+  // 4. Get ESC student IDs
+  const escStudentIds = new Set(
+    (escEnrollments ?? [])
+      .map((enrollment) => enrollment.student_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+
+  // 5. Fetch payments in batches
   //
   // Doing all student IDs in one `.in()` query can create
   // a very large request and cause `fetch failed`.
@@ -78,7 +100,7 @@ export async function reconcileStudentPaymentTotals() {
     }
   }
 
-  // 4. Store totals per student
+  // 6. Store totals per student
   const paymentsByStudent = new Map<
     string,
     {
@@ -88,7 +110,7 @@ export async function reconcileStudentPaymentTotals() {
     }
   >();
 
-  // 5. Classify every payment
+  // 7. Classify every payment
   for (const payment of allPayments) {
     if (!payment.student_id) {
       continue;
@@ -141,8 +163,9 @@ export async function reconcileStudentPaymentTotals() {
     }
   }
 
-  // 6. Update every student account card
+  // 8. Update every student account card
   let updatedCount = 0;
+  let escAccountCardCount = 0;
 
   for (const card of accountCards) {
     const totals = paymentsByStudent.get(card.student_id) ?? {
@@ -151,7 +174,24 @@ export async function reconcileStudentPaymentTotals() {
       total_aircon_paid: 0,
     };
 
-    const totalTuitionFee = Number(card.adjusted_total_tuition_fee) || 0;
+    /*
+     * ----------------------------------------
+     * ESC TUITION ADJUSTMENT
+     * ----------------------------------------
+     *
+     * Grades 7, 8, 9, and 10 marked as ESC
+     * receive the corrected tuition assessment:
+     *
+     * Base Tuition       = 0
+     * Miscellaneous      = 6,380
+     * Total Tuition Fee  = 6,380
+     */
+
+    const isESC = escStudentIds.has(card.student_id);
+
+    const totalTuitionFee = isESC
+      ? 6380
+      : Number(card.adjusted_total_tuition_fee) || 0;
 
     const totalBooksFee = Number(card.total_books_fee) || 0;
 
@@ -162,15 +202,24 @@ export async function reconcileStudentPaymentTotals() {
 
     const booksBalance = Math.max(totalBooksFee - totals.total_books_paid, 0);
 
+    const updateData = {
+      total_tuition_paid: totals.total_tuition_paid,
+      total_books_paid: totals.total_books_paid,
+      total_aircon_paid: totals.total_aircon_paid,
+      tuition_balance: tuitionBalance,
+      books_balance: booksBalance,
+      ...(isESC
+        ? {
+            adjusted_base_tuition: 0,
+            adjusted_miscellaneous: 6380,
+            adjusted_total_tuition_fee: 6380,
+          }
+        : {}),
+    };
+
     const { error: updateError } = await supabase
       .from("student_account_card")
-      .update({
-        total_tuition_paid: totals.total_tuition_paid,
-        total_books_paid: totals.total_books_paid,
-        total_aircon_paid: totals.total_aircon_paid,
-        tuition_balance: tuitionBalance,
-        books_balance: booksBalance,
-      })
+      .update(updateData)
       .eq("id", card.id);
 
     if (updateError) {
@@ -179,12 +228,18 @@ export async function reconcileStudentPaymentTotals() {
       );
     }
 
+    if (isESC) {
+      escAccountCardCount++;
+    }
+
     updatedCount++;
   }
 
   return {
     success: true,
     updatedCount,
+    escUpdatedCount: escEnrollments?.length ?? 0,
+    escAccountCardCount,
     paymentCount: allPayments.length,
   };
 }

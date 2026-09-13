@@ -41,7 +41,7 @@ type Payment = {
   mode_of_payment: string;
   student_id: string;
   payment_specifics: string;
-  created_at?: string; // Added created_at property here
+  created_at?: string;
 };
 
 export async function createPayments(payments: Payment[]) {
