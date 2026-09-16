@@ -24,7 +24,7 @@ export default function EnrollmentClientContainer({
   discounts,
   tuitionFees,
   books,
-  subsidies, // Destructure subsidies
+  subsidies,
 }: EnrollmentClientContainerProps) {
   return (
     <div className="h-screen overflow-hidden">

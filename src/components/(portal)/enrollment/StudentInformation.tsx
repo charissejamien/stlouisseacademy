@@ -361,10 +361,6 @@ export default function StudentInformation({
               </FieldSet>
             </div>
 
-            {/* ================================================== */}
-            {/* ACADEMIC FEES — SEPARATE CARD */}
-            {/* ================================================== */}
-
             <div className="bg-card rounded-lg border p-4 sm:p-5">
               <div className="space-y-1 mb-5">
                 <h2 className="font-semibold">Academic Fees</h2>
