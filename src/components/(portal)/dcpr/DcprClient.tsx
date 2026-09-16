@@ -1,3 +1,5 @@
+import DcprSummaryToday from "./DcprSummaryToday";
+
 export default function DcprClient() {
   return (
     <div className="w-full">
@@ -10,6 +12,10 @@ export default function DcprClient() {
           Monitor and review the school’s daily cash position, including
           collections, disbursements, and available cash balances.
         </p>
+      </div>
+
+      <div>
+        <DcprSummaryToday/>
       </div>
     </div>
   );

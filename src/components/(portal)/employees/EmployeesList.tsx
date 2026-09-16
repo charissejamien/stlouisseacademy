@@ -88,9 +88,6 @@ export default function EmployeesList() {
   return (
     <div className="w-full overflow-x-auto">
       <Table>
-        <TableCaption>
-          A list of your employees.
-        </TableCaption>
 
         <TableHeader>
           <TableRow>

@@ -18,8 +18,26 @@ export default function RegistrarDashboard() {
     const quickActions = [
         {action: "Enrollment", link: "/enrollment"},
         {action: "Payment", link: "/payments"},
-        {action: "Payroll", link: "/"}
+        {action: "Payroll", link: "/payroll"}
     ]
+
+    const upcomingEvents = [
+        {
+            month: "August",
+            events: [
+                { date: "21", title: "Parent's Orientation" },
+                { date: "22", title: "Student's Orientation" },
+                { date: "23", title: "Faculty Orientation" },
+            ]
+        },
+        {
+            month: "September",
+            events: [
+                { date: "3", title: "Examination" },
+                { date: "11", title: "PTA Meeting" },
+            ]
+        }
+    ];
 
     return(
         <div className="w-full mt-10 flex gap-10">
@@ -28,9 +46,9 @@ export default function RegistrarDashboard() {
             <div className="w-[75%] flex flex-col gap-10">
 
                 {/* Quick Information */}
-                <div className="w-full flex gap-10">
+                <div className="w-full flex gap-3">
                     <Card 
-                        className="w-full max-w-lg space-y-2 pb-12 hover:scale-102 transition-transform"
+                        className="w-full space-y-2 pb-7 hover:scale-102 transition-transform cursor-pointer"
                         onClick={() => router.push("/students")}
                     >
                         <CardHeader>
@@ -40,7 +58,8 @@ export default function RegistrarDashboard() {
                             <h3 className="text-5xl font-semibold">401</h3>
                         </CardContent>
                     </Card>
-                    <Card className="w-full max-w-lg space-y-2 pb-12 hover:scale-102 transition-transform">
+                    <Card className="w-full space-y-2 pb-7 hover:scale-102 transition-transform cursor-pointer"
+                    onClick={() => router.push("/employees")}>
                         <CardHeader>
                             <CardTitle>Current Employees</CardTitle>
                         </CardHeader>
@@ -51,20 +70,15 @@ export default function RegistrarDashboard() {
                 </div>
 
                 {/* Lower Container */}
-                <div className="w-full flex gap-10">
-
-                    {/* Graph or Table */}
-                    <div className="w-[80%] h-100 bg-white">
-
-                    </div>
+                <div className="w-full">
 
                     {/* Quick Links */}
-                    <div className="w-[20%] flex flex-col gap-2">
+                    <div className="flex w-fit justify-between gap-1">
                         {quickActions.map((q, index) => (
                             <Button 
                                 key={index}
                                 onClick={() => router.push(q.link)}
-                                className="h-20 transition-transform hover:scale-102"
+                                className="h-20 w-full transition-transform hover:scale-102"
                             >{q.action}</Button>
                         ))}
                     </div>
@@ -74,25 +88,42 @@ export default function RegistrarDashboard() {
 
             {/* Upcoming Events */}
             <div className="w-[25%]">   
-                <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle>Upcoming Dates</CardTitle>
-                        <CardDescription>
-                            Review important dates
-                        </CardDescription>
-                        <CardAction>
-                            <Button variant="link">View in Calendar</Button>
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
+                <Card className="w-full shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                         <div>
-                            <p>August</p>
-                            <p>Aug 21 | Parents Orientation</p>
+                            <CardTitle className="text-xl font-bold">Upcoming Dates</CardTitle>
+                            <CardDescription>
+                                Review important dates
+                            </CardDescription>
                         </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-6 pb-45">
+                        {upcomingEvents.map((group, groupIdx) => (
+                            <div key={groupIdx} className="space-y-3">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b pb-1 block">
+                                    {group.month}
+                                </span>
+                                
+                                <div className="space-y-2">
+                                    {group.events.map((event, eventIdx) => (
+                                        <div 
+                                            key={eventIdx} 
+                                            className="flex items-center gap-3 rounded-lg hover:bg-slate-50 transition-colors"
+                                        >
+                                            <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-md px-2.5 py-1 min-w-[55px]">
+                                                <span className="text-xs font-semibold leading-tight">{event.date}</span>
+                                            </div>
+                                            <p className="text-sm font-medium text-slate-800 leading-tight">
+                                                {event.title}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </CardContent>
-                    <CardFooter className="flex-col gap-2">
-
-                    </CardFooter>
+                    <CardFooter className="pt-0" />
                 </Card>
             </div>
             
