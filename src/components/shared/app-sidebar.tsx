@@ -112,6 +112,11 @@ const groups: SidebarGroupType[] = [
     roles: ["admin", "registrar", "executive", "superadmin"],
     subgroup: [
       {
+        link: "/financials/students",
+        name: "Summary",
+        roles: ["admin", "registrar", "executive", "superadmin"],
+      },
+      {
         link: "/payments",
         name: "Payments",
         roles: ["admin", "registrar", "executive", "superadmin"],
@@ -178,10 +183,10 @@ export function AppSidebar({ role, userProfile }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="border-b px-4 py-4 group-data-[collapsible=icon]:px-2">
+      <SidebarHeader className="border-b px-4 py-4 group-data-[collapsible=icon]:px-2 items-center text-center">
         <div className="flex items-center gap-3">
-          <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <h1 className="truncate text-sm font-semibold tracking-tight">
+          <div className="min-w-0 group-data-[collapsible=icon]:hidden text-center">
+            <h1 className="truncate font-semibold tracking-tight">
               St. Louisse Academy
             </h1>
             <p className="text-xs text-muted-foreground">Daanbantayan</p>

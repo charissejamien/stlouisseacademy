@@ -2,7 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import {
   AppSidebar,
   UserProfile,
@@ -43,19 +43,22 @@ export default async function PortalGroupRootLayout({
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background">
-      <SidebarProvider>
-        {/* Desktop */}
+      <SidebarProvider className="h-full w-full">
+        {/* Desktop Layout */}
         <div className="hidden h-full w-full overflow-hidden px-5 md:flex">
           <AppSidebar role={userProfile.role} userProfile={userProfile} />
 
-          <main className="h-full min-w-0 flex-1 overflow-y-auto pr-2">
-            <SidebarTrigger />
-            {children}
+          {/* min-h-0 is the secret sauce to allow overflow-y-auto to work in Flexbox */}
+          <main className="flex h-full min-w-0 min-h-0 flex-1 flex-col overflow-y-auto pr-2">
+            <div className="py-2">
+              <SidebarTrigger />
+            </div>
+            <div className="flex-1">{children}</div>
           </main>
         </div>
 
-        {/* Mobile */}
-        <div className="h-screen overflow-y-auto md:hidden">
+        {/* Mobile Layout */}
+        <div className="h-screen w-full overflow-y-auto md:hidden">
           <main className="min-h-full px-4 pb-20 pt-4">{children}</main>
         </div>
       </SidebarProvider>

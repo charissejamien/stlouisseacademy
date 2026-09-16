@@ -44,10 +44,12 @@ export async function getStudentsCount() {
 
     const activeSchoolYear = await getActiveSchoolYear();
 
+    console.log('Active school year:', activeSchoolYear)
+
     const{ data , error } = await supabase
     .from("enrollments")
     .select("*")
-    .eq("school_year_id", activeSchoolYear);
+    .eq("school_year_id", activeSchoolYear.id);
 
     if (error) {
         throw new Error(error.message)

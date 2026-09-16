@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import {
   CalendarDays,
   FileText,
@@ -230,9 +231,9 @@ export default function EmployeeDetails({
 
       <section>
         <Card>
-          <CardContent className="pt-5">
+          <CardContent className="pt-5 space-y-6">
 
-            <div className="mb-6">
+            <div>
               <h3 className="font-semibold text-slate-800">
                 Employee Information
               </h3>
@@ -242,7 +243,8 @@ export default function EmployeeDetails({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Personal Details Row (5 Columns on Large Screens) */}
+            <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
 
               {/* First Name */}
               <InformationItem
@@ -281,6 +283,11 @@ export default function EmployeeDetails({
                 capitalize
               />
 
+            </div>
+
+            {/* Contact Details Row (Date of Birth, Long Email, Contact Number) */}
+            <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 pt-2 border-t border-slate-100">
+
               {/* Date of Birth */}
               <InformationItem
                 icon={
@@ -290,14 +297,16 @@ export default function EmployeeDetails({
                 value={employee.date_of_birth}
               />
 
-              {/* Email */}
-              <InformationItem
-                icon={
-                  <Mail className="h-3.5 w-3.5" />
-                }
-                label="Email"
-                value={employee.email}
-              />
+              {/* Email (Spans 2 columns to give maximum width) */}
+              <div className="sm:col-span-2 lg:col-span-2">
+                <InformationItem
+                  icon={
+                    <Mail className="h-3.5 w-3.5" />
+                  }
+                  label="Email"
+                  value={employee.email}
+                />
+              </div>
 
               {/* Contact */}
               <InformationItem
@@ -309,6 +318,7 @@ export default function EmployeeDetails({
               />
 
             </div>
+
           </CardContent>
         </Card>
       </section>
@@ -588,22 +598,23 @@ function InformationItem({
   capitalize?: boolean
 }) {
   return (
-    <div className="flex items-start gap-2.5">
+    <div className="flex items-start gap-2.5 min-w-0 w-full">
 
       {icon && (
-        <div className="mt-0.5 text-slate-400">
+        <div className="mt-0.5 shrink-0 text-slate-400">
           {icon}
         </div>
       )}
 
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
 
         <p className="text-xs font-medium text-slate-400">
           {label}
         </p>
 
         <p
-          className={`mt-0.5 text-sm font-semibold text-slate-700 ${
+          title={value || "—"}
+          className={`mt-0.5 truncate text-sm font-semibold text-slate-700 ${
             capitalize
               ? "capitalize"
               : ""
@@ -789,17 +800,16 @@ function EmployeeDetailsSkeleton() {
 
       {/* Employee Information */}
       <Card>
-        <CardContent className="pt-5">
+        <CardContent className="pt-5 space-y-6">
 
-          <div className="mb-6 space-y-2">
+          <div className="space-y-2">
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-3 w-64" />
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {Array.from({
-              length: 8,
+              length: 5,
             }).map((_, index) => (
               <div
                 key={index}
@@ -809,7 +819,21 @@ function EmployeeDetailsSkeleton() {
                 <Skeleton className="h-4 w-32" />
               </div>
             ))}
+          </div>
 
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-2">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-2 space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-32" />
+            </div>
           </div>
 
         </CardContent>

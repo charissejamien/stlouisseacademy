@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import {
@@ -60,6 +61,7 @@ function sortStudentsAlphabetically(students: StudentFinancialRow[]) {
 }
 
 export default function StudentsFinancialsPage() {
+  const router = useRouter();
   const [selectedGrade, setSelectedGrade] = useState("all");
   const [groupByGender, setGroupByGender] = useState(false);
 
@@ -133,7 +135,11 @@ export default function StudentsFinancialsPage() {
    */
 
   const renderStudentRow = (student: StudentFinancialRow) => (
-    <TableRow key={student.id}>
+    <TableRow
+      key={student.id}
+      onClick={() => router.push(`/students/${student.id}`)}
+      className="cursor-pointer transition-colors hover:bg-muted/50"
+    >
       {/* Student Name */}
       <TableCell className="font-medium">
         {student.last_name}, {student.first_name}
