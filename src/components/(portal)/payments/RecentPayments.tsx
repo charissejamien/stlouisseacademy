@@ -40,14 +40,14 @@ export default function RecentPayments() {
 
   if (isError) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md text-center text-destructive text-sm">
+      <div className="p-6 rounded-lg shadow-md text-center text-destructive text-sm">
         Failed to load recent transactions.
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border">
+    <div className="rounded-lg shadow-md overflow-hidden border">
       <Table>
         <TableHeader>
           <TableRow>
